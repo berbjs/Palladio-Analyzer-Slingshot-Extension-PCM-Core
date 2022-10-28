@@ -13,8 +13,7 @@ Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.
  de.uka.ipd.sdq.simucomframework,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data,
  de.uka.ipd.sdq.simucomframework.variables,
- org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data,
- org.palladiosimulator.analyzer.slingshot.scalingpolicy.data
+ org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data
 Import-Package: com.google.common.eventbus,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities;version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events;version="1.0.0"

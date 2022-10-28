@@ -28,7 +28,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
-import org.palladiosimulator.analyzer.slingshot.scalingpolicy.data.events.ModelAdjusted;
+//import org.palladiosimulator.analyzer.slingshot.scalingpolicy.data.events.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
@@ -61,7 +61,7 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 @OnEvent(when = ResourceDemandRequested.class, then = {
 		JobInitiated.class, PassiveResourceAcquired.class
 }, cardinality = SINGLE)
-@OnEvent(when = ModelAdjusted.class, then = {})
+//@OnEvent(when = ModelAdjusted.class, then = {})
 public class ResourceSimulation implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(ResourceSimulation.class);
@@ -220,12 +220,12 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		return Result.of(new ActiveResourceFinished(evt.getEntity().getRequest(), 0));
 	}
 
-	@Subscribe
-	public Result onModelAdjusted(final ModelAdjusted modelChanged) {
-		// TODO: Notice the changes and add them to load balancer accordingly.
-		return Result.empty();
-	}
-	
+//	@Subscribe
+//	public Result onModelAdjusted(final ModelAdjusted modelChanged) {
+//		// TODO: Notice the changes and add them to load balancer accordingly.
+//		return Result.empty();
+//	}
+//	
 	/*
 	 * TODO: When GeneralEntryRequest, 
 	 * 	1. (System): Find appropriate assembly context -> AllocationContextRequested
