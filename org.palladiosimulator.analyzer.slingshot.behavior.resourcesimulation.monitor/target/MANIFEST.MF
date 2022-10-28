@@ -1,0 +1,19 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Monitor
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.r
+ esourcesimulation.monitor
+Bundle-Version: 1.0.0.202204282116
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behavior
+ .resourcesimulation.monitor
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.palladiosimulator.analyzer.slingshot;bundle-version=
+ "1.0.0",org.palladiosimulator.probeframework,org.palladiosimulator.anal
+ yzer.slingshot.monitor.data,org.palladiosimulator.monitorrepository,org
+ .palladiosimulator.edp2.util,org.palladiosimulator.pcm.edp2.measuringpo
+ int,org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.
+ data,org.palladiosimulator.analyzer.slingshot.monitor,org.palladiosimul
+ ator.analyzer.slingshot.behavior.resourcesimulation.data
+Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
+ org/licenses/LICENSE-2.0.txt"
+

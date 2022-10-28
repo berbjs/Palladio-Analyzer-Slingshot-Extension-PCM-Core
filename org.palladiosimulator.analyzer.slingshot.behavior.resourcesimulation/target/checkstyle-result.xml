@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="8.29">
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/ResourceSimulation.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+<error line="129" severity="info" message="Line is longer than 130 characters (found 133)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="160" severity="info" message="Line is longer than 130 characters (found 134)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="192" severity="info" message="Line is longer than 130 characters (found 134)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/repository/ResourceEnvironmentAccessor.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+<error line="35" severity="info" message="Line is longer than 130 characters (found 134)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/AbstractResourceTable.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/passive/PassiveResourceTable.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/passive/PassiveResourceCompoundKey.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/passive/SimplePassiveResource.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/active/FCFSResource.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/active/ProcessorSharingResource.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/active/ActiveResource.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/active/AbstractActiveResource.java">
+<error line="71" severity="info" message="Line is longer than 130 characters (found 134)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/active/ActiveResourceCompoundKey.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/active/SchedulingPolicyId.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/active/ActiveResourceTable.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/resources/AbstractResource.java">
+</file>
+</checkstyle>

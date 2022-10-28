@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: UsageModelData
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.u
+ sagesimulation.data
+Bundle-Version: 1.0.0.202204282116
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviou
+ r.usagesimulation.data
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.palladiosimulator.analyzer.slingshot;bundle-version=
+ "1.0.0",org.palladiosimulator.pcm,org.apache.log4j,de.uka.ipd.sdq.simuc
+ omframework,de.uka.ipd.sdq.simucomframework.variables;bundle-version="4
+ .3.0",org.palladiosimulator.analyzer.slingshot.common.utils
+Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.usagem
+ odel.entities,org.palladiosimulator.analyzer.slingshot.behavior.usagemo
+ del.entities.interpretationcontext,org.palladiosimulator.analyzer.sling
+ shot.behavior.usagemodel.entities.scenariobehavior,org.palladiosimulato
+ r.analyzer.slingshot.behavior.usagemodel.events
+Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
+ org/licenses/LICENSE-2.0.txt"
+

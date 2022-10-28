@@ -1,0 +1,24 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Usagemodel
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.u
+ sagesimulation;singleton:=true
+Bundle-Version: 1.0.0.202204282116
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behavior
+ .usagemodel
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.apache.log4j;bundle-version="1.2.15",org.palladiosim
+ ulator.pcm;bundle-version="4.3.0",de.uka.ipd.sdq.simucomframework.varia
+ bles,org.palladiosimulator.analyzer.slingshot;bundle-version="1.0.0",or
+ g.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data;bu
+ ndle-version="1.0.0",javax.inject,de.uka.ipd.sdq.simucomframework;bundl
+ e-version="4.3.0",org.palladiosimulator.analyzer.slingshot.common.utils
+ ,de.uka.ipd.sdq.probfunction.math,com.google.inject
+Import-Package: com.google.common.eventbus
+Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.usages
+ imulation,org.palladiosimulator.analyzer.slingshot.behavior.usagesimula
+ tion.interpreters,org.palladiosimulator.analyzer.slingshot.behavior.usa
+ gesimulation.repositories
+Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
+ org/licenses/LICENSE-2.0.txt"
+

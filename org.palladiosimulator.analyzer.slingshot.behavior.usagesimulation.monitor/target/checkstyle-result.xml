@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="8.29">
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.monitor/src/org/palladiosimulator/analyzer/slingshot/behavior/usagesimulation/monitor/UsageModelMonitoring.java">
+<error line="44" severity="info" message="Line is longer than 130 characters (found 162)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="45" severity="info" message="Line is longer than 130 characters (found 137)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="46" severity="info" message="Line is longer than 130 characters (found 136)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="61" severity="info" message="Line is longer than 130 characters (found 151)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="86" severity="info" message="Line is longer than 130 characters (found 135)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="99" severity="info" message="Line is longer than 130 characters (found 136)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.monitor/src/org/palladiosimulator/analyzer/slingshot/behavior/usagesimulation/monitor/package-info.java">
+<error line="1" severity="warning" message="Missing a Javadoc comment." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocStyleCheck"/>
+</file>
+</checkstyle>

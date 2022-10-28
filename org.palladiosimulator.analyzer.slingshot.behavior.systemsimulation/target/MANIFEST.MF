@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Systemsimulation
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.s
+ ystemsimulation;singleton:=true
+Bundle-Version: 1.0.0.202204282116
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviou
+ r.systemsimulation
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.palladiosimulator.analyzer.slingshot;bundle-version=
+ "1.0.0",org.palladiosimulator.pcm;bundle-version="4.3.0",org.apache.log
+ 4j;bundle-version="1.2.15",org.palladiosimulator.analyzer.slingshot.beh
+ avior.usagesimulation.data;bundle-version="1.0.0",org.palladiosimulator
+ .analyzer.slingshot.behavior.systemsimulation.data;bundle-version="1.0.
+ 0",de.uka.ipd.sdq.simucomframework.variables;bundle-version="4.3.0",de.
+ uka.ipd.sdq.simucomframework,de.uka.ipd.sdq.probfunction.math,org.palla
+ diosimulator.analyzer.slingshot.common.utils,com.google.guava;bundle-ve
+ rsion="27.1.0",com.google.inject;bundle-version="4.2.3"
+Import-Package: com.google.common.eventbus;version="21.0.0"
+Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
+ org/licenses/LICENSE-2.0.txt"
+

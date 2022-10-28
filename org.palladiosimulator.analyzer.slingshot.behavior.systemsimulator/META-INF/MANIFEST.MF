@@ -1,0 +1,12 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Systemsimulator
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.systemsimulator;singleton:=true
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behavior.systemsimulator
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0",
+ com.google.inject;bundle-version="5.0.1",
+ org.palladiosimulator.analyzer.slingshot.ui.events;bundle-version="1.0.0",
+ org.palladiosimulator.analyzer.slingshot.workflow.events;bundle-version="1.0.0",
+ org.palladiosimulator.pcm;bundle-version="5.1.0"

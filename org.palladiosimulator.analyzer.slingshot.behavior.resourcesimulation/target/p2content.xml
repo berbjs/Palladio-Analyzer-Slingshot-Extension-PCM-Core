@@ -1,0 +1,90 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<units size='2'>
+  <unit id='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation' version='1.0.0.202204282116' generation='2'>
+    <update id='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation' range='[0.0.0,1.0.0.202204282116)' severity='0'/>
+    <properties size='4'>
+      <property name='org.eclipse.equinox.p2.name' value='Resourcesimulation'/>
+      <property name='maven-groupId' value='org.palladiosimulator.analyzer.slingshot'/>
+      <property name='maven-artifactId' value='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation'/>
+      <property name='maven-version' value='1.0.0-SNAPSHOT'/>
+    </properties>
+    <provides size='6'>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation' version='1.0.0.202204282116'/>
+      <provided namespace='osgi.bundle' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation' version='1.0.0.202204282116'/>
+      <provided namespace='java.package' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation' version='0.0.0'/>
+      <provided namespace='java.package' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources' version='0.0.0'/>
+      <provided namespace='osgi.identity' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation' version='1.0.0.202204282116'>
+        <properties size='1'>
+          <property name='type' value='osgi.bundle'/>
+        </properties>
+      </provided>
+      <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='bundle' version='1.0.0'/>
+    </provides>
+    <requires size='13'>
+      <required namespace='osgi.bundle' name='org.palladiosimulator.analyzer.slingshot' range='1.0.0'/>
+      <required namespace='osgi.bundle' name='org.apache.log4j' range='1.2.15'/>
+      <required namespace='osgi.bundle' name='de.uka.ipd.sdq.probfunction.math' range='0.0.0'/>
+      <required namespace='osgi.bundle' name='org.palladiosimulator.pcm' range='0.0.0'/>
+      <required namespace='osgi.bundle' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.data' range='1.0.0'/>
+      <required namespace='osgi.bundle' name='de.uka.ipd.sdq.simucomframework' range='0.0.0'/>
+      <required namespace='osgi.bundle' name='org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data' range='0.0.0'/>
+      <required namespace='osgi.bundle' name='de.uka.ipd.sdq.simucomframework.variables' range='0.0.0'/>
+      <required namespace='osgi.bundle' name='org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data' range='0.0.0'/>
+      <required namespace='java.package' name='com.google.common.eventbus' range='0.0.0'/>
+      <required namespace='java.package' name='org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities' range='1.0.0'/>
+      <required namespace='java.package' name='org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events' range='1.0.0'/>
+      <requiredProperties namespace='osgi.ee' match='(&amp;(osgi.ee=JavaSE)(version=11))'>
+        <description>
+          org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation
+        </description>
+      </requiredProperties>
+    </requires>
+    <artifacts size='1'>
+      <artifact classifier='osgi.bundle' id='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation' version='1.0.0.202204282116'/>
+    </artifacts>
+    <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+    <touchpointData size='1'>
+      <instructions size='1'>
+        <instruction key='manifest'>
+          Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation;singleton:=true&#xA;Bundle-Version: 1.0.0.202204282116&#xA;
+        </instruction>
+      </instructions>
+    </touchpointData>
+  </unit>
+  <unit id='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.source' version='1.0.0.202204282116' singleton='false'>
+    <update id='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.source' range='[0.0.0,1.0.0.202204282116)' severity='0'/>
+    <properties size='9'>
+      <property name='df_LT.bundleVendor' value='unknown'/>
+      <property name='df_LT.bundleName' value='Resourcesimulation Source'/>
+      <property name='org.eclipse.equinox.p2.name' value='%bundleName'/>
+      <property name='org.eclipse.equinox.p2.provider' value='%bundleVendor'/>
+      <property name='org.eclipse.equinox.p2.bundle.localization' value='OSGI-INF/l10n/bundle-src'/>
+      <property name='maven-groupId' value='org.palladiosimulator.analyzer.slingshot'/>
+      <property name='maven-artifactId' value='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation'/>
+      <property name='maven-version' value='1.0.0-SNAPSHOT'/>
+      <property name='maven-classifier' value='sources'/>
+    </properties>
+    <provides size='5'>
+      <provided namespace='org.eclipse.equinox.p2.iu' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.source' version='1.0.0.202204282116'/>
+      <provided namespace='osgi.bundle' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.source' version='1.0.0.202204282116'/>
+      <provided namespace='osgi.identity' name='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.source' version='1.0.0.202204282116'>
+        <properties size='1'>
+          <property name='type' value='osgi.bundle'/>
+        </properties>
+      </provided>
+      <provided namespace='org.eclipse.equinox.p2.eclipse.type' name='source' version='1.0.0'/>
+      <provided namespace='org.eclipse.equinox.p2.localization' name='df_LT' version='1.0.0'/>
+    </provides>
+    <artifacts size='1'>
+      <artifact classifier='osgi.bundle' id='org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.source' version='1.0.0.202204282116'/>
+    </artifacts>
+    <touchpoint id='org.eclipse.equinox.p2.osgi' version='1.0.0'/>
+    <touchpointData size='1'>
+      <instructions size='1'>
+        <instruction key='manifest'>
+          Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.source&#xA;Bundle-Version: 1.0.0.202204282116&#xA;
+        </instruction>
+      </instructions>
+    </touchpointData>
+  </unit>
+</units>

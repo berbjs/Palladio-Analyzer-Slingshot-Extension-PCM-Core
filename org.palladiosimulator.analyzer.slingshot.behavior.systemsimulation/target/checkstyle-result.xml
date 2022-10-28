@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="8.29">
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/systemsimulation/SystemSimulationBehavior.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+<error line="94" severity="info" message="Line is longer than 130 characters (found 143)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="175" severity="info" message="Line is longer than 130 characters (found 133)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/systemsimulation/interpreters/SeffInterpreter.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+<error line="110" severity="info" message="Line is longer than 130 characters (found 131)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="138" severity="info" message="Line is longer than 130 characters (found 132)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="143" severity="info" message="Line is longer than 130 characters (found 134)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="245" severity="info" message="Line is longer than 130 characters (found 134)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/systemsimulation/interpreters/RepositoryInterpreter.java">
+<error line="197" severity="info" message="Line is longer than 130 characters (found 135)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="220" severity="info" message="Line is longer than 130 characters (found 137)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="222" severity="info" message="Line is longer than 130 characters (found 176)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/systemsimulation/SeffSimulationBehavior.java">
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/systemsimulation/repository/SystemModelRepository.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation/src/org/palladiosimulator/analyzer/slingshot/behavior/systemsimulation/repository/SystemModelRepositoryImpl.java">
+<error line="48" severity="info" message="Line is longer than 130 characters (found 131)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="110" severity="info" message="Line is longer than 130 characters (found 132)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="135" severity="info" message="Line is longer than 130 characters (found 140)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="140" severity="info" message="Line is longer than 130 characters (found 134)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+</checkstyle>

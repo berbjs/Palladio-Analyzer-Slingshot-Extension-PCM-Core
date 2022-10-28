@@ -1,0 +1,26 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: SystemSimulationData
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.s
+ ystemsimulation.data
+Bundle-Version: 1.0.0.202204282116
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviou
+ r.systemsimulation.data
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.system
+ simulation.entities;version="1.0.0",org.palladiosimulator.analyzer.slin
+ gshot.behavior.systemsimulation.entities.resource,org.palladiosimulator
+ .analyzer.slingshot.behavior.systemsimulation.entities.seff,org.palladi
+ osimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.b
+ ehaviorcontext,org.palladiosimulator.analyzer.slingshot.behavior.system
+ simulation.entities.user,org.palladiosimulator.analyzer.slingshot.behav
+ ior.systemsimulation.events;version="1.0.0"
+Require-Bundle: org.palladiosimulator.analyzer.slingshot;bundle-version=
+ "1.0.0",org.palladiosimulator.analyzer.slingshot.behavior.usagesimulati
+ on.data;bundle-version="1.0.0",org.palladiosimulator.pcm,de.uka.ipd.sdq
+ .simucomframework.variables,org.palladiosimulator.analyzer.slingshot.co
+ mmon.utils;bundle-version="1.0.0"
+Import-Package: org.apache.log4j
+Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
+ org/licenses/LICENSE-2.0.txt"
+

@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Generalsimulationconfiguration
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.g
+ eneralsimulationconfiguration;singleton:=true
+Bundle-Version: 1.0.0.quantifier
+Bundle-Vendor: org.palladiosimulator
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behavior
+ .generalsimulationconfiguration
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.palladiosimulator.analyzer.slingshot,de.uka.ipd.sdq.
+ probfunction.math,de.uka.ipd.sdq.simucomframework.variables,org.apache.
+ log4j;bundle-version="1.2.15"
+Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
+ org/licenses/LICENSE-2.0.txt"
+

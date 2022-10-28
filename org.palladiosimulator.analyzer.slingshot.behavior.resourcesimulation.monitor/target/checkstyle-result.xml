@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="8.29">
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/probes/TakePassiveResourceStateProbe.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+<error line="12" column="8" severity="warning" message="Unused import - org.palladiosimulator.probeframework.measurement.ProbeMeasurement." source="com.puppycrawl.tools.checkstyle.checks.imports.UnusedImportsCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/monitor/PassiveResourceMonitorInitializationBehavior.java">
+<error line="1" severity="warning" message="Missing package-info.java file." source="com.puppycrawl.tools.checkstyle.checks.javadoc.JavadocPackageCheck"/>
+<error line="29" severity="info" message="Line is longer than 130 characters (found 162)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="59" severity="info" message="Line is longer than 130 characters (found 155)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+<file name="/home/julijan/git/palladio-analyzer-slingshot-3/bundles/org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor/src/org/palladiosimulator/analyzer/slingshot/behavior/resourcesimulation/monitor/PassiveResourceProbeTable.java">
+<error line="27" column="22" severity="warning" message="&apos;probes&apos; hides a field." source="com.puppycrawl.tools.checkstyle.checks.coding.HiddenFieldCheck"/>
+<error line="37" column="22" severity="warning" message="&apos;probes&apos; hides a field." source="com.puppycrawl.tools.checkstyle.checks.coding.HiddenFieldCheck"/>
+<error line="48" column="22" severity="warning" message="&apos;probes&apos; hides a field." source="com.puppycrawl.tools.checkstyle.checks.coding.HiddenFieldCheck"/>
+<error line="55" severity="info" message="Line is longer than 130 characters (found 131)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="56" severity="info" message="Line is longer than 130 characters (found 131)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+<error line="57" severity="info" message="Line is longer than 130 characters (found 131)." source="com.puppycrawl.tools.checkstyle.checks.sizes.LineLengthCheck"/>
+</file>
+</checkstyle>

@@ -1,0 +1,21 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ResourceSimulationData
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.r
+ esourcesimulation.data
+Bundle-Version: 1.0.0.202204282116
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviou
+ r.resourcesimulation.data
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Require-Bundle: org.palladiosimulator.analyzer.slingshot;bundle-version=
+ "1.0.0",org.apache.log4j,org.palladiosimulator.analyzer.slingshot.behav
+ ior.systemsimulation.data;bundle-version="1.0.0",de.uka.ipd.sdq.probfun
+ ction.math,org.palladiosimulator.pcm;bundle-version="4.3.0",de.uka.ipd.
+ sdq.simucomframework.variables,de.uka.ipd.sdq.simucomframework
+Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.resour
+ cesimulation.entities.jobs,org.palladiosimulator.analyzer.slingshot.beh
+ avior.resourcesimulation.entities.resources,org.palladiosimulator.analy
+ zer.slingshot.behavior.resourcesimulation.events
+Bundle-License: The Apache License, Version 2.0;link="http://www.apache.
+ org/licenses/LICENSE-2.0.txt"
+
