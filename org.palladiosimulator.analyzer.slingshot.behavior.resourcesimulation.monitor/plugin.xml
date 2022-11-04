@@ -2,10 +2,10 @@
 <?eclipse version="3.4"?>
 <plugin>
    <extension
-         point="org.palladiosimulator.analyzer.slingshot.extensionpoint.behavior">
-      <behavior-provider
-            baseClass="org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor.PassiveResourceMonitorInitializationBehavior">
-      </behavior-provider>
+         point="org.palladiosimulator.analyzer.slingshot">
+      <slingshot-extension
+            module="org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor.ResourceSimulationMonitorModule">
+      </slingshot-extension>
    </extension>
 
 </plugin>
