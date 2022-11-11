@@ -30,8 +30,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
 //import org.palladiosimulator.analyzer.slingshot.scalingpolicy.data.events.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
-import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
+import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
@@ -41,9 +41,6 @@ import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.PassiveResource;
 import org.palladiosimulator.pcm.resourceenvironment.LinkingResource;
-import org.palladiosimulator.pcm.resourceenvironment.ResourceEnvironment;
-
-import com.google.common.eventbus.Subscribe;
 
 import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 
@@ -73,7 +70,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	private final PassiveResourceTable passiveResourceTable;
 
 	@Inject
-	public ResourceSimulation(final Allocation allocation, final ResourceEnvironment resourceEnvironment) {
+	public ResourceSimulation(final Allocation allocation) {
 		this.allocation = allocation;
 		this.resourceEnvironmentAccessor = new ResourceEnvironmentAccessor(allocation);
 		this.resourceTable = new ActiveResourceTable();
