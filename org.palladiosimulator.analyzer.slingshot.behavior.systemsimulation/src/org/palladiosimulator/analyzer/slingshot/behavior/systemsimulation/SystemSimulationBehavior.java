@@ -28,6 +28,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserE
 import org.palladiosimulator.analyzer.slingshot.common.utils.SimulatedStackHelper;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
+import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
@@ -39,8 +40,6 @@ import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.OperationSignature;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * The System simulation behavior is a extension that simulates the system

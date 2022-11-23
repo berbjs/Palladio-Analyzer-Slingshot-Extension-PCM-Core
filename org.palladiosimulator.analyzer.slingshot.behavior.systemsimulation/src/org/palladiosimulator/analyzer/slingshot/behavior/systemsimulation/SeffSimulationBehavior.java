@@ -15,11 +15,10 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.int
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserRequestFinished;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
+import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-
-import com.google.common.eventbus.Subscribe;
 
 /**
  * This behavior module both interprets and generates events specifically for

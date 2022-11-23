@@ -3,6 +3,7 @@ package org.palladiosimulator.analyzer.slingshot.common.utils;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
@@ -41,6 +42,17 @@ public final class ResourceUtils {
 		} catch (final IOException e) {
 			throw new RuntimeException(e);
 		}
+	}
+
+	public static URI insertFragment(final URI uri, final String fragment, final int position) {
+		if (position > uri.segmentCount()) {
+			throw new IllegalArgumentException("position is out of range.");
+		}
+
+		List<String> seg = new ArrayList<String>(uri.segmentsList());
+		seg.add(position, fragment);
+		URI newUri = URI.createHierarchicalURI(uri.scheme(), uri.authority(), uri.device(), seg.toArray(new String[0]), uri.query(), uri.fragment());
+		return newUri;
 	}
 
 }
