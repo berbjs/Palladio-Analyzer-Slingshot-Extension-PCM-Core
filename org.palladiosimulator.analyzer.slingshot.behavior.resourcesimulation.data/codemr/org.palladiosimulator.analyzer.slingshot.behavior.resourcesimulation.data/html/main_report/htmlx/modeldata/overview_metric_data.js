@@ -1,1 +1,0 @@
-var CodeMR_ProjectMetrics = {"Project Name":"org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.data", "Number of Highly Problematic Classes":0, "Number of Entities":16, "Number of Problematic Classes":1, "Class Lines of Code":227, "Number of External Packages":14, "Number of Packages":5, "Number of External Entities":34}

@@ -7,11 +7,11 @@ Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviour.resour
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0",
  org.apache.log4j,
- org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data;bundle-version="1.0.0",
  de.uka.ipd.sdq.probfunction.math,
  org.palladiosimulator.pcm;bundle-version="4.3.0",
  de.uka.ipd.sdq.simucomframework.variables,
- de.uka.ipd.sdq.simucomframework
+ de.uka.ipd.sdq.simucomframework,
+ org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data;bundle-version="1.0.0"
 Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs,
  org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources,
  org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events

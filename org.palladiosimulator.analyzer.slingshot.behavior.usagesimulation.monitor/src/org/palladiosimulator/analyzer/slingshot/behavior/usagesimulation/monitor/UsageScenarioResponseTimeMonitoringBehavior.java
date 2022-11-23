@@ -20,6 +20,7 @@ import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited.MonitorModelVisited;
 import org.palladiosimulator.analyzer.slingshot.monitor.utils.probes.EventCurrentSimulationTimeProbe;
 import org.palladiosimulator.commons.emfutils.EMFLoadHelper;
+import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.usagemodel.Start;
 import org.palladiosimulator.pcm.usagemodel.Stop;
@@ -63,7 +64,7 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 			// TODO: Look at what MetricDescription was given
 			
 			this.userProbesMap.put(scenario.getId(), userProbes);
-			final Calculator calculator = this.calculatorFactory.buildCalculator(event.getMetricDescription(), event.getMeasuringPoint(),
+			final Calculator calculator = this.calculatorFactory.buildCalculator(MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, event.getMeasuringPoint(),
 						DefaultCalculatorProbeSets.createStartStopProbeConfiguration(userProbes.userStartedProbe, userProbes.userStoppedProbe));
 			return Result.of(new CalculatorRegistered(calculator));
 		} else {
@@ -88,6 +89,7 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 		}
 	}
 	
+	@Subscribe(reified = Stop.class)
 	public Result onUsageScenarioFinished(final UsageModelPassedElement<Stop> userStopped) {
 		if (this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())) {
 			final UserProbes userProbes = this.userProbesMap.get(userStopped.getContext().getScenario().getId());
