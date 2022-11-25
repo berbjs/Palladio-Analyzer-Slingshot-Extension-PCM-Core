@@ -11,6 +11,7 @@ import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 import org.palladiosimulator.pcm.resourcetype.SchedulingPolicy;
 
 import de.uka.ipd.sdq.simucomframework.resources.SchedulingStrategy;
+import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 
 /**
  * The resource table maps every provided resource to a specific resource
@@ -38,12 +39,14 @@ public final class ActiveResourceTable extends AbstractResourceTable<ActiveResou
 		switch (SchedulingPolicyId.retrieveFromSchedulingPolicy(schedulingPolicy)) {
 		case FCFS:
 			resourceName = SchedulingStrategy.FCFS.toString();
-			resource = new FCFSResource(id, resourceName, numberOfReplicas);
+			double rateFcfs = StackContext.evaluateStatic(spec.getProcessingRate_ProcessingResourceSpecification().getSpecification(), Double.class);
+			resource = new FCFSResource(id, resourceName, numberOfReplicas, rateFcfs);
 			break;
 
 		case PROCESSOR_SHARING:
 			resourceName = SchedulingStrategy.PROCESSOR_SHARING.toString();
-			resource = new ProcessorSharingResource(id, resourceName, numberOfReplicas);
+			double ratePs = StackContext.evaluateStatic(spec.getProcessingRate_ProcessingResourceSpecification().getSpecification(), Double.class);
+			resource = new ProcessorSharingResource(id, resourceName, numberOfReplicas, ratePs);
 			break;
 
 //		case DELAY:

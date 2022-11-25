@@ -54,8 +54,8 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 * @param name     The name of the resource.
 	 * @param capacity The maximum capacity of the resource.
 	 */
-	public ProcessorSharingResource(final ActiveResourceCompoundKey type, final String name, final long capacity) {
-		super(type, name, capacity);
+	public ProcessorSharingResource(final ActiveResourceCompoundKey type, final String name, final long capacity, final double rate) {
+		super(type, name, capacity, rate);
 
 		this.runningJobs = new TreeSet<>();
 		this.numberProcessesOnCore = new ArrayList<>((int) capacity);

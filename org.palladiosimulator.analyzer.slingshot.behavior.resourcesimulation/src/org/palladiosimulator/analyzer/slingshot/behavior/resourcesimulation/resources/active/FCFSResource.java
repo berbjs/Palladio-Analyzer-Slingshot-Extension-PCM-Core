@@ -16,7 +16,7 @@ import de.uka.ipd.sdq.probfunction.math.util.MathTools;
  * A FCFSResource handles first jobs first, and then the remaining jobs will be
  * handled (first-come, first-served).
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stiess
  */
 public class FCFSResource extends AbstractActiveResource {
 
@@ -36,8 +36,8 @@ public class FCFSResource extends AbstractActiveResource {
 	 * @param name     The name of the resource.
 	 * @param capacity The maximum capacity of the resource.
 	 */
-	public FCFSResource(final ActiveResourceCompoundKey type, final String name, final long capacity) {
-		super(type, name, capacity);
+	public FCFSResource(final ActiveResourceCompoundKey type, final String name, final long capacity, final double rate) {
+		super(type, name, capacity, rate);
 	}
 
 	/**
@@ -49,7 +49,6 @@ public class FCFSResource extends AbstractActiveResource {
 	 */
 	@Override
 	protected Result process(final JobInitiated jobInitiated) {
-		this.updateInternalTimer(jobInitiated.time());
 		final Job newJob = jobInitiated.getEntity();
 
 		this.processes.add(newJob);
@@ -70,8 +69,6 @@ public class FCFSResource extends AbstractActiveResource {
 	 */
 	@Override
 	public Result onJobProgressed(final JobProgressed jobProgressed) {
-		this.updateInternalTimer(jobProgressed.time());
-
 		final Job job = jobProgressed.getEntity();
 
 		assert MathTools.equalsDouble(0, job.getDemand()) : "Remaining demand (" + job.getDemand() + ") not zero!";
@@ -86,12 +83,18 @@ public class FCFSResource extends AbstractActiveResource {
 	}
 
 	/**
+	 * 
+	 * Deprecated because not really needed for the FCFS resource.
+	 * 
 	 * Updates the internal timer and the demand of the next job to handle by
 	 * subtracting the passed time from the demand.
 	 * 
 	 * @param simulationTime The new simulation time. Must be greater than the
 	 *                       internal time.
+	 *                       
+	 *                       
 	 */
+	@Deprecated
 	private void updateInternalTimer(final double simulationTime) {
 		final double passedTime = simulationTime - this.internalTimer;
 
@@ -120,7 +123,7 @@ public class FCFSResource extends AbstractActiveResource {
 		final Job first = this.processes.peek();
 
 		if (first != null) {
-			return new JobProgressed(first, first.getDemand());
+			return new JobProgressed(first, first.getDemand()/this.processingRate);
 		}
 
 		return null;

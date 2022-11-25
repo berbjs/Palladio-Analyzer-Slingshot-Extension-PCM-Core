@@ -24,6 +24,8 @@ import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 public abstract class AbstractActiveResource extends AbstractResource implements ActiveResource {
 
 	private static final Logger LOGGER = Logger.getLogger(AbstractActiveResource.class);
+	
+	protected final double processingRate;
 
 	/**
 	 * @deprecated Use
@@ -31,8 +33,9 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 *             for a more sophisticated constructor.
 	 */
 	@Deprecated
-	public AbstractActiveResource(final String id, final String name, final long capacity) {
+	public AbstractActiveResource(final String id, final String name, final long capacity, final double processingRate) {
 		super(capacity, name, id);
+		this.processingRate = processingRate;
 	}
 
 	/**
@@ -44,8 +47,9 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 *                 model.
 	 * @param capacity The maximum capacity of the resource.
 	 */
-	public AbstractActiveResource(final ActiveResourceCompoundKey id, final String name, final long capacity) {
+	public AbstractActiveResource(final ActiveResourceCompoundKey id, final String name, final long capacity, final double processingRate) {
 		super(capacity, name, id);
+		this.processingRate = processingRate;
 	}
 
 	/**
