@@ -16,6 +16,7 @@ Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data
 Import-Package: com.google.common.eventbus,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities;version="1.0.0",
- org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events;version="1.0.0"
+ org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events;version="1.0.0",
+ org.palladiosimulator.analyzer.slingshot.common.utils.stoexproxy
 Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation,
  org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources

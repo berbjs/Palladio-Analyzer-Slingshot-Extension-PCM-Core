@@ -170,6 +170,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 			LOGGER.error("No such active resource found! " + id.toString());
 			return Result.empty();
 		}
+		
+
 
 		return activeResource.get().onJobInitiated(jobInitiated);
 	}

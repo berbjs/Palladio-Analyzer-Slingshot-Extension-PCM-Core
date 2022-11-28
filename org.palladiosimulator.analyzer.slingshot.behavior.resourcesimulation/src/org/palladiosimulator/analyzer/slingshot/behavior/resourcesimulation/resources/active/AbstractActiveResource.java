@@ -2,8 +2,8 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.res
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
-import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResource;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
@@ -25,14 +25,17 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 
 	private static final Logger LOGGER = Logger.getLogger(AbstractActiveResource.class);
 
+	private final ProcessingRate processingRate;
+	
 	/**
 	 * @deprecated Use
 	 *             {@link #AbstractActiveResource(ProcessingResourceType, String, long)}
 	 *             for a more sophisticated constructor.
 	 */
 	@Deprecated
-	public AbstractActiveResource(final String id, final String name, final long capacity) {
+	public AbstractActiveResource(final String id, final String name, final long capacity, final ProcessingRate rate) {
 		super(capacity, name, id);
+		this.processingRate = rate;
 	}
 
 	/**
@@ -43,9 +46,11 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 * @param name     The name of the resource, typically the entity name from the
 	 *                 model.
 	 * @param capacity The maximum capacity of the resource.
+	 * @param rate     The specified PCM processing rate of the resource. 
 	 */
-	public AbstractActiveResource(final ActiveResourceCompoundKey id, final String name, final long capacity) {
+	public AbstractActiveResource(final ActiveResourceCompoundKey id, final String name, final long capacity, final ProcessingRate rate) {
 		super(capacity, name, id);
+		this.processingRate = rate;
 	}
 
 	/**
@@ -77,7 +82,8 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 		if (!this.jobBelongsToResource(jobInitiated.getEntity())) {
 			return Result.empty();
 		}
-
+		double currentDemand = jobInitiated.getEntity().getDemand();
+		jobInitiated.getEntity().updateDemand(currentDemand/processingRate.calculateRV());
 		return this.process(jobInitiated);
 	}
 

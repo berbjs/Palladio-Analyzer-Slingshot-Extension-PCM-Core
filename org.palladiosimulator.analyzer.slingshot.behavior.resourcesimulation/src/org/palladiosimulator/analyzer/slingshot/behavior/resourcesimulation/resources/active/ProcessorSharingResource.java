@@ -7,7 +7,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
-import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -54,8 +54,8 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 * @param name     The name of the resource.
 	 * @param capacity The maximum capacity of the resource.
 	 */
-	public ProcessorSharingResource(final ActiveResourceCompoundKey type, final String name, final long capacity) {
-		super(type, name, capacity);
+	public ProcessorSharingResource(final ActiveResourceCompoundKey type, final String name, final long capacity, final ProcessingRate rate) {
+		super(type, name, capacity, rate);
 
 		this.runningJobs = new TreeSet<>();
 		this.numberProcessesOnCore = new ArrayList<>((int) capacity);
