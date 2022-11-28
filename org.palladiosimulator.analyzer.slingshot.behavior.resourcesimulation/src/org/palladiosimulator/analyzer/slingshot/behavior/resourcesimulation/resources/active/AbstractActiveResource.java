@@ -24,6 +24,8 @@ import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 public abstract class AbstractActiveResource extends AbstractResource implements ActiveResource {
 
 	private static final Logger LOGGER = Logger.getLogger(AbstractActiveResource.class);
+	
+	protected final double processingRate;
 
 	private final ProcessingRate processingRate;
 	
