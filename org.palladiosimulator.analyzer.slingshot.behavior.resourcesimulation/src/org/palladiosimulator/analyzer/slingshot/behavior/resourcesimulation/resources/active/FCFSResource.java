@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
@@ -36,7 +37,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 * @param name     The name of the resource.
 	 * @param capacity The maximum capacity of the resource.
 	 */
-	public FCFSResource(final ActiveResourceCompoundKey type, final String name, final long capacity, final double rate) {
+	public FCFSResource(final ActiveResourceCompoundKey type, final String name, final long capacity, final ProcessingRate rate) {
 		super(type, name, capacity, rate);
 	}
 

@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.res
 
 import java.util.Optional;
 
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResourceTable;
 import org.palladiosimulator.pcm.allocation.Allocation;
 import org.palladiosimulator.pcm.allocation.AllocationContext;
@@ -39,14 +40,12 @@ public final class ActiveResourceTable extends AbstractResourceTable<ActiveResou
 		switch (SchedulingPolicyId.retrieveFromSchedulingPolicy(schedulingPolicy)) {
 		case FCFS:
 			resourceName = SchedulingStrategy.FCFS.toString();
-			double rateFcfs = StackContext.evaluateStatic(spec.getProcessingRate_ProcessingResourceSpecification().getSpecification(), Double.class);
-			resource = new FCFSResource(id, resourceName, numberOfReplicas, rateFcfs);
+			resource = new FCFSResource(id, resourceName, numberOfReplicas, new ProcessingRate(spec.getProcessingRate_ProcessingResourceSpecification()));
 			break;
 
 		case PROCESSOR_SHARING:
 			resourceName = SchedulingStrategy.PROCESSOR_SHARING.toString();
-			double ratePs = StackContext.evaluateStatic(spec.getProcessingRate_ProcessingResourceSpecification().getSpecification(), Double.class);
-			resource = new ProcessorSharingResource(id, resourceName, numberOfReplicas, ratePs);
+			resource = new ProcessorSharingResource(id, resourceName, numberOfReplicas, new ProcessingRate(spec.getProcessingRate_ProcessingResourceSpecification()));
 			break;
 
 //		case DELAY:
