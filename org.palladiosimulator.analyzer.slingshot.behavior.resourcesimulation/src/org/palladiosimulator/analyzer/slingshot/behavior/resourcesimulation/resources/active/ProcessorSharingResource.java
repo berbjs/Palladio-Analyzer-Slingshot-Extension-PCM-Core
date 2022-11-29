@@ -1,9 +1,9 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.Map.Entry;
 import java.util.UUID;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
@@ -33,8 +33,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	private static final double JIFFY = 1e-9;
 
 	/** The set of jobs to process, sorted by its demand. */
-	private final SortedSet<Job> runningJobs;
-
+	private final Hashtable<Job, Double> runningJobs;
 	/** The list of cores, whose number specify the number of processes. */
 	private final List<Integer> numberProcessesOnCore;
 
@@ -57,7 +56,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	public ProcessorSharingResource(final ActiveResourceCompoundKey type, final String name, final long capacity, final ProcessingRate rate) {
 		super(type, name, capacity, rate);
 
-		this.runningJobs = new TreeSet<>();
+		this.runningJobs = new Hashtable<>();
 		this.numberProcessesOnCore = new ArrayList<>((int) capacity);
 
 		for (int i = 0; i < capacity; i++) {
@@ -81,7 +80,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 			newJob.updateDemand(JIFFY);
 		}
 
-		this.runningJobs.add(newJob);
+		this.runningJobs.put(newJob, newJob.getDemand());
 		this.reportCoreUsage();
 
 		final ProcessorSharingJobProgressed jobProgressed = this.scheduleNextEvent();
@@ -146,11 +145,20 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		}
 
 		this.currentState = UUID.randomUUID();
+		
+		// get shortest job
+		Job shortestJob = null;
+		for (final Job job : runningJobs.keySet()) {
+			if (shortestJob == null || runningJobs.get(shortestJob) > runningJobs.get(job)) {
+				shortestJob = job;
+			}
+		}
 
-		final Job shortestJob = this.runningJobs.first();
-		double remainingTime = shortestJob.getDemand() * this.getProcessingDelayFactorPerProcess();
+		double remainingTime = runningJobs.get(shortestJob) * this.getProcessingDelayFactorPerProcess();
 
-		/* Update remaining time to 0 if it is too small in order to avoid rounding errors. */
+		/*
+		 * Update remaining time to 0 if it is too small in order to avoid rounding errors.
+		 */
 		remainingTime = remainingTime < JIFFY ? 0.0 : remainingTime;
 
 		return new ProcessorSharingJobProgressed(shortestJob, remainingTime, this.currentState);
@@ -168,10 +176,12 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		final double processedDemandPerThread = passedTime / this.getProcessingDelayFactorPerProcess();
 
 		if (MathTools.less(0, passedTime)) {
-			this.runningJobs.forEach(job -> {
-				final double remaining = job.getDemand() - processedDemandPerThread;
-				job.updateDemand(remaining);
-			});
+			for (final Entry<Job, Double> e : runningJobs.entrySet()) {
+				final double rem = e.getValue() - processedDemandPerThread;
+				e.setValue(rem);
+				e.getKey().updateDemand(rem);
+			}
+
 		}
 
 		this.internalTime = simulationTime;

@@ -20,7 +20,7 @@ import de.uka.ipd.sdq.probfunction.math.util.MathTools;
  * 
  * @author Julijan Katic
  */
-public class Job implements Comparable<Job> {
+public class Job {
 
 	/** The unique id of the job */
 	private final String id;
@@ -97,15 +97,6 @@ public class Job implements Comparable<Job> {
 	 */
 	public AllocationContext getAllocationContext() {
 		return this.allocationContext;
-	}
-
-	@Override
-	public int compareTo(final Job other) {
-		if (this.equals(other)) {
-			return 0;
-		}
-
-		return Double.compare(this.demand, other.demand);
 	}
 
 	/**
