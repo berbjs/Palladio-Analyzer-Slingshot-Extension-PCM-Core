@@ -25,8 +25,6 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 
 	private static final Logger LOGGER = Logger.getLogger(AbstractActiveResource.class);
 	
-	protected final double processingRate;
-
 	private final ProcessingRate processingRate;
 	
 	/**

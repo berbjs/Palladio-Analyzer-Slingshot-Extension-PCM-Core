@@ -124,7 +124,7 @@ public class FCFSResource extends AbstractActiveResource {
 		final Job first = this.processes.peek();
 
 		if (first != null) {
-			return new JobProgressed(first, first.getDemand()/this.processingRate);
+			return new JobProgressed(first, first.getDemand());
 		}
 
 		return null;
