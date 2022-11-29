@@ -115,7 +115,11 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		this.runningJobs.remove(shortestJob);
 		this.reportCoreUsage();
 
-		return Result.of(new JobFinished(shortestJob), this.scheduleNextEvent());
+		JobProgressed next = this.scheduleNextEvent();
+		if (next != null) {
+			return Result.of(new JobFinished(shortestJob), next);
+		}
+		return Result.of(new JobFinished(shortestJob));
 	}
 
 	@Override

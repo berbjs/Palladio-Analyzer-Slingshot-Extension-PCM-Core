@@ -75,7 +75,12 @@ public class FCFSResource extends AbstractActiveResource {
 		assert MathTools.equalsDouble(0, job.getDemand()) : "Remaining demand (" + job.getDemand() + ") not zero!";
 
 		this.processes.remove(job);
-		return Result.of(new JobFinished(job), this.scheduleNextEvent());
+
+		JobProgressed next = this.scheduleNextEvent();
+		if (next != null) {
+			return Result.of(new JobFinished(job), next);
+		}
+		return Result.of(new JobFinished(job));
 	}
 
 	@Override
