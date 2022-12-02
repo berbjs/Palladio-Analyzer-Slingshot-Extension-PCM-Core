@@ -5,6 +5,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
@@ -24,12 +25,13 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
  * This behavior module both interprets and generates events specifically for
  * SEFFs.
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stiess 
  */
 @OnEvent(when = SEFFInterpretationProgressed.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
 @OnEvent(when = SEFFInterpretationFinished.class, then = { SEFFInterpretationProgressed.class,
 		UserRequestFinished.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = SEFFChildInterpretationStarted.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
+@OnEvent(when = PassiveResourceAcquired.class, then=SEFFInterpreted.class, cardinality = EventCardinality.MANY)
 public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SeffSimulationBehavior.class);
@@ -40,6 +42,15 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final Set<SEFFInterpreted> events = interpreter
 				.doSwitch(progressed.getEntity().getBehaviorContext().getNextAction());
 		return Result.from(events);
+	}
+
+	
+	@Subscribe
+	public Result onPassiveResourceAcquired(final PassiveResourceAcquired passiveResourceAcquired){
+		final SeffInterpreter interpreter = new SeffInterpreter(passiveResourceAcquired.getEntity().getSeffInterpretationContext());
+		final Set<SEFFInterpreted> events = interpreter
+				.doSwitch(passiveResourceAcquired.getEntity().getSeffInterpretationContext().getBehaviorContext().getNextAction());
+		return Result.of(events);
 	}
 
 	@Subscribe

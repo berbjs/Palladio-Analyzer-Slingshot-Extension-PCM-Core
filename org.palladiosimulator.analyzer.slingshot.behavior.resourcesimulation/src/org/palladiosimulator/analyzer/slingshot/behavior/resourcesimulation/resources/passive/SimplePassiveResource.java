@@ -86,7 +86,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 
 		WaitingJob nextJob = this.waitingJobs.peek();
 
-		while (nextJob != null && this.acquirable(waitingJob)) {
+		while (nextJob != null && this.acquirable(nextJob)) {
 			events.add(this.grantAccess(nextJob));
 			nextJob = this.waitingJobs.peek();
 		}
