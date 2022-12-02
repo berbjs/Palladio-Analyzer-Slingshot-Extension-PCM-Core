@@ -74,35 +74,23 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 	
 	@Subscribe(reified = Start.class)
 	public Result onUsageScenarioStarted(final UsageModelPassedElement<Start> userStarted) {
-		if (this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())) {
-			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());
-			
+		if(this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())){
+			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());			
 			userProbes.userStartedProbe.takeMeasurement(userStarted);
-			
-			final ProbeTakenEntity entity = ProbeTakenEntity.builder()
-					.withProbe(userProbes.userStartedProbe)
-					.build();
-			
-			return Result.of(new ProbeTaken(entity));
-		} else {
-			return Result.empty();
-		}
+			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.userStartedProbe).build()));
+		}		
+		return Result.empty();
 	}
 	
 	@Subscribe(reified = Stop.class)
 	public Result onUsageScenarioFinished(final UsageModelPassedElement<Stop> userStopped) {
-		if (this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())) {
+		if(this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())){
 			final UserProbes userProbes = this.userProbesMap.get(userStopped.getContext().getScenario().getId());
-			userProbes.userStoppedProbe.takeMeasurement(userStopped);
-			
-			final ProbeTakenEntity entity = ProbeTakenEntity.builder()
-					.withProbe(userProbes.userStoppedProbe)
-					.build();
-			
-			return Result.of(new ProbeTaken(entity));
-		} else {
+				userProbes.userStoppedProbe.takeMeasurement(userStopped);
+				return Result
+						.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.userStoppedProbe).build()));
+			}
 			return Result.empty();
-		}
 	}
 	
 	
