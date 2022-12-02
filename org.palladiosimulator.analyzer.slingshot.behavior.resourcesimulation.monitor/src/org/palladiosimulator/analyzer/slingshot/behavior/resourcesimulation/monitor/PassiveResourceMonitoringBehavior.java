@@ -29,14 +29,14 @@ import com.google.common.eventbus.Subscribe;
 @OnEvent(when = MonitorModelVisited.class, then = CalculatorRegistered.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = ResourceDemandRequested.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = PassiveResourceAcquired.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
-public class PassiveResourceMonitorInitializationBehavior implements SimulationBehaviorExtension {
+public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExtension {
 
 	private final IGenericCalculatorFactory calculatorFactory;
 
 	private final PassiveResourceProbeTable table = new PassiveResourceProbeTable();
 
 	@Inject
-	public PassiveResourceMonitorInitializationBehavior(final IGenericCalculatorFactory calculatorFactory) {
+	public PassiveResourceMonitoringBehavior(final IGenericCalculatorFactory calculatorFactory) {
 		this.calculatorFactory = calculatorFactory;
 	}
 
