@@ -20,8 +20,8 @@ import org.palladiosimulator.pcm.repository.PassiveResource;
  * will be added to the queue. As soon as a job releases the resource, the first
  * jobs in the queue will be granted the resource until the capacity has again
  * been reached.
- * 
- * 
+ *
+ *
  * @author Julijan Katic
  *
  */
@@ -35,7 +35,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 
 	/**
 	 * Constructs a new simple passive resource.
-	 * 
+	 *
 	 * @param id       The id of this resource.
 	 * @param capacity The initial capacity the resource has.
 	 */
@@ -55,7 +55,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	 * the queue if the capacity is not sufficient right now. This will result
 	 * either in a {@link PassiveResourceAcquired} event if the resource was granted
 	 * to the job, or in an empty {@code Result} if not.
-	 * 
+	 *
 	 * @param waitingJob The job to acquire.
 	 * @return Either {@link PassiveResourceAcquired} if granted, or empty.
 	 */
@@ -74,7 +74,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	 * available capacity will be increased accordingly. Furthermore, this will
 	 * grant the next waiting jobs according until the new capacity has been reached
 	 * again. These jobs will hence be deleted from the queue.
-	 * 
+	 *
 	 * @param waitingJob The job releasing this resource.
 	 * @return {@link PassiveResourceAcquired} events for the next jobs waiting in
 	 *         the queue to be granted.
@@ -91,14 +91,14 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 			nextJob = this.waitingJobs.peek();
 		}
 
-		return Result.of(events);
+		return Result.from(events);
 	}
 
 	/**
 	 * Checks whether the job can acquire this resource by looking whether the job
 	 * would be next in the queue (or if the queue is empty) and the capacity is
 	 * sufficient for the specified demand.
-	 * 
+	 *
 	 * @param waitingJob The job to check whether to be granted.
 	 * @return true if the job can acquire this resource.
 	 */
@@ -110,7 +110,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	/**
 	 * Grants the access to the resource. This will decrease the available capacity
 	 * and remove it from the queue if contained.
-	 * 
+	 *
 	 * @param waitingJob The job to grant access to.
 	 * @return The event that can be added to the {@code Result}.
 	 */
