@@ -81,40 +81,9 @@ public final class PassiveResourceProbeTable {
 	}
 
 	private static final class Probes {
-		private final EventCurrentSimulationTimeProbe resourceDemandRequestedProbe = new EventCurrentSimulationTimeProbe(
-				new ResourceDemandRequestEventDistinguisher());
-		private final EventCurrentSimulationTimeProbe passiveResourceAcquiredProbe = new EventCurrentSimulationTimeProbe(new PassiveResourceAcquiredEventDistinuisher());
-		private final EventCurrentSimulationTimeProbe passiveResourceReleasedProbe = new EventCurrentSimulationTimeProbe(new PassiveResourceResleasedEventDistinuisher());
-
-		private static final class ResourceDemandRequestEventDistinguisher implements EventDistinguisher {
-
-			@Override
-			public RequestContext apply(DESEvent t) {
-				return new RequestContext(((ResourceDemandRequested) t).getEntity().getSeffInterpretationContext()
-						.getRequestProcessingContext().getUserId());
-			}
-
-		}
-
-		private static final class PassiveResourceAcquiredEventDistinuisher implements EventDistinguisher {
-
-			@Override
-			public RequestContext apply(DESEvent t) {
-				return new RequestContext(((PassiveResourceAcquired) t).getEntity().getSeffInterpretationContext()
-						.getRequestProcessingContext().getUserId());
-			}
-
-		}
-		private static final class PassiveResourceResleasedEventDistinuisher implements EventDistinguisher {
-			
-			@Override
-			public RequestContext apply(DESEvent t) {
-				return new RequestContext(((PassiveResourceReleased) t).getEntity().getSeffInterpretationContext()
-						.getRequestProcessingContext().getUserId());
-			}
-			
-		}
-
+		private final EventCurrentSimulationTimeProbe resourceDemandRequestedProbe = new EventCurrentSimulationTimeProbe(t -> new RequestContext(((ResourceDemandRequested) t).getEntity().getSeffInterpretationContext().getRequestProcessingContext().getUserId()));
+		private final EventCurrentSimulationTimeProbe passiveResourceAcquiredProbe = new EventCurrentSimulationTimeProbe(t -> new RequestContext(((PassiveResourceAcquired) t).getEntity().getSeffInterpretationContext().getRequestProcessingContext().getUserId()));
+		private final EventCurrentSimulationTimeProbe passiveResourceReleasedProbe = new EventCurrentSimulationTimeProbe(t -> new RequestContext(((PassiveResourceReleased) t).getEntity().getSeffInterpretationContext().getRequestProcessingContext().getUserId()));
 	}
 
 
