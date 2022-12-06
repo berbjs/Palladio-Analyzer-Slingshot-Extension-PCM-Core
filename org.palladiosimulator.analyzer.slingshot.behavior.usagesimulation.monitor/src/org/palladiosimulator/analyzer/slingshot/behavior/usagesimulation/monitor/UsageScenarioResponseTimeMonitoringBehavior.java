@@ -20,6 +20,8 @@ import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited.MonitorModelVisited;
 import org.palladiosimulator.analyzer.slingshot.monitor.utils.probes.EventCurrentSimulationTimeProbe;
 import org.palladiosimulator.commons.emfutils.EMFLoadHelper;
+import org.palladiosimulator.edp2.models.measuringpoint.MeasuringPoint;
+import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.usagemodel.Start;
@@ -34,7 +36,7 @@ import org.palladiosimulator.probeframework.measurement.RequestContext;
  * A usage model monitoring monitors each usage scenario in a usage model. For
  * that, every time a usage scenario has been
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stiess
  *
  */
 @OnEvent(when = MonitorModelVisited.class, then = CalculatorRegistered.class, cardinality = EventCardinality.SINGLE)
@@ -57,52 +59,46 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 	 */
 	@Subscribe
 	public Result onMeasurementSpecificationVisited(final MeasurementSpecificationVisited event) {
-		final EObject eObject = EMFLoadHelper.loadAndResolveEObject(event.getMeasuringPoint().getResourceURIRepresentation());
-		if (eObject instanceof UsageScenario) {
+		final MeasurementSpecification measurementSpecification = event.getEntity();
+		final MeasuringPoint measuringPoint = measurementSpecification.getMonitor().getMeasuringPoint();
+		final EObject eObject = EMFLoadHelper.loadAndResolveEObject(measuringPoint.getResourceURIRepresentation());
+
+		if (eObject instanceof UsageScenario && MetricDescriptionUtility.metricDescriptionIdsEqual(measurementSpecification.getMetricDescription(),
+				MetricDescriptionConstants.RESPONSE_TIME_METRIC)) {
 			final UsageScenario scenario = (UsageScenario) eObject;
 			final UserProbes userProbes = new UserProbes();
-			// TODO: Look at what MetricDescription was given
-			
 			this.userProbesMap.put(scenario.getId(), userProbes);
-			final Calculator calculator = this.calculatorFactory.buildCalculator(MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, event.getMeasuringPoint(),
-						DefaultCalculatorProbeSets.createStartStopProbeConfiguration(userProbes.userStartedProbe, userProbes.userStoppedProbe));
+			
+			final Calculator calculator = this.calculatorFactory.buildCalculator(
+					MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, measuringPoint,
+					DefaultCalculatorProbeSets.createStartStopProbeConfiguration(userProbes.userStartedProbe,
+							userProbes.userStoppedProbe));
+				
 			return Result.of(new CalculatorRegistered(calculator));
-		} else {
-			return Result.empty();
-		}
+			}
+		return Result.empty();
+
 	}
 	
 	@Subscribe(reified = Start.class)
 	public Result onUsageScenarioStarted(final UsageModelPassedElement<Start> userStarted) {
-		if (this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())) {
-			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());
-			
+		if(this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())){
+			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());			
 			userProbes.userStartedProbe.takeMeasurement(userStarted);
-			
-			final ProbeTakenEntity entity = ProbeTakenEntity.builder()
-					.withProbe(userProbes.userStartedProbe)
-					.build();
-			
-			return Result.of(new ProbeTaken(entity));
-		} else {
-			return Result.empty();
-		}
+			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.userStartedProbe).build()));
+		}		
+		return Result.empty();
 	}
 	
 	@Subscribe(reified = Stop.class)
 	public Result onUsageScenarioFinished(final UsageModelPassedElement<Stop> userStopped) {
-		if (this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())) {
+		if(this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())){
 			final UserProbes userProbes = this.userProbesMap.get(userStopped.getContext().getScenario().getId());
-			userProbes.userStoppedProbe.takeMeasurement(userStopped);
-			
-			final ProbeTakenEntity entity = ProbeTakenEntity.builder()
-					.withProbe(userProbes.userStoppedProbe)
-					.build();
-			
-			return Result.of(new ProbeTaken(entity));
-		} else {
+				userProbes.userStoppedProbe.takeMeasurement(userStopped);
+				return Result
+						.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.userStoppedProbe).build()));
+			}
 			return Result.empty();
-		}
 	}
 	
 	

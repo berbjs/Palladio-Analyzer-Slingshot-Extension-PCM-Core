@@ -145,15 +145,16 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @return
 	 */
 	private WaitingJob createWaitingJob(final ResourceDemandRequest request, final PassiveResource passiveResource) {
-		final long demand = StackContext.evaluateStatic(
-				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand()
-						.getSpecification(),
-				Long.class, request.getUser().getStack().currentStackFrame());
+		//TODO::FIX ME!
+//		final long demand = StackContext.evaluateStatic(
+//				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand()
+//						.getSpecification(),
+//				Long.class, request.getUser().getStack().currentStackFrame());
 
 		final WaitingJob waitingJob = WaitingJob.builder()
 				.withPassiveResource(passiveResource)
 				.withRequest(request)
-				.withDemand(demand)
+				.withDemand(1)
 				.build();
 		return waitingJob;
 	}

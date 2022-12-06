@@ -20,7 +20,7 @@ import org.palladiosimulator.pcm.repository.ProvidedRole;
  * entered the system. The SEFF specific information is stored in its own class,
  * whose instance is stored here.
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stiess
  * @version 1.0
  */
 public final class RequestProcessingContext {
@@ -79,6 +79,10 @@ public final class RequestProcessingContext {
 	
 	public UserInterpretationContext getUserInterpretationContext() {
 		return this.userInterpretationContext;
+	}
+
+	public String getUserId() {
+		return this.user.getId();
 	}
 
 

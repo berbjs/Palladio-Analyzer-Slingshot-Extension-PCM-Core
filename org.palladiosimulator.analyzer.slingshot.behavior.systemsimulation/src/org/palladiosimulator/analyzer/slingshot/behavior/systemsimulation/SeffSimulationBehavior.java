@@ -5,6 +5,7 @@ import java.util.Set;
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
@@ -13,7 +14,6 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.interp
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserRequestFinished;
-import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
@@ -24,12 +24,13 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
  * This behavior module both interprets and generates events specifically for
  * SEFFs.
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stiess 
  */
 @OnEvent(when = SEFFInterpretationProgressed.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
 @OnEvent(when = SEFFInterpretationFinished.class, then = { SEFFInterpretationProgressed.class,
 		UserRequestFinished.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = SEFFChildInterpretationStarted.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
+@OnEvent(when = PassiveResourceAcquired.class, then=SEFFInterpreted.class, cardinality = EventCardinality.MANY)
 public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SeffSimulationBehavior.class);
@@ -39,6 +40,15 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final SeffInterpreter interpreter = new SeffInterpreter(progressed.getEntity());
 		final Set<SEFFInterpreted> events = interpreter
 				.doSwitch(progressed.getEntity().getBehaviorContext().getNextAction());
+		return Result.from(events);
+	}
+
+	
+	@Subscribe
+	public Result onPassiveResourceAcquired(final PassiveResourceAcquired passiveResourceAcquired){
+		final SeffInterpreter interpreter = new SeffInterpreter(passiveResourceAcquired.getEntity().getSeffInterpretationContext());
+		final Set<SEFFInterpreted> events = interpreter
+				.doSwitch(passiveResourceAcquired.getEntity().getSeffInterpretationContext().getBehaviorContext().getNextAction());
 		return Result.from(events);
 	}
 

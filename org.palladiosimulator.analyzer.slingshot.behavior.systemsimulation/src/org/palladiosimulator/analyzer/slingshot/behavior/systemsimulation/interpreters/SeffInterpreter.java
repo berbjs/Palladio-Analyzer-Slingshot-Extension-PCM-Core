@@ -205,7 +205,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				.withPassiveResource(object.getPassiveResource_ReleaseAction())
 				.build();
 
-		return Set.of(new PassiveResourceReleased(request, 0));
+		return Set.of(new PassiveResourceReleased(request, 0), new SEFFInterpretationProgressed(context));
 	}
 
 	@Override
