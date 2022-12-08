@@ -2,6 +2,8 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.inter
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -39,6 +41,7 @@ import org.palladiosimulator.pcm.seff.ReleaseAction;
 import org.palladiosimulator.pcm.seff.SetVariableAction;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
+import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 import org.palladiosimulator.pcm.seff.util.SeffSwitch;
 
 import de.uka.ipd.sdq.simucomframework.variables.StackContext;
@@ -186,11 +189,15 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 	@Override
 	public Set<SEFFInterpreted> caseAcquireAction(final AcquireAction object) {
+		
+		ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(() -> new NoSuchElementException("No parametric resource demand specified for AcquireAction!"));
+		
 		final ResourceDemandRequest request = ResourceDemandRequest.builder()
 				.withAssemblyContext(this.context.getAssemblyContext())
 				.withPassiveResource(object.getPassiveresource_AcquireAction())
 				.withResourceType(ResourceType.PASSIVE)
 				.withSeffInterpretationContext(this.context)
+				.withParametricResourceDemand(demand)
 				.build();
 
 		return Set.of(new ResourceDemandRequested(request));
@@ -198,11 +205,15 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 	@Override
 	public Set<SEFFInterpreted> caseReleaseAction(final ReleaseAction object) {
+		
+		ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(() -> new NoSuchElementException("No parametric resource demand specified for ReleaseAction!"));
+
 		final ResourceDemandRequest request = ResourceDemandRequest.builder()
 				.withResourceType(ResourceType.PASSIVE)
 				.withSeffInterpretationContext(this.context)
 				.withAssemblyContext(this.context.getAssemblyContext())
 				.withPassiveResource(object.getPassiveResource_ReleaseAction())
+				.withParametricResourceDemand(demand)
 				.build();
 
 		return Set.of(new PassiveResourceReleased(request, 0), new SEFFInterpretationProgressed(context));
