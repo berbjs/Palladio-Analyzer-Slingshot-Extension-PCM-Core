@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.inter
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -189,14 +190,14 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	@Override
 	public Set<SEFFInterpreted> caseAcquireAction(final AcquireAction object) {
 		
-		Optional<ParametricResourceDemand> demand = object.getResourceDemand_Action().stream().findFirst();
+		ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(() -> new NoSuchElementException("No parametric resource demand specified for AcquireAction!"));
 		
 		final ResourceDemandRequest request = ResourceDemandRequest.builder()
 				.withAssemblyContext(this.context.getAssemblyContext())
 				.withPassiveResource(object.getPassiveresource_AcquireAction())
 				.withResourceType(ResourceType.PASSIVE)
 				.withSeffInterpretationContext(this.context)
-				.withParametricResourceDemand(demand.orElseThrow())
+				.withParametricResourceDemand(demand)
 				.build();
 
 		return Set.of(new ResourceDemandRequested(request));
@@ -205,14 +206,14 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	@Override
 	public Set<SEFFInterpreted> caseReleaseAction(final ReleaseAction object) {
 		
-		Optional<ParametricResourceDemand> demand = object.getResourceDemand_Action().stream().findFirst();
+		ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(() -> new NoSuchElementException("No parametric resource demand specified for ReleaseAction!"));
 
 		final ResourceDemandRequest request = ResourceDemandRequest.builder()
 				.withResourceType(ResourceType.PASSIVE)
 				.withSeffInterpretationContext(this.context)
 				.withAssemblyContext(this.context.getAssemblyContext())
 				.withPassiveResource(object.getPassiveResource_ReleaseAction())
-				.withParametricResourceDemand(demand.orElseThrow())
+				.withParametricResourceDemand(demand)
 				.build();
 
 		return Set.of(new PassiveResourceReleased(request, 0), new SEFFInterpretationProgressed(context));
