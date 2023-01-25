@@ -8,6 +8,8 @@ import java.util.Optional;
 import org.palladiosimulator.pcm.seff.AbstractAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Fork actions consist of multiple behaviors that are interpreted concurrently.
  * The concurrency is achieved by interpreting one action from one model at a
@@ -24,9 +26,9 @@ import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 public final class ForkBehaviorContextHolder extends MultiBehaviorContextHolder {
 
 	private final List<SeffBehaviorWrapper> unfinishedBehaviors;
-	private final Iterator<SeffBehaviorWrapper> iterator;
+	private Iterator<SeffBehaviorWrapper> iterator;
 	private SeffBehaviorWrapper currentSeff;
-
+	
 	/**
 	 * Instantiates a ForkBehaviorContextHolder. None of the parameters must be
 	 * {@code null}.
@@ -54,10 +56,16 @@ public final class ForkBehaviorContextHolder extends MultiBehaviorContextHolder 
 	 * Updates the index to let it point to the next unfinished behavior model.
 	 */
 	private void updateCurrentBehaviorIndex() {
+		if(!this.iterator.hasNext())
+		{
+			this.iterator = this.unfinishedBehaviors.iterator();
+		}
+		
 		this.currentSeff = this.iterator.next();
 		while (this.currentSeff.hasFinished()) {
 			this.iterator.remove();
 			this.currentSeff = this.iterator.next();
 		}
 	}
+	
 }

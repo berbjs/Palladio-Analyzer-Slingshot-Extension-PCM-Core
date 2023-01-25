@@ -2,9 +2,10 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.inter
 
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
@@ -15,6 +16,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.BranchBehaviorContextHolder;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.LoopBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
@@ -35,9 +37,11 @@ import org.palladiosimulator.pcm.seff.BranchAction;
 import org.palladiosimulator.pcm.seff.CollectionIteratorAction;
 import org.palladiosimulator.pcm.seff.ExternalCallAction;
 import org.palladiosimulator.pcm.seff.ForkAction;
+import org.palladiosimulator.pcm.seff.ForkedBehaviour;
 import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.LoopAction;
 import org.palladiosimulator.pcm.seff.ReleaseAction;
+import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.SetVariableAction;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
@@ -156,8 +160,22 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 	@Override
 	public Set<SEFFInterpreted> caseForkAction(final ForkAction object) {
-		LOGGER.warn("The Fork action is not implemented yet and skipped.");
-		return this.doSwitch(object.getSuccessor_AbstractAction());
+		final EList<ForkedBehaviour> forkedBehaviors = object.getAsynchronousForkedBehaviours_ForkAction();
+		final List<ResourceDemandingBehaviour> rdBehaviors = forkedBehaviors.stream().map(b -> (ResourceDemandingBehaviour)b).collect(Collectors.toList());
+		
+		if (forkedBehaviors.isEmpty()) {
+			throw new IllegalStateException("Empty forked behaviors is not allowed");
+		}
+
+		final ForkBehaviorContextHolder forkedBehaviorContext = new ForkBehaviorContextHolder(rdBehaviors, object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior());
+		
+		final List<SEFFInterpretationContext> childContexts = rdBehaviors.stream().map(rdBehavior -> SEFFInterpretationContext.builder()
+				.withBehaviorContext(forkedBehaviorContext)
+				.withRequestProcessingContext(this.context.getRequestProcessingContext())
+				.withAssemblyContext(this.context.getAssemblyContext())
+				.build()).collect(Collectors.toList());
+		
+		return childContexts.stream().map(childContext -> new SEFFChildInterpretationStarted(childContext)).collect(Collectors.toSet());
 	}
 
 	/**
