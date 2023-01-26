@@ -166,7 +166,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			throw new IllegalStateException("ForkAction must have a synchronisation point!");
 		}
 		
-		final EList<ForkedBehaviour> forkedBehaviors = object.getAsynchronousForkedBehaviours_ForkAction();
+		final EList<ForkedBehaviour> forkedBehaviors = object.getSynchronisingBehaviours_ForkAction().getSynchronousForkedBehaviours_SynchronisationPoint();
+		
 		
 		final List<ResourceDemandingBehaviour> rdBehaviors = forkedBehaviors.stream().map(b -> (ResourceDemandingBehaviour)b).collect(Collectors.toList());
 		
