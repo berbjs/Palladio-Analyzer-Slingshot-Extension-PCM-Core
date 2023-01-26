@@ -45,6 +45,7 @@ import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.SetVariableAction;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
+import org.palladiosimulator.pcm.seff.SynchronisationPoint;
 import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 import org.palladiosimulator.pcm.seff.util.SeffSwitch;
 
@@ -160,7 +161,13 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 	@Override
 	public Set<SEFFInterpreted> caseForkAction(final ForkAction object) {
+		
+		if(object.getSynchronisingBehaviours_ForkAction()==null) {
+			throw new IllegalStateException("ForkAction must have a synchronisation point!");
+		}
+		
 		final EList<ForkedBehaviour> forkedBehaviors = object.getAsynchronousForkedBehaviours_ForkAction();
+		
 		final List<ResourceDemandingBehaviour> rdBehaviors = forkedBehaviors.stream().map(b -> (ResourceDemandingBehaviour)b).collect(Collectors.toList());
 		
 		if (forkedBehaviors.isEmpty()) {
