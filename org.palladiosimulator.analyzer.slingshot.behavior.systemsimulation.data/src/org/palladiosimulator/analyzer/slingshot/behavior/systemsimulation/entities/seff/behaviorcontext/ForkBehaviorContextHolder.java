@@ -8,8 +8,6 @@ import java.util.Optional;
 import org.palladiosimulator.pcm.seff.AbstractAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Fork actions consist of multiple behaviors that are interpreted concurrently.
  * The concurrency is achieved by interpreting one action from one model at a
@@ -20,7 +18,7 @@ import com.google.common.base.Preconditions;
  * skipped. The action itself is said to be finished if every fork model has
  * finished.
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stiess
  *
  */
 public final class ForkBehaviorContextHolder extends MultiBehaviorContextHolder {
@@ -28,6 +26,7 @@ public final class ForkBehaviorContextHolder extends MultiBehaviorContextHolder 
 	private final List<SeffBehaviorWrapper> unfinishedBehaviors;
 	private Iterator<SeffBehaviorWrapper> iterator;
 	private SeffBehaviorWrapper currentSeff;
+	private boolean processingMarker = false;
 	
 	/**
 	 * Instantiates a ForkBehaviorContextHolder. None of the parameters must be
@@ -66,6 +65,28 @@ public final class ForkBehaviorContextHolder extends MultiBehaviorContextHolder 
 			this.iterator.remove();
 			this.currentSeff = this.iterator.next();
 		}
+	}
+	
+	/**
+	 * Mark the Fork context holder as processed.
+	 */
+	public void markProcessed() {
+		processingMarker = true;
+	}
+	
+	/**
+	 * Returns whether the interpretation is processed in this context. The Fork context 
+	 * holder is said to be processed if all children {@link SeffBehaviorWrapper} have
+	 * finished and the interpretation has continued to the parent already and has been marked
+	 * through markProcessed().
+	 * 
+	 * 
+	 * @return true, if has been marked processed.
+	 * @see markProcessed()
+	 *         
+	 **/
+	public boolean isProcessed() {
+		return processingMarker;
 	}
 	
 }

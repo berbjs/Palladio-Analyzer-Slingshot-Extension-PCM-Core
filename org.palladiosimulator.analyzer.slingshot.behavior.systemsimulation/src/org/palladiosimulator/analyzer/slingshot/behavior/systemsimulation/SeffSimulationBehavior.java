@@ -70,9 +70,20 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		 * If the interpretation is finished in a SEFF that was called from another
 		 * SEFF, continue there. Otherwise, the SEFF comes from a User request.
 		 */
-		if(!entity.getBehaviorContext().hasFinished() && entity.getBehaviorContext() instanceof ForkBehaviorContextHolder) {
-			LOGGER.info("A forked behavior has finished, but not all");
-			result = Result.of();
+		if(entity.getBehaviorContext() instanceof ForkBehaviorContextHolder) {
+			
+			ForkBehaviorContextHolder fb = (ForkBehaviorContextHolder) entity.getBehaviorContext();
+			
+			if(!entity.getBehaviorContext().hasFinished()) {
+				LOGGER.info("A forked behavior has finished, but not all");
+				result = Result.of();
+			} else if (fb.isProcessed()) {
+				result = Result.of();
+			} else {
+				LOGGER.info("return to parent - from forked");
+				fb.markProcessed();
+				result = this.continueInParent(entity);
+			}
 		}
 		else if (!entity.getBehaviorContext().hasFinished()) {
 			LOGGER.info("repeat scenario");
