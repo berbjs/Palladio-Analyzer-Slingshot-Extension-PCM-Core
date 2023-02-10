@@ -4,6 +4,7 @@ import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
@@ -69,7 +70,22 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		 * If the interpretation is finished in a SEFF that was called from another
 		 * SEFF, continue there. Otherwise, the SEFF comes from a User request.
 		 */
-		if (!entity.getBehaviorContext().hasFinished()) {
+		if(entity.getBehaviorContext() instanceof ForkBehaviorContextHolder) {
+			
+			ForkBehaviorContextHolder fb = (ForkBehaviorContextHolder) entity.getBehaviorContext();
+			
+			if(!entity.getBehaviorContext().hasFinished()) {
+				LOGGER.info("A forked behavior has finished, but not all");
+				result = Result.of();
+			} else if (fb.isProcessed()) {
+				result = Result.of();
+			} else {
+				LOGGER.info("return to parent - from forked");
+				fb.markProcessed();
+				result = this.continueInParent(entity);
+			}
+		}
+		else if (!entity.getBehaviorContext().hasFinished()) {
 			LOGGER.info("repeat scenario");
 			result = this.repeat(entity);
 		} else if (entity.getCaller().isPresent()) {
@@ -105,6 +121,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * @return
 	 */
 	private Result continueInParent(final SEFFInterpretationContext entity) {
+		
 		final SeffBehaviorWrapper seffBehaviorHolder = entity.getBehaviorContext().getParent().get();
 
 		final SEFFInterpretationContext seffInterpretationContext = SEFFInterpretationContext.builder()

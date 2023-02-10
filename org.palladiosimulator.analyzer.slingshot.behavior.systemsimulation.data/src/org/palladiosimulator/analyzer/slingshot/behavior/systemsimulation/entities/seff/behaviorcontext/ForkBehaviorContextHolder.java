@@ -18,15 +18,16 @@ import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
  * skipped. The action itself is said to be finished if every fork model has
  * finished.
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stiess
  *
  */
 public final class ForkBehaviorContextHolder extends MultiBehaviorContextHolder {
 
 	private final List<SeffBehaviorWrapper> unfinishedBehaviors;
-	private final Iterator<SeffBehaviorWrapper> iterator;
+	private Iterator<SeffBehaviorWrapper> iterator;
 	private SeffBehaviorWrapper currentSeff;
-
+	private boolean processingMarker = false;
+	
 	/**
 	 * Instantiates a ForkBehaviorContextHolder. None of the parameters must be
 	 * {@code null}.
@@ -54,10 +55,38 @@ public final class ForkBehaviorContextHolder extends MultiBehaviorContextHolder 
 	 * Updates the index to let it point to the next unfinished behavior model.
 	 */
 	private void updateCurrentBehaviorIndex() {
+		if(!this.iterator.hasNext())
+		{
+			this.iterator = this.unfinishedBehaviors.iterator();
+		}
+		
 		this.currentSeff = this.iterator.next();
 		while (this.currentSeff.hasFinished()) {
 			this.iterator.remove();
 			this.currentSeff = this.iterator.next();
 		}
 	}
+	
+	/**
+	 * Mark the Fork context holder as processed.
+	 */
+	public void markProcessed() {
+		processingMarker = true;
+	}
+	
+	/**
+	 * Returns whether the interpretation is processed in this context. The Fork context 
+	 * holder is said to be processed if all children {@link SeffBehaviorWrapper} have
+	 * finished and the interpretation has continued to the parent already and has been marked
+	 * through markProcessed().
+	 * 
+	 * 
+	 * @return true, if has been marked processed.
+	 * @see markProcessed()
+	 *         
+	 **/
+	public boolean isProcessed() {
+		return processingMarker;
+	}
+	
 }
