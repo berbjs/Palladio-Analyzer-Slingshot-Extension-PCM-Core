@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -49,7 +50,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 * @return {@link JobProgressed} events.
 	 */
 	@Override
-	protected Result process(final JobInitiated jobInitiated) {
+	protected Result<AbstractJobEvent> process(final JobInitiated jobInitiated) {
 		final Job newJob = jobInitiated.getEntity();
 
 		this.processes.add(newJob);
@@ -69,7 +70,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 *         {@link JobProgressed} from the next job to handle.
 	 */
 	@Override
-	public Result onJobProgressed(final JobProgressed jobProgressed) {
+	public Result<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
 		final Job job = jobProgressed.getEntity();
 
 		assert MathTools.equalsDouble(0, job.getDemand()) : "Remaining demand (" + job.getDemand() + ") not zero!";

@@ -3,6 +3,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.res
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResource;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
@@ -18,15 +19,15 @@ import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
  * <p>
  * The active resource is identified by the {@link ProcessingResourceType} it
  * used.
- * 
+ *
  * @author Julijan Katic
  */
 public abstract class AbstractActiveResource extends AbstractResource implements ActiveResource {
 
 	private static final Logger LOGGER = Logger.getLogger(AbstractActiveResource.class);
-	
+
 	private final ProcessingRate processingRate;
-	
+
 	/**
 	 * @deprecated Use
 	 *             {@link #AbstractActiveResource(ProcessingResourceType, String, long)}
@@ -41,12 +42,12 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	/**
 	 * Constructs the active resource. The id is specified by the {@code type} (more
 	 * specifically {@code type.getId()}).
-	 * 
+	 *
 	 * @param type     The type of the resource whose id will be used as this id.
 	 * @param name     The name of the resource, typically the entity name from the
 	 *                 model.
 	 * @param capacity The maximum capacity of the resource.
-	 * @param rate     The specified PCM processing rate of the resource. 
+	 * @param rate     The specified PCM processing rate of the resource.
 	 */
 	public AbstractActiveResource(final ActiveResourceCompoundKey id, final String name, final long capacity, final ProcessingRate rate) {
 		super(capacity, name, id);
@@ -57,17 +58,17 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 * The delegated handler of the resource that will be processed if the job
 	 * belongs to this resource according to {@link #jobBelongsToResource(Job)}
 	 * implementation.
-	 * 
+	 *
 	 * @param jobInitiated The event.
 	 * @return The appropriate events.
 	 */
-	protected abstract Result process(final JobInitiated jobInitiated);
+	protected abstract Result<AbstractJobEvent> process(final JobInitiated jobInitiated);
 
 	/**
 	 * Checks whether the job belongs to the resource. This is done by checking
 	 * whether the {@link ProcessingResourceType} specified in the {@link job} and
 	 * this id ({@link #getId()}) are equal.
-	 * 
+	 *
 	 * @param job The job to check.
 	 * @return true if the job belongs to this resource.
 	 */
@@ -78,11 +79,11 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	}
 
 	@Override
-	public Result onJobInitiated(final JobInitiated jobInitiated) {
+	public Result<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
 		if (!this.jobBelongsToResource(jobInitiated.getEntity())) {
 			return Result.empty();
 		}
-		double currentDemand = jobInitiated.getEntity().getDemand();
+		final double currentDemand = jobInitiated.getEntity().getDemand();
 		jobInitiated.getEntity().updateDemand(currentDemand/processingRate.calculateRV());
 		return this.process(jobInitiated);
 	}

@@ -41,8 +41,8 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * <p>
  * This kind of interpreter will always return a set of events (or an empty
  * set). This interpreter is therefore made for behavior extensions in mind.
- * 
- * 
+ *
+ *
  * @author Julijan Katic
  */
 public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretationProgressed>> {
@@ -63,7 +63,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 
 	/** The model repository to get more information from the system model. */
 	private final SystemModelRepository modelRepository;
-	
+
 	/** The context of the calling seff */
 	private final Optional<SEFFInterpretationContext> callerContext;
 
@@ -71,7 +71,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	 * Instantiates the interpreter with given information. Depending on the
 	 * interpretation, not every parameter must be set (every parameter CAN be
 	 * null!).
-	 * 
+	 *
 	 * @param context         The special assembly context to interpret.
 	 * @param signature       A signature to find the right RDSeff.
 	 * @param providedRole    The provided role from which the interpretation
@@ -82,7 +82,8 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	 *                        system model.
 	 */
 	public RepositoryInterpreter(final AssemblyContext context, final Signature signature,
-	        final ProvidedRole providedRole, final User user, final SystemModelRepository modelRepository, final Optional<SEFFInterpretationContext> callerContext) {
+			final ProvidedRole providedRole, final User user, final SystemModelRepository modelRepository,
+			final Optional<SEFFInterpretationContext> callerContext) {
 		this.assemblyContext = context;
 		this.signature = signature;
 		this.providedRole = providedRole;
@@ -111,7 +112,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		final List<ServiceEffectSpecification> calledSeffs = this
 		        .getSeffsForCall(object.getServiceEffectSpecifications__BasicComponent(), this.signature);
 
-		
+
 		return calledSeffs.stream()
 		        .filter(ResourceDemandingSEFF.class::isInstance)
 		        .map(ResourceDemandingSEFF.class::cast)
@@ -119,7 +120,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		        	/*
 		    		 * Define for each SEFF a new request event to be interpreted.
 		    		 */
-			        SEFFInterpretationContext context = SEFFInterpretationContext.builder()
+			        final SEFFInterpretationContext context = SEFFInterpretationContext.builder()
 			        		.withAssemblyContext(this.assemblyContext)
 			        		.withCaller(callerContext)
 			        		.withBehaviorContext(new RootBehaviorContextHolder(rdSeff))
@@ -138,7 +139,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	/**
 	 * Helper method that returns the list of SEFFs that are meant for the
 	 * operationSignature.
-	 * 
+	 *
 	 * @param serviceEffectSpecifications The (Ecore) list of all seffs.
 	 * @param operationSignature          The signature which a SEFF should
 	 *                                    describe.
@@ -157,7 +158,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	 * Interprets the provided role of a system model / repository model. This is
 	 * done by looking at the providing entity and looking which events can be
 	 * spawned by it.
-	 * 
+	 *
 	 * If the providedRole belongs to a composed entity (such as the system as a
 	 * whole where the user can enter the system), then
 	 * {@link #caseComposedProvidingRequiringEntity()} will be called. Otherwise,
@@ -168,7 +169,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		LOGGER.debug("Accessing provided role: " + providedRole.getId());
 
 		/* Sometime the providing entity is not defined and therefore must be
-		 * found by the system model repository to find the right entity. 
+		 * found by the system model repository to find the right entity.
 		 */
 		//if (providedRole.getProvidingEntity_ProvidedRole() == null) {
 		//	LOGGER.debug("ProvidedRole does not have the information about its providing entity, find it...");
@@ -183,10 +184,10 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	 * The ComposedProvidingRequiringEntity is a special entity (which is typically
 	 * the system itself). It often has inner assembly contexts which is connected
 	 * to this entity with a delegation connector.
-	 * 
+	 *
 	 * If such assembly context exists, then the (provided) role of that assembly
 	 * context will be interpreted.
-	 * 
+	 *
 	 */
 	@Override
 	public Set<SEFFInterpretationProgressed> caseComposedProvidingRequiringEntity(
@@ -212,21 +213,23 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	/**
 	 * Determines the provided delegation connector which is connected with the
 	 * provided role.
-	 * 
+	 *
 	 * @return the determined provided delegation connector, null otherwise.
 	 */
 	private Optional<ProvidedDelegationConnector> getConnectedProvidedDelegationConnector() {
 		final InterfaceProvidingEntity implementingEntity = this.providedRole.getProvidingEntity_ProvidedRole();
 		assert implementingEntity instanceof ComposedStructure;
-		
+
 		final ComposedStructure composedStructure = (ComposedStructure) implementingEntity;
-		
+
 		return composedStructure.getConnectors__ComposedStructure().stream()
-				.filter(connector -> connector.eClass() == CompositionPackage.eINSTANCE.getProvidedDelegationConnector())
+				.filter(connector -> connector.eClass() == CompositionPackage.eINSTANCE
+						.getProvidedDelegationConnector())
 				.map(ProvidedDelegationConnector.class::cast)
-				.filter(delegationConnector -> delegationConnector.getOuterProvidedRole_ProvidedDelegationConnector().getId().equals(this.providedRole.getId()))
+				.filter(delegationConnector -> delegationConnector.getOuterProvidedRole_ProvidedDelegationConnector()
+						.getId().equals(this.providedRole.getId()))
 				.findFirst();
-		
+
 	}
 
 	/**

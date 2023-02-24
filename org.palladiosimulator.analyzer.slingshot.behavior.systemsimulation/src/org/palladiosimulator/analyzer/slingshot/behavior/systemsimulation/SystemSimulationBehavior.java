@@ -26,10 +26,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.reposi
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserEntryRequested;
 import org.palladiosimulator.analyzer.slingshot.common.utils.SimulatedStackHelper;
-import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
-import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.pcm.allocation.Allocation;
@@ -45,7 +43,7 @@ import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
  * The System simulation behavior is a extension that simulates the system
  * model. It listens to events requesting to interpret the repository and
  * sometimes will result in a SEFF Interpretation request if there is a RDSeff.
- * 
+ *
  * @author Julijan Katic
  */
 @OnEvent(when = UserEntryRequested.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
@@ -76,7 +74,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	 * Used to interpret the entry request from a usage model.
 	 */
 	@Subscribe
-	public Result onUserEntryRequested(final UserEntryRequested userEntryRequested) {
+	public Result<SEFFInterpretationProgressed> onUserEntryRequested(final UserEntryRequested userEntryRequested) {
 		final UserRequest request = userEntryRequested.getEntity();
 
 		final OperationProvidedRole operationProvidedRole = request.getOperationProvidedRole();
@@ -133,16 +131,17 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * This event will handle the repository interpretation of a system, especially
 	 * for the entry of a system.
-	 * 
+	 *
 	 * TODO: Is this needed?
 	 */
 	@Subscribe
-	public Result onRepositoryInterpretationInitiated(
+	public Result<SEFFInterpretationProgressed> onRepositoryInterpretationInitiated(
 			final RepositoryInterpretationInitiated event) {
 		final RepositoryInterpretationContext context = event.getEntity();
 
 		final RepositoryInterpreter interpreter = new RepositoryInterpreter(context.getAssemblyContext(),
-				context.getSignature(), context.getProvidedRole(), context.getUser(), this.systemRepository, Optional.empty());
+				context.getSignature(), context.getProvidedRole(), context.getUser(), this.systemRepository,
+				Optional.empty());
 		final Set<SEFFInterpretationProgressed> appearedEvents = interpreter.doSwitch(context.getProvidedRole());
 
 		return Result.from(appearedEvents);
@@ -151,23 +150,23 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Used to interpret the next SEFF that is requested by another seff. For
 	 * example, when an External Call action was performed.
-	 * 
+	 *
 	 * @deprecated This method does not incooperate linking resources where
 	 * 				the call might actually be hit. Instead, the responsibility
 	 * 				now lies in the ResourceSimulation.
 	 */
 	@Deprecated
 	//@Subscribe
-	public Result onRequestInitiated(
+	public Result<SEFFInterpretationProgressed> onRequestInitiated(
 			final SEFFExternalActionCalled requestInitiated) {
 		final GeneralEntryRequest entity = requestInitiated.getEntity();
-		
+
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
 				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
 
 		if (assemblyContext.isPresent()) {
-			
-			
+
+
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(),
 					null, entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
@@ -183,7 +182,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result onActiveResourceFinished(
+	public Result<SEFFInterpretationProgressed> onActiveResourceFinished(
 			final ActiveResourceFinished activeResourceFinished) {
 		return Result.of(
 				new SEFFInterpretationProgressed(activeResourceFinished.getEntity().getSeffInterpretationContext()));

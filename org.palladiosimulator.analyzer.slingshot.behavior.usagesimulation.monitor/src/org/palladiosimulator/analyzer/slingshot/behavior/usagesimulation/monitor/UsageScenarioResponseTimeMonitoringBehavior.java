@@ -35,7 +35,7 @@ import org.palladiosimulator.probeframework.measurement.RequestContext;
 /**
  * A usage model monitoring monitors each usage scenario in a usage model. For
  * that, every time a usage scenario has been
- * 
+ *
  * @author Julijan Katic, Floriment Klinaku, Sarah Stiess
  *
  */
@@ -43,22 +43,22 @@ import org.palladiosimulator.probeframework.measurement.RequestContext;
 @OnEvent(when = UsageModelPassedElement.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = UsageModelPassedElement.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBehaviorExtension {
-	
+
 	private final IGenericCalculatorFactory calculatorFactory;
 	private final Map<String, UserProbes> userProbesMap = new HashMap<>();
-	
+
 	@Inject
 	public UsageScenarioResponseTimeMonitoringBehavior(final IGenericCalculatorFactory calculatorFactory) {
 		this.calculatorFactory = calculatorFactory;
 	}
-	
+
 	/**
 	 * Creates probes if a measuring point for it was specified.
 	 * @param event
 	 * @return
 	 */
 	@Subscribe
-	public Result onMeasurementSpecificationVisited(final MeasurementSpecificationVisited event) {
+	public Result<CalculatorRegistered> onMeasurementSpecificationVisited(final MeasurementSpecificationVisited event) {
 		final MeasurementSpecification measurementSpecification = event.getEntity();
 		final MeasuringPoint measuringPoint = measurementSpecification.getMonitor().getMeasuringPoint();
 		final EObject eObject = EMFLoadHelper.loadAndResolveEObject(measuringPoint.getResourceURIRepresentation());
@@ -68,30 +68,30 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 			final UsageScenario scenario = (UsageScenario) eObject;
 			final UserProbes userProbes = new UserProbes();
 			this.userProbesMap.put(scenario.getId(), userProbes);
-			
+
 			final Calculator calculator = this.calculatorFactory.buildCalculator(
 					MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, measuringPoint,
 					DefaultCalculatorProbeSets.createStartStopProbeConfiguration(userProbes.userStartedProbe,
 							userProbes.userStoppedProbe));
-				
+
 			return Result.of(new CalculatorRegistered(calculator));
 			}
 		return Result.empty();
 
 	}
-	
+
 	@Subscribe(reified = Start.class)
-	public Result onUsageScenarioStarted(final UsageModelPassedElement<Start> userStarted) {
+	public Result<ProbeTaken> onUsageScenarioStarted(final UsageModelPassedElement<Start> userStarted) {
 		if(this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())){
-			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());			
+			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());
 			userProbes.userStartedProbe.takeMeasurement(userStarted);
 			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.userStartedProbe).build()));
-		}		
+		}
 		return Result.empty();
 	}
-	
+
 	@Subscribe(reified = Stop.class)
-	public Result onUsageScenarioFinished(final UsageModelPassedElement<Stop> userStopped) {
+	public Result<ProbeTaken> onUsageScenarioFinished(final UsageModelPassedElement<Stop> userStopped) {
 		if(this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())){
 			final UserProbes userProbes = this.userProbesMap.get(userStopped.getContext().getScenario().getId());
 				userProbes.userStoppedProbe.takeMeasurement(userStopped);
@@ -100,12 +100,12 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 			}
 			return Result.empty();
 	}
-	
-	
+
+
 	private static final class UserProbes {
 		private final EventCurrentSimulationTimeProbe userStartedProbe = new EventCurrentSimulationTimeProbe(UserProbes::passedElement);
 		private final EventCurrentSimulationTimeProbe userStoppedProbe = new EventCurrentSimulationTimeProbe(UserProbes::passedElement);
-	
+
 		private static RequestContext passedElement(final DESEvent event) {
 			if (event instanceof UsageModelPassedElement<?>) {
 				final UsageModelPassedElement<?> el = (UsageModelPassedElement<?>) event;
@@ -114,5 +114,5 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 			return RequestContext.EMPTY_REQUEST_CONTEXT;
 		}
 	}
-	
+
 }

@@ -12,19 +12,18 @@ import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 import org.palladiosimulator.pcm.resourcetype.SchedulingPolicy;
 
 import de.uka.ipd.sdq.simucomframework.resources.SchedulingStrategy;
-import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 
 /**
  * The resource table maps every provided resource to a specific resource
  * instance.
- * 
+ *
  * @author Julijan Katic
  */
 public final class ActiveResourceTable extends AbstractResourceTable<ActiveResourceCompoundKey, ActiveResource> {
 
 	/**
 	 * Creates a new {@link ActiveResource} accordingly to the {@code spec}.
-	 * 
+	 *
 	 * @param spec the specification of the resource.
 	 */
 	public void createNewResource(final ResourceContainer container, final ProcessingResourceSpecification spec) {
@@ -55,7 +54,7 @@ public final class ActiveResourceTable extends AbstractResourceTable<ActiveResou
 
 		default:
 			/* In case of a resource type that is not known, nothing should happen
-			 * --> Other extensions might handle this already. 
+			 * --> Other extensions might handle this already.
 			 */
 			resource = null;
 			resourceName = "";
