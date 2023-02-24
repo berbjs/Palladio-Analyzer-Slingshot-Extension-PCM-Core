@@ -28,6 +28,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
+import org.palladiosimulator.analyzer.slingshot.common.events.AbstractSimulationEvent;
 //import org.palladiosimulator.analyzer.slingshot.scalingpolicy.data.events.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
@@ -84,20 +85,20 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result<?> onResourceDemandRequested(final ResourceDemandRequested resourceDemandRequested) {
+	public Result<AbstractSimulationEvent> onResourceDemandRequested(final ResourceDemandRequested resourceDemandRequested) {
 		final ResourceDemandRequest request = resourceDemandRequested.getEntity();
 
 		if (request.getResourceType() == ResourceType.ACTIVE) {
-			return this.initiateActiveResource(request);
+			return Result.of(this.initiateActiveResource(request));
 		} else {
-			return this.initiatePassiveResource(request);
+			return Result.of(this.initiatePassiveResource(request));
 		}
 	}
 
 	/**
 	 * @param request
 	 */
-	private Result<PassiveResourceAcquired> initiatePassiveResource(final ResourceDemandRequest request) {
+	private PassiveResourceAcquired initiatePassiveResource(final ResourceDemandRequest request) {
 		final PassiveResource passiveResource = request.getPassiveResource().get();
 		final AssemblyContext assemblyContext = request.getAssemblyContext();
 		final Optional<SimplePassiveResource> passiveResourceInstance = this.passiveResourceTable
@@ -108,7 +109,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 			return passiveResourceInstance.get().acquire(waitingJob);
 		} else {
-			return Result.empty();
+			return null;
 		}
 	}
 
@@ -116,7 +117,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @param request
 	 * @return
 	 */
-	private Result<JobInitiated> initiateActiveResource(final ResourceDemandRequest request) {
+	private JobInitiated initiateActiveResource(final ResourceDemandRequest request) {
 		final double demand = StackContext.evaluateStatic(
 				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand()
 						.getSpecification(),
@@ -136,7 +137,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				.withAllocationContext(context)
 				.build();
 
-		return Result.of(new JobInitiated(job, 0));
+		return new JobInitiated(job, 0);
 	}
 
 	/**
