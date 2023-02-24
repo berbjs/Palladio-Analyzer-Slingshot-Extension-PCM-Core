@@ -42,14 +42,14 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 	}
 
 	@Subscribe
-	public Result onMeasurementSpecification(final MeasurementSpecificationVisited m) {
+	public Result<CalculatorRegistered> onMeasurementSpecification(final MeasurementSpecificationVisited m) {
 		final MeasurementSpecification spec = m.getEntity();
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
 		if (measuringPoint instanceof AssemblyPassiveResourceMeasuringPoint) {
 			final AssemblyPassiveResourceMeasuringPoint passiveResourceMeasuringPoint = (AssemblyPassiveResourceMeasuringPoint) measuringPoint;
 			final PassiveResource passiveResource = passiveResourceMeasuringPoint.getPassiveResource();
 			this.table.addPassiveResource(passiveResource);
-			
+
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.WAITING_TIME_METRIC)) {
 				final Calculator calculator = this.table.setupWaitingTimeCalculator(passiveResourceMeasuringPoint,
@@ -67,7 +67,7 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 	}
 
 	@Subscribe
-	public Result onResourceDemandRequest(final ResourceDemandRequested resourceDemandRequest) {
+	public Result<ProbeTaken> onResourceDemandRequest(final ResourceDemandRequested resourceDemandRequest) {
 		if (resourceDemandRequest.getEntity().getResourceType() == ResourceType.PASSIVE) {
 			final Probe probe = this.table.currentTimeOfPassiveResourceRequested(resourceDemandRequest);
 			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
@@ -77,7 +77,7 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 	}
 
 	@Subscribe
-	public Result onPassiveResourceAcquired(final PassiveResourceAcquired passiveResourceAcquired) {
+	public Result<ProbeTaken> onPassiveResourceAcquired(final PassiveResourceAcquired passiveResourceAcquired) {
 		if (passiveResourceAcquired.getEntity().getResourceType() == ResourceType.PASSIVE) {
 			final Probe probe = this.table.currentTimeOfPassiveResourceAcquired(passiveResourceAcquired);
 			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
@@ -85,12 +85,12 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 
 		return Result.empty();
 	}
-	
+
 	@Subscribe
-	public Result onPassiveResourceReleased(final PassiveResourceReleased passiveResourceReleased){
+	public Result<ProbeTaken> onPassiveResourceReleased(final PassiveResourceReleased passiveResourceReleased){
 		if(passiveResourceReleased.getEntity().getResourceType() == ResourceType.PASSIVE) {
 			final Probe probe = this.table.currentTimeOfPassiveResourceReleased(passiveResourceReleased);
-			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));			
+			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
 		}
 		return Result.empty();
 	}

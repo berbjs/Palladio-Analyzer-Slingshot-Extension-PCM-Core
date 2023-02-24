@@ -13,8 +13,6 @@ Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.
  de.uka.ipd.sdq.simucomframework,
  de.uka.ipd.sdq.probfunction.math,
  org.palladiosimulator.analyzer.slingshot.common.utils,
- com.google.guava;bundle-version="27.1.0",
- com.google.inject;bundle-version="4.2.3",
  org.palladiosimulator.analyzer.slingshot.ui.events;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.workflow.events;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.workflow,

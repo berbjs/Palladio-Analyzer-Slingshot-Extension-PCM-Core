@@ -59,7 +59,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	 * @param waitingJob The job to acquire.
 	 * @return Either {@link PassiveResourceAcquired} if granted, or empty.
 	 */
-	public Result acquire(final WaitingJob waitingJob) {
+	public Result<PassiveResourceAcquired> acquire(final WaitingJob waitingJob) {
 		/* TODO: Throw exception if demand is higher than capacity. */
 		if (this.acquirable(waitingJob)) {
 			return Result.of(this.grantAccess(waitingJob));
@@ -79,7 +79,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	 * @return {@link PassiveResourceAcquired} events for the next jobs waiting in
 	 *         the queue to be granted.
 	 */
-	public Result release(final WaitingJob waitingJob) {
+	public Result<PassiveResourceAcquired> release(final WaitingJob waitingJob) {
 		this.available += waitingJob.getDemand();
 
 		final Set<PassiveResourceAcquired> events = new HashSet<>();

@@ -47,7 +47,7 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 /**
  * The resource simulation behavior initializes all the available resources on
  * start and will listen to requests for the simulation.
- * 
+ *
  * @author Julijan Katic
  */
 @OnEvent(when = SimulationFinished.class, then = {})
@@ -84,7 +84,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result onResourceDemandRequested(final ResourceDemandRequested resourceDemandRequested) {
+	public Result<?> onResourceDemandRequested(final ResourceDemandRequested resourceDemandRequested) {
 		final ResourceDemandRequest request = resourceDemandRequested.getEntity();
 
 		if (request.getResourceType() == ResourceType.ACTIVE) {
@@ -97,7 +97,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	/**
 	 * @param request
 	 */
-	private Result initiatePassiveResource(final ResourceDemandRequest request) {
+	private Result<PassiveResourceAcquired> initiatePassiveResource(final ResourceDemandRequest request) {
 		final PassiveResource passiveResource = request.getPassiveResource().get();
 		final AssemblyContext assemblyContext = request.getAssemblyContext();
 		final Optional<SimplePassiveResource> passiveResourceInstance = this.passiveResourceTable
@@ -116,7 +116,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @param request
 	 * @return
 	 */
-	private Result initiateActiveResource(final ResourceDemandRequest request) {
+	private Result<JobInitiated> initiateActiveResource(final ResourceDemandRequest request) {
 		final double demand = StackContext.evaluateStatic(
 				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand()
 						.getSpecification(),
@@ -150,7 +150,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand()
 						.getSpecification(),
 				Long.class, request.getUser().getStack().currentStackFrame());
-	
+
 		final WaitingJob waitingJob = WaitingJob.builder()
 				.withPassiveResource(passiveResource)
 				.withRequest(request)
@@ -160,7 +160,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result onJobInitiated(final JobInitiated jobInitiated) {
+	public Result<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
 		final Job job = jobInitiated.getEntity();
 		final ActiveResourceCompoundKey id = new ActiveResourceCompoundKey(
 				job.getAllocationContext().getResourceContainer_AllocationContext(), job.getProcessingResourceType());
@@ -171,14 +171,14 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 			LOGGER.error("No such active resource found! " + id.toString());
 			return Result.empty();
 		}
-		
+
 
 
 		return activeResource.get().onJobInitiated(jobInitiated);
 	}
 
 	@Subscribe
-	public Result onPassiveResourceReleased(
+	public Result<PassiveResourceAcquired> onPassiveResourceReleased(
 			final PassiveResourceReleased passiveResourceReleased) {
 		final ResourceDemandRequest entity = passiveResourceReleased.getEntity();
 		final Optional<SimplePassiveResource> passiveResource = this.passiveResourceTable.getPassiveResource(
@@ -194,7 +194,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result onJobProgressed(final JobProgressed jobProgressed) {
+	public Result<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
 		final Job job = jobProgressed.getEntity();
 		final ActiveResourceCompoundKey id = ActiveResourceCompoundKey.of(
 				job.getAllocationContext().getResourceContainer_AllocationContext(), job.getProcessingResourceType());
@@ -212,11 +212,11 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	/**
 	 * This event handler will give a global response event that the certain request
 	 * is finished.
-	 * 
+	 *
 	 * @return Set containing {@link ActiveResourceFinished}.
 	 */
 	@Subscribe
-	public Result onJobFinished(final JobFinished evt) {
+	public Result<ActiveResourceFinished> onJobFinished(final JobFinished evt) {
 		return Result.of(new ActiveResourceFinished(evt.getEntity().getRequest(), 0));
 	}
 
@@ -225,24 +225,24 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 //		// TODO: Notice the changes and add them to load balancer accordingly.
 //		return Result.empty();
 //	}
-//	
+//
 	/*
-	 * TODO: When GeneralEntryRequest, 
+	 * TODO: When GeneralEntryRequest,
 	 * 	1. (System): Find appropriate assembly context -> AllocationContextRequested
 	 *  2. (Resource): Check whether AsC is located somewhere else
 	 *  	2.1 (Resource): If yes, get the linking resource
 	 *  	2.2 (Resource): According to the LR, simulate a band-width limit by adding simu time
 	 *  3. (Resource): Afterwards, send AppropriateResourceACFound with the specified delay
-	 *  4. (System): Continue with the actual 
+	 *  4. (System): Continue with the actual
 	 */
-	
-	public Result onAllocationContextRequested(final AssemblyContext from, final AssemblyContext to) {
+
+	public Result<?> onAllocationContextRequested(final AssemblyContext from, final AssemblyContext to) {
 		// Precondition: from and to are somehow connected to each other
-		AllocationContext fromAlC = this.resourceEnvironmentAccessor.findResourceContainerOfComponent(from).orElseThrow();
-		AllocationContext toAlC = this.resourceEnvironmentAccessor.findResourceContainerOfComponent(to).orElseThrow();
-		
+		final AllocationContext fromAlC = this.resourceEnvironmentAccessor.findResourceContainerOfComponent(from).orElseThrow();
+		final AllocationContext toAlC = this.resourceEnvironmentAccessor.findResourceContainerOfComponent(to).orElseThrow();
+
 		// We now find the LinkingResource which connects both containers
-		LinkingResource linkingResource = this.allocation.getTargetResourceEnvironment_Allocation()
+		final LinkingResource linkingResource = this.allocation.getTargetResourceEnvironment_Allocation()
 					   .getLinkingResources__ResourceEnvironment()
 					   .stream()
 					   .filter(lr -> lr.getConnectedResourceContainers_LinkingResource()
@@ -254,26 +254,26 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 							   )
 					   .findAny()
 					   .orElseThrow();
-					   
+
 		final double failureProbability = linkingResource.getCommunicationLinkResourceSpecifications_LinkingResource().getFailureProbability();
 		if (Math.random() < failureProbability) {
 			// Simulate a failing connection, i.e. LinkFailed
 		}
-		
-		PCMRandomVariable latencyRV = linkingResource.getCommunicationLinkResourceSpecifications_LinkingResource().getLatency_CommunicationLinkResourceSpecification();
+
+		final PCMRandomVariable latencyRV = linkingResource.getCommunicationLinkResourceSpecifications_LinkingResource().getLatency_CommunicationLinkResourceSpecification();
 		final double latency = StackContext.evaluateStatic(latencyRV.getSpecification(), Double.class);
-		
+
 		// Now, return AppropriateResourceFound with latency
 		return Result.empty();
 	}
 
 	/**
 	 * Clears the contexts as soon as the simulation has finished.
-	 * 
+	 *
 	 * @return an empty set.
 	 */
 	@Subscribe
-	public Result onSimulationFinished(final SimulationFinished simulationFinished) {
+	public Result<?> onSimulationFinished(final SimulationFinished simulationFinished) {
 		this.resourceTable.clearResourcesFromJobs();
 		this.passiveResourceTable.clearResourcesFromJobs();
 		return Result.empty();

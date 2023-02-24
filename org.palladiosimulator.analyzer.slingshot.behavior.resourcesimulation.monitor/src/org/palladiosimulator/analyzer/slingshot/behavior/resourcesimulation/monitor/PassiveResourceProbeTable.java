@@ -6,8 +6,6 @@ import java.util.Map;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
-import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
-import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventDistinguisher;
 import org.palladiosimulator.analyzer.slingshot.monitor.utils.probes.EventCurrentSimulationTimeProbe;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.pcm.repository.PassiveResource;
@@ -50,8 +48,8 @@ public final class PassiveResourceProbeTable {
 		}
 		return null;
 	}
-	
-	public Probe currentTimeOfPassiveResourceReleased(PassiveResourceReleased passiveResourceReleased) {
+
+	public Probe currentTimeOfPassiveResourceReleased(final PassiveResourceReleased passiveResourceReleased) {
 		final PassiveResource passiveResource = passiveResourceReleased.getEntity().getPassiveResource().orElseThrow();
 		final Probes probes = this.probes.get(passiveResource.getId());
 		if (probes != null) {
@@ -70,7 +68,7 @@ public final class PassiveResourceProbeTable {
 				DefaultCalculatorProbeSets.createStartStopProbeConfiguration(probes.resourceDemandRequestedProbe,
 						probes.passiveResourceAcquiredProbe));
 	}
-	
+
 	public Calculator setupHoldingTimeCalculator(final AssemblyPassiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
 		this.addPassiveResource(measuringPoint.getPassiveResource());

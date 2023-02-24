@@ -45,7 +45,6 @@ import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.SetVariableAction;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
-import org.palladiosimulator.pcm.seff.SynchronisationPoint;
 import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 import org.palladiosimulator.pcm.seff.util.SeffSwitch;
 
@@ -62,7 +61,7 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * has the call stack.
  * <p>
  * It generates new events and returns them on each visit.
- * 
+ *
  * @author Julijan Katic
  */
 public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
@@ -75,7 +74,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	 * Instantiates the SeffInterpreter with the needed information of user context
 	 * and assembly context entity. These information are needed as the seff always
 	 * works on a certain call stack.
-	 * 
+	 *
 	 * @param context The interpretation context onto which the Seff specification
 	 *                is bound.
 	 */
@@ -86,7 +85,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	/**
 	 * When a StopAction occurs, then no further interpretation of this event is
 	 * needed and thus the request has been successfully interpreted.
-	 * 
+	 *
 	 * @return Set with a single {@link RequestFinished} event.
 	 */
 	@Override
@@ -117,11 +116,9 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final BranchBehaviorContextHolder holder = new BranchBehaviorContextHolder(
 				branchTransition.getBranchBehaviour_BranchTransition(), branchAction.getSuccessor_AbstractAction(),
 				this.context.getBehaviorContext().getCurrentProcessedBehavior());
-		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder()
-				.withBehaviorContext(holder)
+		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withAssemblyContext(this.context.getAssemblyContext())
-				.build();
+				.withAssemblyContext(this.context.getAssemblyContext()).build();
 
 		final SEFFChildInterpretationStarted event = new SEFFChildInterpretationStarted(childContext);
 
@@ -131,7 +128,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	/**
 	 * Always returns {@link SeffInterpretationRequested} with the successor object
 	 * be interpreted next.
-	 * 
+	 *
 	 * @return Set of single {@link SEFFInterpretationProgressed}.
 	 */
 	@Override
@@ -150,40 +147,41 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final LoopBehaviorContextHolder holder = new LoopBehaviorContextHolder(object.getBodyBehaviour_Loop(),
 				object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior(),
 				iterationCount);
-		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder()
-				.withBehaviorContext(holder)
+		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withAssemblyContext(this.context.getAssemblyContext())
-				.build();
+				.withAssemblyContext(this.context.getAssemblyContext()).build();
 
 		return Set.of(new SEFFChildInterpretationStarted(childContext));
 	}
 
 	@Override
 	public Set<SEFFInterpreted> caseForkAction(final ForkAction object) {
-		
-		if(object.getSynchronisingBehaviours_ForkAction()==null) {
+
+		if (object.getSynchronisingBehaviours_ForkAction() == null) {
 			throw new IllegalStateException("ForkAction must have a synchronisation point!");
 		}
-		
-		final EList<ForkedBehaviour> forkedBehaviors = object.getSynchronisingBehaviours_ForkAction().getSynchronousForkedBehaviours_SynchronisationPoint();
-		
-		
-		final List<ResourceDemandingBehaviour> rdBehaviors = forkedBehaviors.stream().map(b -> (ResourceDemandingBehaviour)b).collect(Collectors.toList());
-		
+
+		final EList<ForkedBehaviour> forkedBehaviors = object.getSynchronisingBehaviours_ForkAction()
+				.getSynchronousForkedBehaviours_SynchronisationPoint();
+
+		final List<ResourceDemandingBehaviour> rdBehaviors = forkedBehaviors.stream()
+				.map(b -> (ResourceDemandingBehaviour) b).collect(Collectors.toList());
+
 		if (forkedBehaviors.isEmpty()) {
 			throw new IllegalStateException("Empty forked behaviors is not allowed");
 		}
 
-		final ForkBehaviorContextHolder forkedBehaviorContext = new ForkBehaviorContextHolder(rdBehaviors, object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior());
-		
-		final List<SEFFInterpretationContext> childContexts = rdBehaviors.stream().map(rdBehavior -> SEFFInterpretationContext.builder()
-				.withBehaviorContext(forkedBehaviorContext)
-				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withAssemblyContext(this.context.getAssemblyContext())
-				.build()).collect(Collectors.toList());
-		
-		return childContexts.stream().map(childContext -> new SEFFChildInterpretationStarted(childContext)).collect(Collectors.toSet());
+		final ForkBehaviorContextHolder forkedBehaviorContext = new ForkBehaviorContextHolder(rdBehaviors,
+				object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior());
+
+		final List<SEFFInterpretationContext> childContexts = rdBehaviors.stream()
+				.map(rdBehavior -> SEFFInterpretationContext.builder().withBehaviorContext(forkedBehaviorContext)
+						.withRequestProcessingContext(this.context.getRequestProcessingContext())
+						.withAssemblyContext(this.context.getAssemblyContext()).build())
+				.collect(Collectors.toList());
+
+		return childContexts.stream().map(childContext -> new SEFFChildInterpretationStarted(childContext))
+				.collect(Collectors.toSet());
 	}
 
 	/**
@@ -191,7 +189,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	 * which the spec is called; hence, this method will return a
 	 * {@link SEFFExternalActionCalled} event to request a new searching and
 	 * interpretation of the SEFF.
-	 * 
+	 *
 	 * @return Set with a single element {@link SEFFExternalActionCalled}.
 	 */
 	@Override
@@ -201,45 +199,36 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final EList<VariableUsage> inputVariableUsages = externalCall.getInputVariableUsages__CallAction();
 
 		final GeneralEntryRequest entryRequest = GeneralEntryRequest.builder()
-				.withInputVariableUsages(inputVariableUsages)
-				.withRequiredRole(requiredRole)
-				.withSignature(calledServiceSignature)
-				.withUser(this.context.getRequestProcessingContext().getUser())
-				.withRequestFrom(this.context.update()
-						.withCaller(this.context)
-						.build())
-				.build();
+				.withInputVariableUsages(inputVariableUsages).withRequiredRole(requiredRole)
+				.withSignature(calledServiceSignature).withUser(this.context.getRequestProcessingContext().getUser())
+				.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
 
 		return Set.of(new SEFFExternalActionCalled(entryRequest));
 	}
 
 	@Override
 	public Set<SEFFInterpreted> caseAcquireAction(final AcquireAction object) {
-		
-		ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(() -> new NoSuchElementException("No parametric resource demand specified for AcquireAction!"));
-		
+
+		final ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(
+				() -> new NoSuchElementException("No parametric resource demand specified for AcquireAction!"));
+
 		final ResourceDemandRequest request = ResourceDemandRequest.builder()
 				.withAssemblyContext(this.context.getAssemblyContext())
-				.withPassiveResource(object.getPassiveresource_AcquireAction())
-				.withResourceType(ResourceType.PASSIVE)
-				.withSeffInterpretationContext(this.context)
-				.withParametricResourceDemand(demand)
-				.build();
+				.withPassiveResource(object.getPassiveresource_AcquireAction()).withResourceType(ResourceType.PASSIVE)
+				.withSeffInterpretationContext(this.context).withParametricResourceDemand(demand).build();
 
 		return Set.of(new ResourceDemandRequested(request));
 	}
 
 	@Override
 	public Set<SEFFInterpreted> caseReleaseAction(final ReleaseAction object) {
-		
-		ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(() -> new NoSuchElementException("No parametric resource demand specified for ReleaseAction!"));
 
-		final ResourceDemandRequest request = ResourceDemandRequest.builder()
-				.withResourceType(ResourceType.PASSIVE)
-				.withSeffInterpretationContext(this.context)
-				.withAssemblyContext(this.context.getAssemblyContext())
-				.withPassiveResource(object.getPassiveResource_ReleaseAction())
-				.withParametricResourceDemand(demand)
+		final ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(
+				() -> new NoSuchElementException("No parametric resource demand specified for ReleaseAction!"));
+
+		final ResourceDemandRequest request = ResourceDemandRequest.builder().withResourceType(ResourceType.PASSIVE)
+				.withSeffInterpretationContext(this.context).withAssemblyContext(this.context.getAssemblyContext())
+				.withPassiveResource(object.getPassiveResource_ReleaseAction()).withParametricResourceDemand(demand)
 				.build();
 
 		return Set.of(new PassiveResourceReleased(request, 0), new SEFFInterpretationProgressed(context));
@@ -252,28 +241,21 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		// TODO: Why the following?
 		final String idNumberOfLoops = parameter.getParameterName() + ".NUMBER_OF_ELEMENTS";
 		final int iterationCount = StackContext.evaluateStatic(idNumberOfLoops, Integer.class,
-				this.context.getRequestProcessingContext()
-						.getUser()
-						.getStack()
-						.currentStackFrame());
+				this.context.getRequestProcessingContext().getUser().getStack().currentStackFrame());
 
 		/*
-		 * Create new stack frame for value characterisations of inner
-		 * collection variables.
+		 * Create new stack frame for value characterisations of inner collection
+		 * variables.
 		 */
-		final SimulatedStackframe<Object> innerVariableStackFrame = this.context.getRequestProcessingContext()
-				.getUser()
-				.getStack()
-				.createAndPushNewStackFrame(
-						this.context.getRequestProcessingContext()
-								.getUser()
-								.getStack()
-								.currentStackFrame());
+		final SimulatedStackframe<Object> innerVariableStackFrame = this.context.getRequestProcessingContext().getUser()
+				.getStack().createAndPushNewStackFrame(
+						this.context.getRequestProcessingContext().getUser().getStack().currentStackFrame());
 
 		/*
-		 * Evaluate value characterization of inner collection variable, store them on created
-		 * top most stack frame. Add a "." at the end of the parameter name because otherwise if
-		 * we search for paramter name "ab" we also get variables called "abc". 
+		 * Evaluate value characterization of inner collection variable, store them on
+		 * created top most stack frame. Add a "." at the end of the parameter name
+		 * because otherwise if we search for paramter name "ab" we also get variables
+		 * called "abc".
 		 */
 		this.context.getRequestProcessingContext().getUser().evaluateInner(innerVariableStackFrame,
 				parameter.getParameterName() + ".");
@@ -281,9 +263,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final LoopBehaviorContextHolder holder = new LoopBehaviorContextHolder(object.getBodyBehaviour_Loop(),
 				object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior(),
 				iterationCount);
-		final SEFFInterpretationContext newContext = this.context.update()
-				.withBehaviorContext(holder)
-				.build();
+		final SEFFInterpretationContext newContext = this.context.update().withBehaviorContext(holder).build();
 
 		return Set.of(new SEFFChildInterpretationStarted(newContext));
 	}
@@ -312,9 +292,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			final ResourceDemandRequest request = ResourceDemandRequest.builder()
 					.withAssemblyContext(this.context.getAssemblyContext())
 					.withSeffInterpretationContext(this.context)
-					.withResourceType(ResourceType.ACTIVE)
-					.withParametricResourceDemand(demand)
-					.build();
+					.withResourceType(ResourceType.ACTIVE).withParametricResourceDemand(demand).build();
 
 			final ResourceDemandRequested requestEvent = new ResourceDemandRequested(request);
 			events.add(requestEvent);

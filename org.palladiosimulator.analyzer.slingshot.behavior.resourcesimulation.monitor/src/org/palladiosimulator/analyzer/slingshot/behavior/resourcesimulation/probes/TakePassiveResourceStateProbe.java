@@ -8,7 +8,6 @@ import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventBasedProbe;
 import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventDistinguisher;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
-import org.palladiosimulator.probeframework.measurement.ProbeMeasurement;
 
 public class TakePassiveResourceStateProbe extends EventBasedProbe<Long, Dimensionless> {
 

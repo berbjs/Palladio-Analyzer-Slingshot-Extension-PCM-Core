@@ -3,7 +3,6 @@ package org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation;
 import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.MANY;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -35,13 +34,13 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserS
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserWokeUp;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.interpreters.UsageScenarioInterpreter;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.repositories.UsageModelRepository;
+import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 //import org.palladiosimulator.analyzer.slingshot.common.utils.Postconditions;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationStarted;
-import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
+import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.usagemodel.AbstractUserAction;
 import org.palladiosimulator.pcm.usagemodel.ClosedWorkload;
@@ -53,11 +52,11 @@ import com.google.common.collect.ImmutableList;
 
 /**
  * This behavior handles the events for the usage simulation.
- * 
+ *
  * It interprets the usage model by listening on the
  * {@link UsageInterpretationEvent}s. See the method documentation for further
  * information about the event handling.
- * 
+ *
  * @author Julijan Katic
  */
 @OnEvent(when = SimulationStarted.class, then = { UserStarted.class,
@@ -108,7 +107,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Helper method in order to collect all available usage scenarios and map them
 	 * into the {@link UsageScenarioInterpretationContext}.
-	 * 
+	 *
 	 * @return the immutable list of usage scenario contexts.
 	 */
 	private ImmutableList<UsageScenarioInterpretationContext> collectAllUsageScenarios() {
@@ -121,11 +120,11 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 * Handles the {@link SimulationStarted} event by starting the interpretation of
 	 * the UsageModel. It will look up the workload, and depending on the workload,
 	 * it will result in a {@link UsageInterpretationEvent}.
-	 * 
+	 *
 	 * @return Set with {@link UsageInterpretationEvent}s.
 	 */
 	@Subscribe
-	public Result onSimulationStart(final SimulationStarted evt) {
+	public Result<DESEvent> onSimulationStart(final SimulationStarted evt) {
 		final Set<DESEvent> returnedEvents = new HashSet<>();
 
 		this.startUsageSimulation(returnedEvents);
@@ -144,7 +143,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 * This helper method is used in order to start the user simulation. Depending
 	 * on the user's workload, the {@link UsageInterpretationEvent} will be in the
 	 * set.
-	 * 
+	 *
 	 * @param returnedEvents the set of events that should be published afterwards.
 	 */
 	private void startUsageSimulation(final Set<DESEvent> returnedEvents) {
@@ -169,7 +168,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 * Helper method for interpreting a usage scenario with an open workload. It
 	 * will evaluate the specification for the number of users that will be
 	 * processed.
-	 * 
+	 *
 	 * @param returnedEvents The set of events into which the appeared events will
 	 *                       be added.
 	 * @param usageScenario  The scenario to interpret.
@@ -210,7 +209,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Helper method for interpreting a usage scenario with a closed workload. It
 	 * will create {@link UsageInterpretionContext}s as specified in the workload.
-	 * 
+	 *
 	 * @param returnedEvents The set of events into which the appeared events will
 	 *                       be added.
 	 * @param usageScenario  The scenario to interpret.
@@ -251,12 +250,12 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Handles the UserStarted event by creating a new stack frame and interpreting
 	 * the next action.
-	 * 
+	 *
 	 * @return the set of events resulting from the interpretation of the next
 	 *         action.
 	 */
 	@Subscribe
-	public Result onUserStarted(final UserStarted userStarted) {
+	public Result<DESEvent> onUserStarted(final UserStarted userStarted) {
 		userStarted.getEntity().getUser().getStack().createAndPushNewStackFrame();
 		final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(userStarted.getEntity());
 		final Set<DESEvent> result = new HashSet<>(interpreter.doSwitch(userStarted.getEntity().getCurrentAction()));
@@ -272,12 +271,12 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Creates a new set of open workload users for each user scenario. Returns the
 	 * events of interpreting the first actions of each open workload user scenario.
-	 * 
+	 *
 	 * @param interArrivalUserInitiated The event
 	 * @return The events of interpreting the first actions in each scenario.
 	 */
 	@Subscribe
-	public Result onInterArrivalUserInitiated(
+	public Result<DESEvent> onInterArrivalUserInitiated(
 			final InterArrivalUserInitiated interArrivalUserInitiated) {
 		final Set<DESEvent> result = new HashSet<>();
 
@@ -303,22 +302,22 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 
 	/**
 	 * Handles the event by doing a simple interpretation.
-	 * 
+	 *
 	 * @return the set of events resulting from the interpretation.
 	 */
 	@Subscribe
-	public Result onWakeUpUserEvent(final UserWokeUp evt) {
+	public Result<DESEvent> onWakeUpUserEvent(final UserWokeUp evt) {
 		this.LOGGER.info("User woke up: " + evt.getEntity().getUser());
 		return this.interpretNextAction(evt.getEntity());
 	}
 
 	/**
 	 * Handles the event by doing a simple interpretation.
-	 * 
+	 *
 	 * @return the set of events resulting from the interpretation.
 	 */
 	@Subscribe
-	public Result onUserRequestFinished(final UserRequestFinished evt) {
+	public Result<DESEvent> onUserRequestFinished(final UserRequestFinished evt) {
 		return this.interpretNextAction(evt.getUserContext());
 	}
 
@@ -337,7 +336,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 * empty set will be returned.
 	 */
 	@Subscribe
-	public Result onUserFinished(final UserFinished evt) {
+	public Result<DESEvent> onUserFinished(final UserFinished evt) {
 		this.LOGGER.info("User finished: " + evt.getEntity());
 
 		final Set<DESEvent> resultSet = new HashSet<>();
@@ -369,16 +368,16 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Helper method which lets the user rerun the simulation again as long as the
 	 * simulation hasn't been interrupted yet.
-	 * 
+	 *
 	 * @param resultSet The set of events that should be published.
 	 * @param context   The user's context.
 	 */
 	private void finishUserInterpretation(final Set<DESEvent> resultSet, final UserInterpretationContext context) {
 		context.getUser().getStack().removeStackFrame();
 //		this.startUsageSimulation(resultSet);
-		/* 
+		/*
 		 * Error in Semantics before with the above statement:
-		 *  - For OpenWorkloads, another user will be spawned which is already done by the InterArrivalUserInitiated event. 
+		 *  - For OpenWorkloads, another user will be spawned which is already done by the InterArrivalUserInitiated event.
 		 *  - For ClosedWorkloads, old users will be replaced with new users, which is not exactly "re-entering" and it is
 		 *    harder to let them only spawn after a ThinkTime.
 		 * Instead, only for ClosedWorkloadUsers, let them re-enter the system after the ThinkTime.
@@ -396,7 +395,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 * {@link RootScenarioContext} and interpreting the first start action.
 	 */
 	@Subscribe
-	public Result onClosedWorkloadUserInitiated(
+	public Result<DESEvent> onClosedWorkloadUserInitiated(
 			final ClosedWorkloadUserInitiated closedWorkloadUserInitiated) {
 		final RootScenarioContext updatedRootScenarioContext = new RootScenarioContext(
 				closedWorkloadUserInitiated.getEntity().getBehaviorContext().getScenarioBehavior());
@@ -406,7 +405,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result onInnerScenarioBehaviorInitiated(
+	public Result<DESEvent> onInnerScenarioBehaviorInitiated(
 			final InnerScenarioBehaviorInitiated innerScenarioBehaviorInitiated) {
 		final UserInterpretationContext userInterpretationContext = innerScenarioBehaviorInitiated.getEntity();
 		final UsageScenarioInterpreter usageScenarioInterpreter = new UsageScenarioInterpreter(
@@ -417,15 +416,15 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 
 	/**
 	 * Helper method for simply interpreting the next action.
-	 * 
+	 *
 	 * Some events do not need extra work, but just pass on the next action to the
 	 * interpreter. This method will simply interpret the next action and return a
 	 * set of events resulting from that interpretation.
-	 * 
+	 *
 	 * @param context The context holding for the interpreter.
 	 * @return Set of events resulting from the interpretation.
 	 */
-	private Result interpretNextAction(final UserInterpretationContext context) {
+	private Result<DESEvent> interpretNextAction(final UserInterpretationContext context) {
 		final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(context);
 		return Result.from(interpreter.doSwitch(context.getCurrentAction()));
 	}

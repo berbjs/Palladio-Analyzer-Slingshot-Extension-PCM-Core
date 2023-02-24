@@ -16,11 +16,11 @@ import org.palladiosimulator.pcm.system.System;
 
 /**
  * Implements the {@link SystemLevelLoadBalancer} with a uniform distribution.
- * 
+ *
  * @author Julijan Katic
  */
 public final class EquallyDistributedSystemLevelLoadBalancer implements SystemLevelLoadBalancer {
-	
+
 	private static final Logger LOGGER = Logger.getLogger(EquallyDistributedSystemLevelLoadBalancer.class);
 
 	private final System systemModel;
@@ -34,18 +34,19 @@ public final class EquallyDistributedSystemLevelLoadBalancer implements SystemLe
 	public Optional<AssemblyContext> getAssemblyContext(final OperationProvidedRole providedRole) {
 		final double randomNumber = Math.random(); // Approximiatly uniform distribution
 
-		final List<AssemblyContext> assemblyContext = this.systemModel.getAssemblyContexts__ComposedStructure().stream()
-				.filter(context -> this.isProvidedRoleInComponent(context.getEncapsulatedComponent__AssemblyContext(),
-						providedRole))
+		final List<AssemblyContext> assemblyContext = this.systemModel
+				.getAssemblyContexts__ComposedStructure().stream().filter(context -> this
+						.isProvidedRoleInComponent(context.getEncapsulatedComponent__AssemblyContext(), providedRole))
 				.collect(Collectors.toList());
-		
+
 		if (assemblyContext.isEmpty()) {
 			return Optional.empty();
 		} else {
 			LOGGER.debug("[[LOAD-BALANCER]]: Number of current assembly contexts: " + assemblyContext.size());
 			final int randomIndex = (int) Math.floor(assemblyContext.size() * randomNumber);
 			final AssemblyContext context = assemblyContext.get(randomIndex);
-			LOGGER.info("[[LOAD-BALANCER]]: Load balancing to index #" + randomIndex + ". Chosen AssemblyContext: " + context.getEntityName() + "#" + context.getId());
+			LOGGER.info("[[LOAD-BALANCER]]: Load balancing to index #" + randomIndex + ". Chosen AssemblyContext: "
+					+ context.getEntityName() + "#" + context.getId());
 			return Optional.of(context);
 		}
 	}

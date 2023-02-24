@@ -20,7 +20,7 @@ import org.palladiosimulator.pcm.system.System;
  * directly instantiating this class, use either
  * {@link SystemModelRepository#getDefaultInstance()} or use the {@code @Inject}
  * annotation and let the module system inject this instance.
- * 
+ *
  * @author Julijan Katic
  */
 public class SystemModelRepositoryImpl implements SystemModelRepository {
@@ -136,9 +136,8 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 //				.filter(connector -> connector.getProvidedRole_AssemblyConnector().getId().equals(role.getId()))
 //				.map(AssemblyConnector::getProvidingAssemblyContext_AssemblyConnector)
 //				.findFirst();
-		return this.systemModel.getAssemblyContexts__ComposedStructure().stream()
-				.filter(context -> this.isProvidedRoleInComponent(context.getEncapsulatedComponent__AssemblyContext(),
-						role))
+		return this.systemModel.getAssemblyContexts__ComposedStructure().stream().filter(
+				context -> this.isProvidedRoleInComponent(context.getEncapsulatedComponent__AssemblyContext(), role))
 				.findFirst();
 	}
 

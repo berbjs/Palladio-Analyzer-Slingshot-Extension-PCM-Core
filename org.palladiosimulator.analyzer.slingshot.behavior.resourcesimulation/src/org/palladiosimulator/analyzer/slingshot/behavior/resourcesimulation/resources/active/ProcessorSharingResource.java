@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -73,7 +74,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 * @return {@link JobProgressed} event of the next job.
 	 */
 	@Override
-	protected Result process(final JobInitiated jobInitiated) {
+	protected Result<AbstractJobEvent> process(final JobInitiated jobInitiated) {
 		this.updateInternalTimer(jobInitiated.time());
 		final Job newJob = jobInitiated.getEntity();
 
@@ -99,7 +100,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 *         {@link JobProgressed} event of the next job to process.
 	 */
 	@Override
-	public Result onJobProgressed(final JobProgressed jobProgressed) {
+	public Result<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
 		if (!(jobProgressed instanceof ProcessorSharingJobProgressed)) {
 			return Result.empty();
 		}
