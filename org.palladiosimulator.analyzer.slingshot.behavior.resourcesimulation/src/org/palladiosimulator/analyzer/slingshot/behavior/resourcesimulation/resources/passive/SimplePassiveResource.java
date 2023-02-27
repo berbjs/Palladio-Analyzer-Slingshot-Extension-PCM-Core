@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.res
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 
@@ -59,13 +60,13 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	 * @param waitingJob The job to acquire.
 	 * @return Either {@link PassiveResourceAcquired} if granted, or empty.
 	 */
-	public PassiveResourceAcquired acquire(final WaitingJob waitingJob) {
+	public Optional<PassiveResourceAcquired> acquire(final WaitingJob waitingJob) {
 		/* TODO: Throw exception if demand is higher than capacity. */
 		if (this.acquirable(waitingJob)) {
-			return grantAccess(waitingJob);
+			return Optional.of(grantAccess(waitingJob));
 		} else {
 			this.waitingJobs.offer(waitingJob);
-			return null;
+			return Optional.empty();
 		}
 	}
 

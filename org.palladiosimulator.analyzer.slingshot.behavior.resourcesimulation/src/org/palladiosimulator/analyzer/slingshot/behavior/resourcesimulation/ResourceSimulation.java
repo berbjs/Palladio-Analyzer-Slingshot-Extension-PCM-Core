@@ -98,7 +98,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	/**
 	 * @param request
 	 */
-	private PassiveResourceAcquired initiatePassiveResource(final ResourceDemandRequest request) {
+	private Optional<PassiveResourceAcquired> initiatePassiveResource(final ResourceDemandRequest request) {
 		final PassiveResource passiveResource = request.getPassiveResource().get();
 		final AssemblyContext assemblyContext = request.getAssemblyContext();
 		final Optional<SimplePassiveResource> passiveResourceInstance = this.passiveResourceTable
@@ -106,11 +106,9 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 		if (passiveResourceInstance.isPresent()) {
 			final WaitingJob waitingJob = this.createWaitingJob(request, passiveResource);
-
 			return passiveResourceInstance.get().acquire(waitingJob);
-		} else {
-			return null;
 		}
+		return Optional.empty();
 	}
 
 	/**
