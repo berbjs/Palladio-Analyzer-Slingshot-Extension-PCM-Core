@@ -5,6 +5,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
@@ -14,8 +15,6 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ProcessorSharingJobProgressed;
-import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-
 import de.uka.ipd.sdq.probfunction.math.util.MathTools;
 
 /**
@@ -74,7 +73,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 * @return {@link JobProgressed} event of the next job.
 	 */
 	@Override
-	protected Result<AbstractJobEvent> process(final JobInitiated jobInitiated) {
+	protected Optional<AbstractJobEvent> process(final JobInitiated jobInitiated) {
 		this.updateInternalTimer(jobInitiated.time());
 		final Job newJob = jobInitiated.getEntity();
 
@@ -85,8 +84,11 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		this.runningJobs.put(newJob, newJob.getDemand());
 		this.reportCoreUsage();
 
-		final ProcessorSharingJobProgressed jobProgressed = this.scheduleNextEvent().get();
-		return Result.of(jobProgressed);
+		final Optional<ProcessorSharingJobProgressed> next = this.scheduleNextEvent();
+		if (next.isPresent()) {
+			return Optional.of(next.get());
+		}
+		return Optional.empty();
 	}
 
 	/**
@@ -100,14 +102,14 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 *         {@link JobProgressed} event of the next job to process.
 	 */
 	@Override
-	public Result<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
+	public Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
 		if (!(jobProgressed instanceof ProcessorSharingJobProgressed)) {
-			return Result.empty();
+			return Set.of();
 		}
 
 		final ProcessorSharingJobProgressed processorSharingJobProgressed = (ProcessorSharingJobProgressed) jobProgressed;
 		if (processorSharingJobProgressed.getExpectedState().compareTo(this.currentState) != 0) {
-			return Result.empty();
+			return Set.of();
 		}
 
 		this.updateInternalTimer(jobProgressed.time());
@@ -118,9 +120,9 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 
 		final Optional<ProcessorSharingJobProgressed> next = this.scheduleNextEvent();
 		if (next.isPresent()) {
-			return Result.of(new JobFinished(shortestJob), next.get());
+			return Set.of(new JobFinished(shortestJob), next.get());
 		}
-		return Result.of(new JobFinished(shortestJob));
+		return Set.of(new JobFinished(shortestJob));
 	}
 
 	@Override

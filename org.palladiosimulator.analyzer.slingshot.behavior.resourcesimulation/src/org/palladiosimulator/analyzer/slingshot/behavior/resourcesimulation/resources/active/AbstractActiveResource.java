@@ -1,12 +1,13 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active;
 
+import java.util.Optional;
+
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResource;
-import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 
 /**
@@ -62,7 +63,7 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 * @param jobInitiated The event.
 	 * @return The appropriate events.
 	 */
-	protected abstract Result<AbstractJobEvent> process(final JobInitiated jobInitiated);
+	protected abstract Optional<AbstractJobEvent> process(final JobInitiated jobInitiated);
 
 	/**
 	 * Checks whether the job belongs to the resource. This is done by checking
@@ -79,9 +80,9 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	}
 
 	@Override
-	public Result<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
+	public Optional<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
 		if (!this.jobBelongsToResource(jobInitiated.getEntity())) {
-			return Result.empty();
+			return Optional.empty();
 		}
 		final double currentDemand = jobInitiated.getEntity().getDemand();
 		jobInitiated.getEntity().updateDemand(currentDemand/processingRate.calculateRV());

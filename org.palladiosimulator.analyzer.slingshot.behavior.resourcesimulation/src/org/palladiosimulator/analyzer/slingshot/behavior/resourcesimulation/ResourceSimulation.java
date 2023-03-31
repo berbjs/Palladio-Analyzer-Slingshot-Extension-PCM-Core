@@ -168,12 +168,12 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 		if (activeResource.isEmpty()) {
 			LOGGER.error("No such active resource found! " + id.toString());
-			return Result.empty();
+			return Result.of();
 		}
 
 
 
-		return activeResource.get().onJobInitiated(jobInitiated);
+		return Result.of(activeResource.get().onJobInitiated(jobInitiated));
 	}
 
 	@Subscribe
@@ -185,11 +185,11 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 		if (passiveResource.isEmpty()) {
 			LOGGER.error("No such passive resource found!");
-			return Result.empty();
+			return Result.of();
 		}
 
 		final WaitingJob waitingJob = this.createWaitingJob(entity, entity.getPassiveResource().get());
-		return passiveResource.get().release(waitingJob);
+		return Result.of(passiveResource.get().release(waitingJob));
 	}
 
 	@Subscribe
@@ -202,10 +202,10 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 		if (activeResource.isEmpty()) {
 			LOGGER.error("No such resource found!");
-			return Result.empty();
+			return Result.of();
 		}
 
-		return activeResource.get().onJobProgressed(jobProgressed);
+		return Result.of(activeResource.get().onJobProgressed(jobProgressed));
 	}
 
 	/**
@@ -263,7 +263,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		final double latency = StackContext.evaluateStatic(latencyRV.getSpecification(), Double.class);
 
 		// Now, return AppropriateResourceFound with latency
-		return Result.empty();
+		return Result.of();
 	}
 
 	/**
@@ -272,9 +272,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @return an empty set.
 	 */
 	@Subscribe
-	public Result<?> onSimulationFinished(final SimulationFinished simulationFinished) {
+	public void onSimulationFinished(final SimulationFinished simulationFinished) {
 		this.resourceTable.clearResourcesFromJobs();
 		this.passiveResourceTable.clearResourcesFromJobs();
-		return Result.empty();
 	}
 }

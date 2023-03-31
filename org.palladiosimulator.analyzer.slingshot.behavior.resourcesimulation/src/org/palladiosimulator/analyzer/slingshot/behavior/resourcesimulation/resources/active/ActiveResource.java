@@ -1,11 +1,13 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active;
 
+import java.util.Optional;
+import java.util.Set;
+
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.IResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
-import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 
 /**
  * The active resource provides delegation methods of events, hence it "listens"
@@ -25,7 +27,7 @@ public interface ActiveResource extends IResource {
 	 * @param jobInitiated The event.
 	 * @return the appropriate events for the active resource.
 	 */
-	Result<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated);
+	Optional<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated);
 
 	/**
 	 * Handles the {@link JobProgressed} event. Typically, this can result in either
@@ -34,6 +36,6 @@ public interface ActiveResource extends IResource {
 	 * @param jobProgressed The event.
 	 * @return the appropriate events for the active resource.
 	 */
-	Result<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed);
+	Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed);
 
 }

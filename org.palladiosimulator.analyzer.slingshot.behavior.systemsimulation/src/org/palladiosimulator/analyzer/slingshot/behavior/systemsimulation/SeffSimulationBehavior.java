@@ -42,7 +42,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final SeffInterpreter interpreter = new SeffInterpreter(progressed.getEntity());
 		final Set<SEFFInterpreted> events = interpreter
 				.doSwitch(progressed.getEntity().getBehaviorContext().getNextAction());
-		return Result.from(events);
+		return Result.of(events);
 	}
 
 
@@ -52,7 +52,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 				passiveResourceAcquired.getEntity().getSeffInterpretationContext());
 		final Set<SEFFInterpreted> events = interpreter.doSwitch(passiveResourceAcquired.getEntity()
 				.getSeffInterpretationContext().getBehaviorContext().getNextAction());
-		return Result.from(events);
+		return Result.of(events);
 	}
 
 	@Subscribe
@@ -61,7 +61,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final SeffInterpreter interpreter = new SeffInterpreter(seffChildInterpretationStarted.getEntity());
 		final Set<SEFFInterpreted> events = interpreter
 				.doSwitch(seffChildInterpretationStarted.getEntity().getBehaviorContext().getNextAction());
-		return Result.from(events);
+		return Result.of(events);
 	}
 
 	@Subscribe

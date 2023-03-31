@@ -144,7 +144,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 				Optional.empty());
 		final Set<SEFFInterpretationProgressed> appearedEvents = interpreter.doSwitch(context.getProvidedRole());
 
-		return Result.from(appearedEvents);
+		return Result.of(appearedEvents);
 	}
 
 	/**
@@ -156,7 +156,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	 * 				now lies in the ResourceSimulation.
 	 */
 	@Deprecated
-	//@Subscribe
+	@Subscribe
 	public Result<SEFFInterpretationProgressed> onRequestInitiated(
 			final SEFFExternalActionCalled requestInitiated) {
 		final GeneralEntryRequest entity = requestInitiated.getEntity();
