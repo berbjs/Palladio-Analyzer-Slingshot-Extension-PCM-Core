@@ -58,11 +58,7 @@ public class FCFSResource extends AbstractActiveResource {
 			return Optional.empty();
 		}
 
-		final Optional<JobProgressed> next = this.scheduleNextEvent();
-		if (next.isPresent()) {
-			return Optional.of(next.get());
-		}
-		return Optional.empty();
+		return this.scheduleNextEvent().map(j -> j);
 	}
 
 	/**

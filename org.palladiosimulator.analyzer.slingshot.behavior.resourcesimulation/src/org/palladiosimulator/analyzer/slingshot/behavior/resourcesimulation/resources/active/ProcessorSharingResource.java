@@ -84,11 +84,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		this.runningJobs.put(newJob, newJob.getDemand());
 		this.reportCoreUsage();
 
-		final Optional<ProcessorSharingJobProgressed> next = this.scheduleNextEvent();
-		if (next.isPresent()) {
-			return Optional.of(next.get());
-		}
-		return Optional.empty();
+		return this.scheduleNextEvent().map(j -> j);
 	}
 
 	/**
