@@ -1,12 +1,17 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResource;
 import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 
@@ -66,6 +71,23 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	protected abstract Optional<AbstractJobEvent> process(final JobInitiated jobInitiated);
 
 	/**
+	 * The delegated handler of the resource that will be processed if the job
+	 * belongs to this resource according to {@link #jobBelongsToResource(Job)}
+	 * implementation.
+	 *
+	 * @param jobInitiated The event.
+	 * @return The appropriate events.
+	 */
+	protected abstract Set<AbstractJobEvent> process(final JobProgressed jobProgressed);
+
+	/**
+	 * TODO
+	 *
+	 * @return
+	 */
+	protected abstract ActiveResourceStateUpdated publishState(final Job job);
+
+	/**
 	 * Checks whether the job belongs to the resource. This is done by checking
 	 * whether the {@link ProcessingResourceType} specified in the {@link job} and
 	 * this id ({@link #getId()}) are equal.
@@ -80,14 +102,34 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	}
 
 	@Override
-	public Optional<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
+	public Set<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
 		if (!this.jobBelongsToResource(jobInitiated.getEntity())) {
-			return Optional.empty();
+			return Set.of();
 		}
-		final double currentDemand = jobInitiated.getEntity().getDemand();
-		jobInitiated.getEntity().updateDemand(currentDemand/processingRate.calculateRV());
-		return this.process(jobInitiated);
-		// if we wanna publish demand requested, we gotta do it here, before it get's normalized.
+		final double calculatedDemand = jobInitiated.getEntity().getDemand()/processingRate.calculateRV();
+		jobInitiated.getEntity().updateDemand(calculatedDemand);
+
+		final Optional<AbstractJobEvent> event = this.process(jobInitiated);
+
+		final Set<AbstractJobEvent> resultEvents = new HashSet<>(Set.of(this.publishState(jobInitiated.getEntity()),
+				new ResourceDemandCalculated(jobInitiated.getEntity(), calculatedDemand)));
+		if (event.isPresent()) {
+			resultEvents.add(event.get());
+		}
+
+		return resultEvents;
+	}
+
+	@Override
+	public Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
+		if (!this.jobBelongsToResource(jobProgressed.getEntity())) {
+			return Set.of();
+		}
+
+		final Set<AbstractJobEvent> resultEvents = new HashSet<>(this.process(jobProgressed));
+		resultEvents.add(this.publishState(jobProgressed.getEntity()));
+
+		return resultEvents;
 	}
 
 }

@@ -174,8 +174,6 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 			return Result.of();
 		}
 
-
-
 		return Result.of(activeResource.get().onJobInitiated(jobInitiated));
 	}
 

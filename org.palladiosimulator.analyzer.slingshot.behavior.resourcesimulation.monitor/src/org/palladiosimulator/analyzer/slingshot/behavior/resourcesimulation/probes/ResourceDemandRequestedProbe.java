@@ -4,7 +4,7 @@ import javax.measure.Measure;
 import javax.measure.quantity.Duration;
 import javax.measure.unit.SI;
 
-import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventBasedListProbe;
 import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventDistinguisher;
@@ -49,8 +49,8 @@ public final class ResourceDemandRequestedProbe extends EventBasedListProbe<Doub
 
 	@Override
 	public Measure<Double, Duration> getTime(final DESEvent event) {
-		if (event instanceof ActiveResourceStateUpdated) {
-			return Measure.valueOf(((ActiveResourceStateUpdated) event).getResourceDemandRequested(), SI.SECOND);
+		if (event instanceof ResourceDemandCalculated) {
+			return Measure.valueOf(((ResourceDemandCalculated) event).getResourceDemandRequested(), SI.SECOND);
 		}
 		throw new IllegalArgumentException("event not of type ACTIVERESOUCRESTATEUPDATED");
 	}

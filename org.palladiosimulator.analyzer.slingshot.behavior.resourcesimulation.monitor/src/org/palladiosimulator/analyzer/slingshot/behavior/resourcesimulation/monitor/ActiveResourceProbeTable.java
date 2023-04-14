@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.ResourceDemandRequestedProbe;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.StateOfActiveResourceProbe;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
@@ -37,7 +38,7 @@ public final class ActiveResourceProbeTable {
 		return Optional.empty();
 	}
 
-	public Optional<Probe> currentResourceDemand(final ActiveResourceStateUpdated event) {
+	public Optional<Probe> currentResourceDemand(final ResourceDemandCalculated event) {
 		final Probes probes = this.probes
 				.get(event.getEntity().getAllocationContext().getResourceContainer_AllocationContext().getId());// TODO
 		if (probes != null) {

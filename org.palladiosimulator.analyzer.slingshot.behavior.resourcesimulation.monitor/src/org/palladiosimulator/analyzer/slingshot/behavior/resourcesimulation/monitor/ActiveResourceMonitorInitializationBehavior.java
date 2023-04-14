@@ -1,12 +1,10 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor;
 
-import java.util.HashSet;
 import java.util.Optional;
-import java.util.Set;
-
 import javax.inject.Inject;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
@@ -30,6 +28,7 @@ import org.palladiosimulator.probeframework.probes.Probe;
 
 @OnEvent(when = MonitorModelVisited.class, then = CalculatorRegistered.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = ActiveResourceStateUpdated.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
+@OnEvent(when = ResourceDemandCalculated.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 public class ActiveResourceMonitorInitializationBehavior implements SimulationBehaviorExtension {
 	// RESOURCE_DEMAND_METRIC_TUPLE
 	// STATE_OF_ACTIVE_RESOURCE_METRIC_TUPLE
@@ -78,20 +77,21 @@ public class ActiveResourceMonitorInitializationBehavior implements SimulationBe
 	}
 
 	@Subscribe
+	public Result<ProbeTaken> onResourceDemandCalculated(final ResourceDemandCalculated stateUpdated) {
+		final Optional<Probe> probe = this.table.currentResourceDemand(stateUpdated);
+		if (probe.isPresent()) {
+			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe.get()).build()));
+		}
+		return Result.of();
+	}
+
+	@Subscribe
 	public Result<ProbeTaken> onActiveResourceStateUpdated(final ActiveResourceStateUpdated stateUpdated) {
-		// TODO : maybe it makes sense to actually merge the probing into one operation,
-		// and return a set of probes right away.
-
-		final Optional<Probe> SARprobe = this.table.currentStateOfActiveResource(stateUpdated);
-		final Optional<Probe> RDprobe = this.table.currentResourceDemand(stateUpdated);
-
-		final Set<ProbeTaken> result = new HashSet<>();
-		if (SARprobe.isPresent())
-			result.add(new ProbeTaken(ProbeTakenEntity.builder().withProbe(SARprobe.get()).build()));
-		if (RDprobe.isPresent())
-			result.add(new ProbeTaken(ProbeTakenEntity.builder().withProbe(RDprobe.get()).build()));
-
-		return Result.of(result);
+		final Optional<Probe> probe = this.table.currentStateOfActiveResource(stateUpdated);
+		if (probe.isPresent()) {
+			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe.get()).build()));
+		}
+		return Result.of();
 	}
 
 }

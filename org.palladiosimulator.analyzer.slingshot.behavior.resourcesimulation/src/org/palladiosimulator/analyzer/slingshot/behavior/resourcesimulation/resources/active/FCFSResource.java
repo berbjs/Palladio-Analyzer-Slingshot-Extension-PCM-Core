@@ -60,8 +60,6 @@ public class FCFSResource extends AbstractActiveResource {
 		}
 
 		return this.scheduleNextEvent().map(j -> j);
-		// return Result.of(this.scheduleNextEvent().get(), new
-		// ActiveResourceStateUpdated(newJob, this.processes.size()));
 	}
 
 	/**
@@ -72,7 +70,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 *         {@link JobProgressed} from the next job to handle.
 	 */
 	@Override
-	public Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
+	public Set<AbstractJobEvent> process(final JobProgressed jobProgressed) {
 		final Job job = jobProgressed.getEntity();
 
 		assert MathTools.equalsDouble(0, job.getDemand()) : "Remaining demand (" + job.getDemand() + ") not zero!";
@@ -81,9 +79,9 @@ public class FCFSResource extends AbstractActiveResource {
 
 		final Optional<JobProgressed> next = this.scheduleNextEvent();
 		if (next.isPresent()) {
-			return Set.of(new JobFinished(job), new ActiveResourceStateUpdated(job, this.processes.size()), next.get());
+			return Set.of(new JobFinished(job), next.get());
 		}
-		return Set.of(new JobFinished(job), new ActiveResourceStateUpdated(job, this.processes.size()));
+		return Set.of(new JobFinished(job));
 	}
 
 	@Override
@@ -133,5 +131,10 @@ public class FCFSResource extends AbstractActiveResource {
 			return Optional.empty();
 		}
 		return Optional.of(new JobProgressed(this.processes.peek(), this.processes.peek().getDemand()));
+	}
+
+	@Override
+	protected ActiveResourceStateUpdated publishState(final Job job) {
+		return new ActiveResourceStateUpdated(job, this.processes.size());
 	}
 }

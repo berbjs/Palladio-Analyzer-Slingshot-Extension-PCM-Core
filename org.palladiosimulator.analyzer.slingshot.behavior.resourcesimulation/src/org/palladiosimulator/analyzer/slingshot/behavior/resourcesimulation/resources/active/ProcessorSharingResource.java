@@ -103,7 +103,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 *         {@link JobProgressed} event of the next job to process.
 	 */
 	@Override
-	public Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
+	public Set<AbstractJobEvent> process(final JobProgressed jobProgressed) {
 		if (!(jobProgressed instanceof ProcessorSharingJobProgressed)) {
 			return Set.of();
 		}
@@ -121,11 +121,9 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 
 		final Optional<ProcessorSharingJobProgressed> next = this.scheduleNextEvent();
 		if (next.isPresent()) {
-			return Set.of(new JobFinished(shortestJob),
-					new ActiveResourceStateUpdated(shortestJob, this.runningJobs.size()), next.get());
+			return Set.of(new JobFinished(shortestJob), next.get());
 		}
-		return Set.of(new JobFinished(shortestJob),
-				new ActiveResourceStateUpdated(shortestJob, this.runningJobs.size()));
+		return Set.of(new JobFinished(shortestJob));
 	}
 
 	@Override
@@ -270,5 +268,10 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		if (this.numberProcessesOnCore.get(coreNumber) != targetNumberProcessesAtCore) {
 			this.numberProcessesOnCore.set(coreNumber, targetNumberProcessesAtCore);
 		}
+	}
+
+	@Override
+	protected ActiveResourceStateUpdated publishState(final Job job) {
+		return new ActiveResourceStateUpdated(job, this.runningJobs.size());
 	}
 }
