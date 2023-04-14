@@ -62,7 +62,6 @@ public final class PassiveResourceProbeTable {
 
 	public Calculator setupWaitingTimeCalculator(final AssemblyPassiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
-		// Necessary?
 		this.addPassiveResource(measuringPoint.getPassiveResource());
 		final Probes probes = this.probes.get(measuringPoint.getPassiveResource().getId());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.WAITING_TIME_METRIC_TUPLE, measuringPoint,
@@ -72,7 +71,6 @@ public final class PassiveResourceProbeTable {
 
 	public Calculator setupHoldingTimeCalculator(final AssemblyPassiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
-		// Necessary?
 		this.addPassiveResource(measuringPoint.getPassiveResource());
 		final Probes probes = this.probes.get(measuringPoint.getPassiveResource().getId());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.HOLDING_TIME_METRIC_TUPLE, measuringPoint,

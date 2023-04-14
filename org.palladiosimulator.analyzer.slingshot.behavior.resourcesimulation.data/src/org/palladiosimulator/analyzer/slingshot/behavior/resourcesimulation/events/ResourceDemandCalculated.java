@@ -2,6 +2,12 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.eve
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 
+/**
+ * Event to announce a requested resource demand.
+ *
+ * @author Sarah Stieß
+ *
+ */
 public final class ResourceDemandCalculated extends AbstractJobEvent {
 
 	private final double calculatedResourceDemand;
@@ -14,5 +20,4 @@ public final class ResourceDemandCalculated extends AbstractJobEvent {
 	public double getResourceDemandRequested() {
 		return calculatedResourceDemand;
 	}
-
 }

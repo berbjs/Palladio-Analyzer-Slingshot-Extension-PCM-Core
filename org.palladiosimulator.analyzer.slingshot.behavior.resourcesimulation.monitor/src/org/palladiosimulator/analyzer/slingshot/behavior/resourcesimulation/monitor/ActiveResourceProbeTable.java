@@ -17,7 +17,13 @@ import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory
 import org.palladiosimulator.probeframework.probes.Probe;
 
 /**
- * @author Julijan Katic, Floriment Klinaku, Sarah Stiess
+ *
+ * Creates Probes and Calculators and maps Resources to their Probes.
+ *
+ * TODO i think it's smarter to map by processing resource specification, as one
+ * resource container may contain multiple specs.
+ *
+ * @author Julijan Katic, Floriment Klinaku, Sarah Stieß
  *
  */
 public final class ActiveResourceProbeTable {
@@ -50,6 +56,8 @@ public final class ActiveResourceProbeTable {
 
 	public Calculator setupStateOfActiveResourceCalculator(final ActiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
+		this.addActiveResource(
+				measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification());
 		final Probes probes = this.probes.get(measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification().getId());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.STATE_OF_ACTIVE_RESOURCE_METRIC_TUPLE,
 				measuringPoint,
@@ -58,6 +66,8 @@ public final class ActiveResourceProbeTable {
 
 	public Calculator setupResoucreDemandCalculator(final ActiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
+		this.addActiveResource(
+				measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification());
 		final Probes probes = this.probes
 				.get(measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification().getId());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.RESOURCE_DEMAND_METRIC_TUPLE,
@@ -65,11 +75,17 @@ public final class ActiveResourceProbeTable {
 				DefaultCalculatorProbeSets.createSingularProbeConfiguration(probes.resourceDemandProbe));
 	}
 
+	/**
+	 *
+	 * Probes for an Active resource. They need no distinguisher, because the unary
+	 * calculators need not match probes.
+	 *
+	 * @author Sarah Stieß
+	 *
+	 */
 	private static final class Probes {
 		private final StateOfActiveResourceProbe stateOfActiveResourceProbe = new StateOfActiveResourceProbe();
 		private final ResourceDemandRequestedProbe resourceDemandProbe = new ResourceDemandRequestedProbe();
-		// no distinguisher required, because unary calculators put into and remove from
-		// the calculator in one go, i.e. no need for proper matching.
 	}
 
 }

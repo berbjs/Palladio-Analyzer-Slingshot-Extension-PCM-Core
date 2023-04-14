@@ -7,51 +7,45 @@ import javax.measure.unit.SI;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventBasedListProbe;
-import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventDistinguisher;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 
 /**
  *
- * BEWARE!!!! "Specifies a (resource demand, point in time)-tuple," i.e. the
- * TUPLE IS FUCKING UPSIDE DOWN COMPARED TO OTHERS!!!
+ * BEWARE!!! This probe interchanges the implementation of getMeasurement and
+ * getTime, because
+ * {@link MetricDescriptionConstants.RESOURCE_DEMAND_METRIC_TUPLE} specifies the
+ * resource demand as a "[..] (resource demand, point in time)-tuple, [..]",
+ * which is upside down compared to all other metric set descriptions.
  *
- * AS RESULT THE VALUE AND TIME OPERATIONS OF THE PROBE ARE IN FACT SWITCHED UP,
- * TOO!
- *
- * @author stiesssh
+ * @author Sarah Stieß
  *
  */
 public final class ResourceDemandRequestedProbe extends EventBasedListProbe<Double, Duration> {
 
 	/**
-	 *
+	 * Constructs a ResourceDemandRequestedProbe.
 	 */
 	public ResourceDemandRequestedProbe() {
 		super(MetricDescriptionConstants.RESOURCE_DEMAND_METRIC_TUPLE);
-		// yes, the unary calculator need the Tuple in the probe because it does an "isCompatibleWith" between calculator (metric entity) and probe metric description...
 	}
 
 	/**
-	 * Constructs an EventDimensionlessProbe with a custom distinguisher.
-	 *
-	 * @param distinguisher The distinguisher that instantiates a
-	 *                      {@link RequestContext}.
+	 * Is actually getTime
 	 */
-	public ResourceDemandRequestedProbe(
-			final EventDistinguisher distinguisher) {
-		super(MetricDescriptionConstants.RESOURCE_DEMAND_METRIC_TUPLE, distinguisher);
-	}
-
 	@Override
 	public Measure<Double, Duration> getMeasurement(final DESEvent event) {
 		return Measure.valueOf(event.time(), SI.SECOND);
 	}
 
+	/**
+	 * Is actually getMeasurement
+	 */
 	@Override
 	public Measure<Double, Duration> getTime(final DESEvent event) {
 		if (event instanceof ResourceDemandCalculated) {
 			return Measure.valueOf(((ResourceDemandCalculated) event).getResourceDemandRequested(), SI.SECOND);
 		}
-		throw new IllegalArgumentException("event not of type ACTIVERESOUCRESTATEUPDATED");
+		throw new IllegalArgumentException(String.format("Wrong eventype. Expected %s but got %s.",
+				ResourceDemandCalculated.class.getSimpleName(), event.getClass().getSimpleName()));
 	}
 }

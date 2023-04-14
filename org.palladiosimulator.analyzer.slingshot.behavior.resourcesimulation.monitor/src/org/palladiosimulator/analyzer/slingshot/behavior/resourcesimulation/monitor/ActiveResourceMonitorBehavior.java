@@ -19,28 +19,28 @@ import org.palladiosimulator.edp2.models.measuringpoint.MeasuringPoint;
 import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
-import org.palladiosimulator.pcm.resourceenvironment.ProcessingResourceSpecification;
 import org.palladiosimulator.pcmmeasuringpoint.ActiveResourceMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
 import org.palladiosimulator.probeframework.probes.Probe;
 
-
+/**
+ *
+ * Behavior to monitor active resources.
+ *
+ * @author Sarah Stieß
+ *
+ */
 @OnEvent(when = MonitorModelVisited.class, then = CalculatorRegistered.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = ActiveResourceStateUpdated.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = ResourceDemandCalculated.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
-public class ActiveResourceMonitorInitializationBehavior implements SimulationBehaviorExtension {
-	// RESOURCE_DEMAND_METRIC_TUPLE
-	// STATE_OF_ACTIVE_RESOURCE_METRIC_TUPLE
-	// UTILIZATION_OF_ACTIVE_RESOURCE_TUPLE
-
+public class ActiveResourceMonitorBehavior implements SimulationBehaviorExtension {
 
 	private final IGenericCalculatorFactory calculatorFactory;
-
 	private final ActiveResourceProbeTable table = new ActiveResourceProbeTable();
 
 	@Inject
-	public ActiveResourceMonitorInitializationBehavior(final IGenericCalculatorFactory calculatorFactory) {
+	public ActiveResourceMonitorBehavior(final IGenericCalculatorFactory calculatorFactory) {
 		this.calculatorFactory = calculatorFactory;
 	}
 
@@ -52,8 +52,6 @@ public class ActiveResourceMonitorInitializationBehavior implements SimulationBe
 		if (measuringPoint instanceof ActiveResourceMeasuringPoint) {
 
 			final ActiveResourceMeasuringPoint activeResourceMeasuringPoint = (ActiveResourceMeasuringPoint) measuringPoint;
-			final ProcessingResourceSpecification activeResourceSpec = activeResourceMeasuringPoint.getActiveResource();
-			this.table.addActiveResource(activeResourceSpec.getResourceContainer_ProcessingResourceSpecification());
 
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.STATE_OF_ACTIVE_RESOURCE_METRIC)) {
@@ -69,11 +67,11 @@ public class ActiveResourceMonitorInitializationBehavior implements SimulationBe
 
 			} else if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.UTILIZATION_OF_ACTIVE_RESOURCE)) {
-				throw new IllegalArgumentException("Not Yet Supported 2.");
+
+				throw new UnsupportedOperationException("UTILIZATION_OF_ACTIVE_RESOURCE not yet implemented");
 			}
 		}
 		return Result.empty();
-
 	}
 
 	@Subscribe

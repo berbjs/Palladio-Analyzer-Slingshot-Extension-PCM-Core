@@ -75,7 +75,7 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 * belongs to this resource according to {@link #jobBelongsToResource(Job)}
 	 * implementation.
 	 *
-	 * @param jobInitiated The event.
+	 * @param jobProgressed The event.
 	 * @return The appropriate events.
 	 */
 	protected abstract Set<AbstractJobEvent> process(final JobProgressed jobProgressed);
@@ -83,7 +83,7 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	/**
 	 * TODO
 	 *
-	 * @return
+	 * @return event with the state of the active resource
 	 */
 	protected abstract ActiveResourceStateUpdated publishState(final Job job);
 

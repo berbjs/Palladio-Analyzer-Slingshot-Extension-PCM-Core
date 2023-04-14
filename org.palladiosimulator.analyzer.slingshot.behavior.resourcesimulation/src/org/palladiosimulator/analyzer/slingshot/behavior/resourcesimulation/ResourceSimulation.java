@@ -55,13 +55,12 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 @OnEvent(when = SimulationFinished.class, then = {})
 @OnEvent(when = JobInitiated.class, then = { JobProgressed.class,
 		ActiveResourceStateUpdated.class }, cardinality = EventCardinality.MANY)
-@OnEvent(when = JobFinished.class, then = ActiveResourceFinished.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = JobProgressed.class, then = { AbstractJobEvent.class,
 		ActiveResourceStateUpdated.class }, cardinality = EventCardinality.MANY)
+@OnEvent(when = JobFinished.class, then = ActiveResourceFinished.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = PassiveResourceReleased.class, then = PassiveResourceAcquired.class, cardinality = EventCardinality.MANY)
-@OnEvent(when = ResourceDemandRequested.class, then = {
-		JobInitiated.class, PassiveResourceAcquired.class
-}, cardinality = SINGLE)
+@OnEvent(when = ResourceDemandRequested.class, then = { JobInitiated.class,
+		PassiveResourceAcquired.class }, cardinality = SINGLE)
 //@OnEvent(when = ModelAdjusted.class, then = {})
 public class ResourceSimulation implements SimulationBehaviorExtension {
 

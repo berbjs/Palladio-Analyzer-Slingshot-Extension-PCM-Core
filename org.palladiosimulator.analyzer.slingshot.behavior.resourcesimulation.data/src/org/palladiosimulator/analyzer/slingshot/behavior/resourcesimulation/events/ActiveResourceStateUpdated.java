@@ -2,16 +2,22 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.eve
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 
+/**
+ * Event to announce the state of an active resource.
+ *
+ * @author Sarah Stieß
+ *
+ */
 public final class ActiveResourceStateUpdated extends AbstractJobEvent {
 
-	private final long queueLength;
+	private final long requestsAtResource;
 
-	public ActiveResourceStateUpdated(final Job entity, final long queueLength) {
+	public ActiveResourceStateUpdated(final Job entity, final long requestsAtResource) {
 		super(entity, 0.0);
-		this.queueLength = queueLength;
+		this.requestsAtResource = requestsAtResource;
 	}
 
-	public long getQueueLength() {
-		return queueLength;
+	public long requestsAtResource() {
+		return requestsAtResource;
 	}
 }

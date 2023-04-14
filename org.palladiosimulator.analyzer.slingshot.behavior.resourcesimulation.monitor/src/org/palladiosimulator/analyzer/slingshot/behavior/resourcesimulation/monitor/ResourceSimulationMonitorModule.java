@@ -6,7 +6,7 @@ public class ResourceSimulationMonitorModule extends AbstractSlingshotExtension 
 
 	@Override
 	protected void configure() {
-		install(ActiveResourceMonitorInitializationBehavior.class);
+		install(ActiveResourceMonitorBehavior.class);
 		install(PassiveResourceMonitoringBehavior.class);
 	}
 
