@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.WaitingJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -52,9 +53,11 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
  * @author Julijan Katic
  */
 @OnEvent(when = SimulationFinished.class, then = {})
-@OnEvent(when = JobInitiated.class, then = JobProgressed.class, cardinality = EventCardinality.MANY)
-@OnEvent(when = JobFinished.class, then = ActiveResourceFinished.class, cardinality = SINGLE)
-@OnEvent(when = JobProgressed.class, then = AbstractJobEvent.class, cardinality = EventCardinality.MANY)
+@OnEvent(when = JobInitiated.class, then = { JobProgressed.class,
+		ActiveResourceStateUpdated.class }, cardinality = EventCardinality.MANY)
+@OnEvent(when = JobFinished.class, then = ActiveResourceFinished.class, cardinality = EventCardinality.SINGLE)
+@OnEvent(when = JobProgressed.class, then = { AbstractJobEvent.class,
+		ActiveResourceStateUpdated.class }, cardinality = EventCardinality.MANY)
 @OnEvent(when = PassiveResourceReleased.class, then = PassiveResourceAcquired.class, cardinality = EventCardinality.MANY)
 @OnEvent(when = ResourceDemandRequested.class, then = {
 		JobInitiated.class, PassiveResourceAcquired.class

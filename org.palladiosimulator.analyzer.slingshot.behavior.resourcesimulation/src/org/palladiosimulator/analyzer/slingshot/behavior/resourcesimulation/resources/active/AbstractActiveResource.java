@@ -87,6 +87,7 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 		final double currentDemand = jobInitiated.getEntity().getDemand();
 		jobInitiated.getEntity().updateDemand(currentDemand/processingRate.calculateRV());
 		return this.process(jobInitiated);
+		// if we wanna publish demand requested, we gotta do it here, before it get's normalized.
 	}
 
 }

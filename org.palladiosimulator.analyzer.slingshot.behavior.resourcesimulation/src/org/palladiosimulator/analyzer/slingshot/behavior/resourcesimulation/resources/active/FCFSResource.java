@@ -8,6 +8,7 @@ import java.util.Set;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -59,6 +60,8 @@ public class FCFSResource extends AbstractActiveResource {
 		}
 
 		return this.scheduleNextEvent().map(j -> j);
+		// return Result.of(this.scheduleNextEvent().get(), new
+		// ActiveResourceStateUpdated(newJob, this.processes.size()));
 	}
 
 	/**
@@ -78,9 +81,9 @@ public class FCFSResource extends AbstractActiveResource {
 
 		final Optional<JobProgressed> next = this.scheduleNextEvent();
 		if (next.isPresent()) {
-			return Set.of(new JobFinished(job), next.get());
+			return Set.of(new JobFinished(job), new ActiveResourceStateUpdated(job, this.processes.size()), next.get());
 		}
-		return Set.of(new JobFinished(job));
+		return Set.of(new JobFinished(job), new ActiveResourceStateUpdated(job, this.processes.size()));
 	}
 
 	@Override

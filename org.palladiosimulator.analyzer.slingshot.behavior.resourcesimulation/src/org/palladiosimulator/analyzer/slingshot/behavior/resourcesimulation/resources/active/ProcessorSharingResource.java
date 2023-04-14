@@ -11,6 +11,7 @@ import java.util.UUID;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -85,6 +86,10 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		this.reportCoreUsage();
 
 		return this.scheduleNextEvent().map(j -> j);
+		// final ProcessorSharingJobProgressed jobProgressed =
+		// this.scheduleNextEvent().get();
+		// return Result.of(jobProgressed, new ActiveResourceStateUpdated(newJob,
+		// this.runningJobs.size()));
 	}
 
 	/**
@@ -116,9 +121,11 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 
 		final Optional<ProcessorSharingJobProgressed> next = this.scheduleNextEvent();
 		if (next.isPresent()) {
-			return Set.of(new JobFinished(shortestJob), next.get());
+			return Set.of(new JobFinished(shortestJob),
+					new ActiveResourceStateUpdated(shortestJob, this.runningJobs.size()), next.get());
 		}
-		return Set.of(new JobFinished(shortestJob));
+		return Set.of(new JobFinished(shortestJob),
+				new ActiveResourceStateUpdated(shortestJob, this.runningJobs.size()));
 	}
 
 	@Override
