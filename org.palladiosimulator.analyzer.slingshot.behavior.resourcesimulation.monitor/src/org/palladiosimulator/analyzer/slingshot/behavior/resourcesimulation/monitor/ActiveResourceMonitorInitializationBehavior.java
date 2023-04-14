@@ -1,5 +1,9 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor;
 
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+
 import javax.inject.Inject;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
@@ -60,7 +64,9 @@ public class ActiveResourceMonitorInitializationBehavior implements SimulationBe
 
 			} else if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.RESOURCE_DEMAND_METRIC)) {
-				throw new IllegalArgumentException("Not Yet Supported 1.");
+				final Calculator calculator = this.table.setupResoucreDemandCalculator(activeResourceMeasuringPoint,
+						this.calculatorFactory);
+				return Result.of(new CalculatorRegistered(calculator));
 
 			} else if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.UTILIZATION_OF_ACTIVE_RESOURCE)) {
@@ -73,8 +79,19 @@ public class ActiveResourceMonitorInitializationBehavior implements SimulationBe
 
 	@Subscribe
 	public Result<ProbeTaken> onActiveResourceStateUpdated(final ActiveResourceStateUpdated stateUpdated) {
-			final Probe probe = this.table.currentStateOfActiveResource(stateUpdated);
-			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
+		// TODO : maybe it makes sense to actually merge the probing into one operation,
+		// and return a set of probes right away.
+
+		final Optional<Probe> SARprobe = this.table.currentStateOfActiveResource(stateUpdated);
+		final Optional<Probe> RDprobe = this.table.currentResourceDemand(stateUpdated);
+
+		final Set<ProbeTaken> result = new HashSet<>();
+		if (SARprobe.isPresent())
+			result.add(new ProbeTaken(ProbeTakenEntity.builder().withProbe(SARprobe.get()).build()));
+		if (RDprobe.isPresent())
+			result.add(new ProbeTaken(ProbeTakenEntity.builder().withProbe(RDprobe.get()).build()));
+
+		return Result.of(result);
 	}
 
 }

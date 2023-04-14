@@ -16,4 +16,8 @@ public final class ActiveResourceStateUpdated extends AbstractJobEvent {
 		return queueLength;
 	}
 
+	public double getResourceDemandRequested() {
+		return 3.141592;
+	}
+
 }
