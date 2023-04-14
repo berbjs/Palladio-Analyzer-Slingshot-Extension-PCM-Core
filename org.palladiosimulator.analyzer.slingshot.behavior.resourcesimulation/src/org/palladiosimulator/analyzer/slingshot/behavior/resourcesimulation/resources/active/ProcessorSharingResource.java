@@ -134,7 +134,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	/**
 	 * Returns the event holding the shortest job. The event will have a delay of
 	 * the remaining time the shortest job would have to be processed. If there is
-	 * no job left, {@code null} will be returned.
+	 * no job left, an empty Optional will be returned.
 	 *
 	 * Furthermore, the internal state will be updated.
 	 *

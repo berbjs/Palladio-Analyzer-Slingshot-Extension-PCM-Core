@@ -35,17 +35,6 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	private final ProcessingRate processingRate;
 
 	/**
-	 * @deprecated Use
-	 *             {@link #AbstractActiveResource(ProcessingResourceType, String, long)}
-	 *             for a more sophisticated constructor.
-	 */
-	@Deprecated
-	public AbstractActiveResource(final String id, final String name, final long capacity, final ProcessingRate rate) {
-		super(capacity, name, id);
-		this.processingRate = rate;
-	}
-
-	/**
 	 * Constructs the active resource. The id is specified by the {@code type} (more
 	 * specifically {@code type.getId()}).
 	 *

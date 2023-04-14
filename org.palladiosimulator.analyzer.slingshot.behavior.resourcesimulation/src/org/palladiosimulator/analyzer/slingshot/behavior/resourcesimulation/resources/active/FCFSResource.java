@@ -123,7 +123,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 * <p>
 	 * The event will be delayed by the current job's demand.
 	 *
-	 * @return The new JobProgressed event if there is any, or {@code null}
+	 * @return The new JobProgressed event if there is any, an empty Optional
 	 *         otherwise.
 	 */
 	private Optional<JobProgressed> scheduleNextEvent() {
