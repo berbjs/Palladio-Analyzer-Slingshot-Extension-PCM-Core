@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.res
 
 import java.util.ArrayDeque;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 
@@ -9,7 +10,6 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.enti
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.IPassiveResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
-import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.PassiveResource;
 
@@ -59,13 +59,13 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	 * @param waitingJob The job to acquire.
 	 * @return Either {@link PassiveResourceAcquired} if granted, or empty.
 	 */
-	public Result<PassiveResourceAcquired> acquire(final WaitingJob waitingJob) {
+	public Optional<PassiveResourceAcquired> acquire(final WaitingJob waitingJob) {
 		/* TODO: Throw exception if demand is higher than capacity. */
 		if (this.acquirable(waitingJob)) {
-			return Result.of(this.grantAccess(waitingJob));
+			return Optional.of(grantAccess(waitingJob));
 		} else {
 			this.waitingJobs.offer(waitingJob);
-			return Result.empty();
+			return Optional.empty();
 		}
 	}
 
@@ -79,7 +79,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 	 * @return {@link PassiveResourceAcquired} events for the next jobs waiting in
 	 *         the queue to be granted.
 	 */
-	public Result<PassiveResourceAcquired> release(final WaitingJob waitingJob) {
+	public Set<PassiveResourceAcquired> release(final WaitingJob waitingJob) {
 		this.available += waitingJob.getDemand();
 
 		final Set<PassiveResourceAcquired> events = new HashSet<>();
@@ -91,7 +91,7 @@ public final class SimplePassiveResource extends AbstractResource implements IPa
 			nextJob = this.waitingJobs.peek();
 		}
 
-		return Result.from(events);
+		return events;
 	}
 
 	/**

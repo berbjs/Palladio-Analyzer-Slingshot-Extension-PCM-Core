@@ -136,7 +136,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 		//assert Postconditions.checkResultTypesAndSize(returnedEvents,
 		//		List.of(UserStarted.class, InterArrivalUserInitiated.class), 2);
 
-		return Result.from(returnedEvents);
+		return Result.of(returnedEvents);
 	}
 
 	/**
@@ -265,7 +265,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 			result.add(new UsageScenarioStarted(userStarted.getEntity(), 0));
 		}
 
-		return Result.from(result);
+		return Result.of(result);
 	}
 
 	/**
@@ -297,7 +297,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 				.findAny()
 				.isEmpty();
 
-		return Result.from(result);
+		return Result.of(result);
 	}
 
 	/**
@@ -362,7 +362,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 			this.finishUserInterpretation(resultSet, context);
 		}
 
-		return Result.from(resultSet);
+		return Result.of(resultSet);
 	}
 
 	/**
@@ -401,7 +401,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 				closedWorkloadUserInitiated.getEntity().getBehaviorContext().getScenarioBehavior());
 		final UsageScenarioInterpreter usageScenarioInterpreter = new UsageScenarioInterpreter(
 				closedWorkloadUserInitiated.getEntity());
-		return Result.from(usageScenarioInterpreter.doSwitch(updatedRootScenarioContext.startScenario()));
+		return Result.of(usageScenarioInterpreter.doSwitch(updatedRootScenarioContext.startScenario()));
 	}
 
 	@Subscribe
@@ -411,7 +411,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 		final UsageScenarioInterpreter usageScenarioInterpreter = new UsageScenarioInterpreter(
 				userInterpretationContext);
 		final Set<DESEvent> events = usageScenarioInterpreter.doSwitch(userInterpretationContext.getCurrentAction());
-		return Result.from(events);
+		return Result.of(events);
 	}
 
 	/**
@@ -426,6 +426,6 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 */
 	private Result<DESEvent> interpretNextAction(final UserInterpretationContext context) {
 		final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(context);
-		return Result.from(interpreter.doSwitch(context.getCurrentAction()));
+		return Result.of(interpreter.doSwitch(context.getCurrentAction()));
 	}
 }
