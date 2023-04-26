@@ -5,11 +5,11 @@ import javax.measure.quantity.Dimensionless;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.IPassiveResource;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
-import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventBasedProbe;
+import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventBasedBasicProbe;
 import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventDistinguisher;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 
-public class TakePassiveResourceStateProbe extends EventBasedProbe<Long, Dimensionless> {
+public class TakePassiveResourceStateProbe extends EventBasedBasicProbe<Long, Dimensionless> {
 
 	private final IPassiveResource passiveResource;
 
@@ -30,6 +30,5 @@ public class TakePassiveResourceStateProbe extends EventBasedProbe<Long, Dimensi
 	public Measure<Long, Dimensionless> getMeasurement(final DESEvent event) {
 		return Measure.valueOf(this.passiveResource.getCurrentlyAvailable(), Dimensionless.UNIT);
 	}
-
 
 }
