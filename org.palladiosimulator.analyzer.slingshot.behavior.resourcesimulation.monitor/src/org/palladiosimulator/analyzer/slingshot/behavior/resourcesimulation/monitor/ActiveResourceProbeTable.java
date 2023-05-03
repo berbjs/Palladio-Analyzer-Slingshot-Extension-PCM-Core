@@ -9,7 +9,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.ResourceDemandRequestedProbe;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.StateOfActiveResourceProbe;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
-import org.palladiosimulator.pcm.resourceenvironment.ResourceContainer;
+import org.palladiosimulator.pcm.resourceenvironment.ProcessingResourceSpecification;
 import org.palladiosimulator.pcmmeasuringpoint.ActiveResourceMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSets;
@@ -20,23 +20,22 @@ import org.palladiosimulator.probeframework.probes.Probe;
  *
  * Creates Probes and Calculators and maps Resources to their Probes.
  *
- * TODO i think it's smarter to map by processing resource specification, as one
- * resource container may contain multiple specs.
+ * Probes are mapped to the ResourceContainer's ProcessingResourceSpecification.
  *
  * @author Julijan Katic, Floriment Klinaku, Sarah Stieß
  *
  */
 public final class ActiveResourceProbeTable {
 
-	private final Map<String, Probes> probes = new HashMap<>();
+	private final Map<ProcessingResourceSpecification, Probes> probes = new HashMap<>();
 
-	public void addActiveResource(final ResourceContainer activeResource) {
-		this.probes.putIfAbsent(activeResource.getId(), new Probes());
+	public void addActiveResource(final ProcessingResourceSpecification spec) {
+		this.probes.putIfAbsent(spec, new Probes());
 	}
 
 	public Optional<Probe> currentStateOfActiveResource(final ActiveResourceStateUpdated event) {
 		final Probes probes = this.probes
-				.get(event.getEntity().getAllocationContext().getResourceContainer_AllocationContext().getId());// TODO
+				.get(event.getEntity().getProcessingResourceSpecification());
 		if (probes != null) {
 			probes.stateOfActiveResourceProbe.takeMeasurement(event);
 			return Optional.of(probes.stateOfActiveResourceProbe);
@@ -46,7 +45,7 @@ public final class ActiveResourceProbeTable {
 
 	public Optional<Probe> currentResourceDemand(final ResourceDemandCalculated event) {
 		final Probes probes = this.probes
-				.get(event.getEntity().getAllocationContext().getResourceContainer_AllocationContext().getId());// TODO
+				.get(event.getEntity().getProcessingResourceSpecification());
 		if (probes != null) {
 			probes.resourceDemandProbe.takeMeasurement(event);
 			return Optional.of(probes.resourceDemandProbe);
@@ -56,9 +55,8 @@ public final class ActiveResourceProbeTable {
 
 	public Calculator setupStateOfActiveResourceCalculator(final ActiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
-		this.addActiveResource(
-				measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification());
-		final Probes probes = this.probes.get(measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification().getId());
+		this.addActiveResource(measuringPoint.getActiveResource());
+		final Probes probes = this.probes.get(measuringPoint.getActiveResource());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.STATE_OF_ACTIVE_RESOURCE_METRIC_TUPLE,
 				measuringPoint,
 				DefaultCalculatorProbeSets.createSingularProbeConfiguration(probes.stateOfActiveResourceProbe));
@@ -66,10 +64,9 @@ public final class ActiveResourceProbeTable {
 
 	public Calculator setupResoucreDemandCalculator(final ActiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
-		this.addActiveResource(
-				measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification());
+		this.addActiveResource(measuringPoint.getActiveResource());
 		final Probes probes = this.probes
-				.get(measuringPoint.getActiveResource().getResourceContainer_ProcessingResourceSpecification().getId());
+				.get(measuringPoint.getActiveResource());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.RESOURCE_DEMAND_METRIC_TUPLE,
 				measuringPoint,
 				DefaultCalculatorProbeSets.createSingularProbeConfiguration(probes.resourceDemandProbe));

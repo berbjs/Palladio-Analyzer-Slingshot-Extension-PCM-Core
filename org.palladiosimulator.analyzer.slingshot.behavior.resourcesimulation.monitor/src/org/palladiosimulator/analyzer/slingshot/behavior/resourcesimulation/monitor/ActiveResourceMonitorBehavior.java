@@ -28,6 +28,11 @@ import org.palladiosimulator.probeframework.probes.Probe;
  *
  * Behavior to monitor active resources.
  *
+ * TODO : would it make sense, to unregister / only register subscribers, if the
+ * respective monitor actually exists? i.e. only listen to
+ * {@link ActiveResourceStateUpdated} if at least one monitor on an active
+ * resource exists.
+ *
  * @author Sarah Stieß
  *
  */

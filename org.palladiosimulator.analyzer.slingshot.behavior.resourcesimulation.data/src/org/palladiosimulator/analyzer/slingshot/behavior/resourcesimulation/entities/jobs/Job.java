@@ -1,10 +1,14 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.annotation.processing.Generated;
 
 import org.eclipse.emf.ecore.util.EcoreUtil;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.pcm.allocation.AllocationContext;
+import org.palladiosimulator.pcm.resourceenvironment.ProcessingResourceSpecification;
 import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 
 import de.uka.ipd.sdq.probfunction.math.util.MathTools;
@@ -17,7 +21,7 @@ import de.uka.ipd.sdq.probfunction.math.util.MathTools;
  * equal.
  * <p>
  * A job is considered "higher" than another job if it has a higher demand.
- * 
+ *
  * @author Julijan Katic
  */
 public class Job {
@@ -49,7 +53,7 @@ public class Job {
 	/**
 	 * Returns the unique identifier of the job. For jobs with the same id, they are
 	 * considered to be the same job.
-	 * 
+	 *
 	 * @return the id of this job.
 	 */
 	public String getId() {
@@ -58,7 +62,7 @@ public class Job {
 
 	/**
 	 * Returns the demand that the resource still needs to process.
-	 * 
+	 *
 	 * @return
 	 */
 	public double getDemand() {
@@ -75,7 +79,7 @@ public class Job {
 
 	/**
 	 * Updates the job's demand to a new demand.
-	 * 
+	 *
 	 * @param newDemand The non-negative new demand that needs to be set.
 	 */
 	public void updateDemand(final double newDemand) {
@@ -85,7 +89,7 @@ public class Job {
 	/**
 	 * Returns whether the job has finished yet. The job is considered finished when
 	 * there is no demand left, i.e. {@code this.getDemand() == 0}.
-	 * 
+	 *
 	 * @return true iff there is no demand left anymore.
 	 */
 	public boolean isFinished() {
@@ -100,8 +104,30 @@ public class Job {
 	}
 
 	/**
+	 * Returns the processing resource specification of the job's resource container
+	 * that also matches the job's processing resource type.
+	 *
+	 * @return the processingResourceSpecification
+	 */
+	public ProcessingResourceSpecification getProcessingResourceSpecification() {
+		final List<ProcessingResourceSpecification> matches = this.allocationContext
+				.getResourceContainer_AllocationContext().getActiveResourceSpecifications_ResourceContainer().stream()
+				.filter(
+				spec -> spec.getActiveResourceType_ActiveResourceSpecification().equals(this.processingResourceType))
+				.collect(Collectors.toList());
+
+		if (matches.size() != 1) {
+			throw new IllegalArgumentException(
+					String.format("Wrong number of matching ProcessingResourceSpecifications, expected 1 but found %d",
+							matches.size()));
+		}
+
+		return matches.get(0);
+	}
+
+	/**
 	 * Returns the hash code of {@link #getId()}.
-	 * 
+	 *
 	 * @generated
 	 */
 	@Override
@@ -114,7 +140,7 @@ public class Job {
 
 	/**
 	 * Checks if two Jobs have the same {@link #getId()}.
-	 * 
+	 *
 	 * @generated
 	 */
 	@Override
@@ -146,7 +172,7 @@ public class Job {
 
 	/**
 	 * Creates builder to build {@link Job}.
-	 * 
+	 *
 	 * @return created builder
 	 */
 	@Generated("SparkTools")
@@ -170,7 +196,7 @@ public class Job {
 
 		/**
 		 * Builder method for id parameter.
-		 * 
+		 *
 		 * @param id field to set
 		 * @return builder
 		 */
@@ -181,7 +207,7 @@ public class Job {
 
 		/**
 		 * Builder method for demand parameter.
-		 * 
+		 *
 		 * @param demand field to set
 		 * @return builder
 		 */
@@ -192,7 +218,7 @@ public class Job {
 
 		/**
 		 * Builder method for processingResourceType parameter.
-		 * 
+		 *
 		 * @param processingResourceType field to set
 		 * @return builder
 		 */
@@ -203,7 +229,7 @@ public class Job {
 
 		/**
 		 * Builder method for allocationContext parameter.
-		 * 
+		 *
 		 * @param allocationContext field to set
 		 * @return builder
 		 */
@@ -214,7 +240,7 @@ public class Job {
 
 		/**
 		 * Builder method for request parameter.
-		 * 
+		 *
 		 * @param request field to set
 		 * @return builder
 		 */
@@ -225,7 +251,7 @@ public class Job {
 
 		/**
 		 * Builder method of the builder.
-		 * 
+		 *
 		 * @return built class
 		 */
 		public Job build() {
