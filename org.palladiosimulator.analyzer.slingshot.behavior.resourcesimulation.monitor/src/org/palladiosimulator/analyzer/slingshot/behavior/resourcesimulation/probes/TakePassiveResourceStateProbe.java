@@ -31,5 +31,4 @@ public class TakePassiveResourceStateProbe extends EventBasedBasicProbe<Long, Di
 		return Measure.valueOf(this.passiveResource.getCurrentlyAvailable(), Dimensionless.UNIT);
 	}
 
-
 }
