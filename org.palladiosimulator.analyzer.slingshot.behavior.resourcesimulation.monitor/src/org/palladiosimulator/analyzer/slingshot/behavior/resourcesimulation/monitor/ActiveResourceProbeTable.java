@@ -3,11 +3,13 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.mon
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.ResourceDemandRequestedProbe;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.StateOfActiveResourceProbe;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.UtilizationOfActiveResourceProbe;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.pcm.resourceenvironment.ProcessingResourceSpecification;
 import org.palladiosimulator.pcmmeasuringpoint.ActiveResourceMeasuringPoint;
@@ -33,14 +35,15 @@ public final class ActiveResourceProbeTable {
 		this.probes.putIfAbsent(spec, new Probes());
 	}
 
-	public Optional<Probe> currentStateOfActiveResource(final ActiveResourceStateUpdated event) {
+	public Set<Probe> currentStateAndUtilizationOfActiveResource(final ActiveResourceStateUpdated event) {
 		final Probes probes = this.probes
 				.get(event.getEntity().getProcessingResourceSpecification());
 		if (probes != null) {
 			probes.stateOfActiveResourceProbe.takeMeasurement(event);
-			return Optional.of(probes.stateOfActiveResourceProbe);
+			probes.utilizationOfActiveResourceProbe.takeMeasurement(event);
+			return Set.of(probes.stateOfActiveResourceProbe, probes.utilizationOfActiveResourceProbe);
 		}
-		return Optional.empty();
+		return Set.of();
 	}
 
 	public Optional<Probe> currentResourceDemand(final ResourceDemandCalculated event) {
@@ -60,6 +63,15 @@ public final class ActiveResourceProbeTable {
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.STATE_OF_ACTIVE_RESOURCE_METRIC_TUPLE,
 				measuringPoint,
 				DefaultCalculatorProbeSets.createSingularProbeConfiguration(probes.stateOfActiveResourceProbe));
+	}
+
+	public Calculator setupUtilizationOfActiveResourceCalculator(final ActiveResourceMeasuringPoint measuringPoint,
+			final IGenericCalculatorFactory calculatorFactory) {
+		this.addActiveResource(measuringPoint.getActiveResource());
+		final Probes probes = this.probes.get(measuringPoint.getActiveResource());
+		return calculatorFactory.buildCalculator(MetricDescriptionConstants.UTILIZATION_OF_ACTIVE_RESOURCE_TUPLE,
+				measuringPoint,
+				DefaultCalculatorProbeSets.createSingularProbeConfiguration(probes.utilizationOfActiveResourceProbe));
 	}
 
 	public Calculator setupResoucreDemandCalculator(final ActiveResourceMeasuringPoint measuringPoint,
@@ -82,6 +94,7 @@ public final class ActiveResourceProbeTable {
 	 */
 	private static final class Probes {
 		private final StateOfActiveResourceProbe stateOfActiveResourceProbe = new StateOfActiveResourceProbe();
+		private final UtilizationOfActiveResourceProbe utilizationOfActiveResourceProbe = new UtilizationOfActiveResourceProbe();
 		private final ResourceDemandRequestedProbe resourceDemandProbe = new ResourceDemandRequestedProbe();
 	}
 

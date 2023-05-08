@@ -1,6 +1,9 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor;
 
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import javax.inject.Inject;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
@@ -60,8 +63,8 @@ public class ActiveResourceMonitorBehavior implements SimulationBehaviorExtensio
 
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.STATE_OF_ACTIVE_RESOURCE_METRIC)) {
-				final Calculator calculator = this.table.setupStateOfActiveResourceCalculator(activeResourceMeasuringPoint,
-						this.calculatorFactory);
+				final Calculator calculator = this.table
+						.setupStateOfActiveResourceCalculator(activeResourceMeasuringPoint, this.calculatorFactory);
 				return Result.of(new CalculatorRegistered(calculator));
 
 			} else if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
@@ -72,8 +75,9 @@ public class ActiveResourceMonitorBehavior implements SimulationBehaviorExtensio
 
 			} else if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.UTILIZATION_OF_ACTIVE_RESOURCE)) {
-
-				throw new UnsupportedOperationException("UTILIZATION_OF_ACTIVE_RESOURCE not yet implemented");
+				final Calculator calculator = this.table.setupUtilizationOfActiveResourceCalculator(
+						activeResourceMeasuringPoint, this.calculatorFactory);
+				return Result.of(new CalculatorRegistered(calculator));
 			}
 		}
 		return Result.empty();
@@ -90,11 +94,12 @@ public class ActiveResourceMonitorBehavior implements SimulationBehaviorExtensio
 
 	@Subscribe
 	public Result<ProbeTaken> onActiveResourceStateUpdated(final ActiveResourceStateUpdated stateUpdated) {
-		final Optional<Probe> probe = this.table.currentStateOfActiveResource(stateUpdated);
-		if (probe.isPresent()) {
-			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe.get()).build()));
-		}
-		return Result.of();
+		final Set<Probe> probes = this.table.currentStateAndUtilizationOfActiveResource(stateUpdated);
+		final Set<ProbeTaken> probesTaken = probes.stream()
+				.map(probe -> new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()))
+				.collect(Collectors.toSet());
+
+		return Result.of(probesTaken);
 	}
 
 }

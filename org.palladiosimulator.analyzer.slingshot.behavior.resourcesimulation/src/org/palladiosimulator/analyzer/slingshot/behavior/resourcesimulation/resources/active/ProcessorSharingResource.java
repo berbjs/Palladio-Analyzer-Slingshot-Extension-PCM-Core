@@ -7,6 +7,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
@@ -268,6 +269,11 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 
 	@Override
 	protected ActiveResourceStateUpdated publishState(final Job job) {
-		return new ActiveResourceStateUpdated(job, this.runningJobs.size());
+
+		final double numberOfActiveCores = this.numberProcessesOnCore.stream().filter(core -> core > 0)
+				.collect(Collectors.toList()).size();
+
+		return new ActiveResourceStateUpdated(job, this.runningJobs.size(),
+				numberOfActiveCores / this.numberProcessesOnCore.size());
 	}
 }

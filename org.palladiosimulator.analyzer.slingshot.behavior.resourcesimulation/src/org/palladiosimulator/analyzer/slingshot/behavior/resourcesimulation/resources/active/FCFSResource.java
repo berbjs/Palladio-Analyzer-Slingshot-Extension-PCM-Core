@@ -135,6 +135,7 @@ public class FCFSResource extends AbstractActiveResource {
 
 	@Override
 	protected ActiveResourceStateUpdated publishState(final Job job) {
-		return new ActiveResourceStateUpdated(job, this.processes.size());
+		final double utilization = this.processes.isEmpty() ? 0 : 1;
+		return new ActiveResourceStateUpdated(job, this.processes.size(), utilization);
 	}
 }
