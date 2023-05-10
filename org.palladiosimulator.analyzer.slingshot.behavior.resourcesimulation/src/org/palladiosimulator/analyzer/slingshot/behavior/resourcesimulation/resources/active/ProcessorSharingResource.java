@@ -269,11 +269,11 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 
 	@Override
 	protected ActiveResourceStateUpdated publishState(final Job job) {
-
+		final int waitingJobs = this.runningJobs.size();
 		final double numberOfActiveCores = this.numberProcessesOnCore.stream().filter(core -> core > 0)
 				.collect(Collectors.toList()).size();
+		final double utilization = numberOfActiveCores / this.numberProcessesOnCore.size();
 
-		return new ActiveResourceStateUpdated(job, this.runningJobs.size(),
-				numberOfActiveCores / this.numberProcessesOnCore.size());
+		return new ActiveResourceStateUpdated(job, waitingJobs, utilization);
 	}
 }
