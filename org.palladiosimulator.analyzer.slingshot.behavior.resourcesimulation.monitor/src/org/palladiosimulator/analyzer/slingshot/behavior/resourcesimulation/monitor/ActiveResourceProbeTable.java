@@ -74,7 +74,7 @@ public final class ActiveResourceProbeTable {
 				DefaultCalculatorProbeSets.createSingularProbeConfiguration(probes.utilizationOfActiveResourceProbe));
 	}
 
-	public Calculator setupResoucreDemandCalculator(final ActiveResourceMeasuringPoint measuringPoint,
+	public Calculator setupResourceDemandCalculator(final ActiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
 		this.addActiveResource(measuringPoint.getActiveResource());
 		final Probes probes = this.probes

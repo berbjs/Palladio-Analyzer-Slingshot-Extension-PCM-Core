@@ -69,7 +69,7 @@ public class ActiveResourceMonitorBehavior implements SimulationBehaviorExtensio
 
 			} else if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.RESOURCE_DEMAND_METRIC)) {
-				final Calculator calculator = this.table.setupResoucreDemandCalculator(activeResourceMeasuringPoint,
+				final Calculator calculator = this.table.setupResourceDemandCalculator(activeResourceMeasuringPoint,
 						this.calculatorFactory);
 				return Result.of(new CalculatorRegistered(calculator));
 
