@@ -70,9 +70,13 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	protected abstract Set<AbstractJobEvent> process(final JobProgressed jobProgressed);
 
 	/**
-	 * TODO
 	 *
-	 * @return event with the state of the active resource
+	 * The delegated handler of the resource that will collect the state of the
+	 * active resource. Should be called after a job enters, progresses at, or
+	 * leaves a resource.
+	 *
+	 * @param job job that is related to the changed state of the resource.
+	 * @return event with the state of the active resource.
 	 */
 	protected abstract ActiveResourceStateUpdated publishState(final Job job);
 
