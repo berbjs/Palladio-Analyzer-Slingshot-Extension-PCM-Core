@@ -7,10 +7,12 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -98,7 +100,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	 *         {@link JobProgressed} event of the next job to process.
 	 */
 	@Override
-	public Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
+	public Set<AbstractJobEvent> process(final JobProgressed jobProgressed) {
 		if (!(jobProgressed instanceof ProcessorSharingJobProgressed)) {
 			return Set.of();
 		}
@@ -133,7 +135,7 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 	/**
 	 * Returns the event holding the shortest job. The event will have a delay of
 	 * the remaining time the shortest job would have to be processed. If there is
-	 * no job left, {@code null} will be returned.
+	 * no job left, an empty Optional will be returned.
 	 *
 	 * Furthermore, the internal state will be updated.
 	 *
@@ -263,5 +265,15 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 		if (this.numberProcessesOnCore.get(coreNumber) != targetNumberProcessesAtCore) {
 			this.numberProcessesOnCore.set(coreNumber, targetNumberProcessesAtCore);
 		}
+	}
+
+	@Override
+	protected ActiveResourceStateUpdated publishState(final Job job) {
+		final int waitingJobs = this.runningJobs.size();
+		final double numberOfActiveCores = this.numberProcessesOnCore.stream().filter(core -> core > 0)
+				.collect(Collectors.toList()).size();
+		final double utilization = numberOfActiveCores / this.numberProcessesOnCore.size();
+
+		return new ActiveResourceStateUpdated(job, waitingJobs, utilization);
 	}
 }

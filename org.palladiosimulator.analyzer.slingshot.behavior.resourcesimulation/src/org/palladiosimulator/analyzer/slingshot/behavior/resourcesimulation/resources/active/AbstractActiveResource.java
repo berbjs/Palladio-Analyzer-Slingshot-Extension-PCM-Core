@@ -1,12 +1,17 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResource;
 import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 
@@ -28,17 +33,6 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	private static final Logger LOGGER = Logger.getLogger(AbstractActiveResource.class);
 
 	private final ProcessingRate processingRate;
-
-	/**
-	 * @deprecated Use
-	 *             {@link #AbstractActiveResource(ProcessingResourceType, String, long)}
-	 *             for a more sophisticated constructor.
-	 */
-	@Deprecated
-	public AbstractActiveResource(final String id, final String name, final long capacity, final ProcessingRate rate) {
-		super(capacity, name, id);
-		this.processingRate = rate;
-	}
 
 	/**
 	 * Constructs the active resource. The id is specified by the {@code type} (more
@@ -66,6 +60,27 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	protected abstract Optional<AbstractJobEvent> process(final JobInitiated jobInitiated);
 
 	/**
+	 * The delegated handler of the resource that will be processed if the job
+	 * belongs to this resource according to {@link #jobBelongsToResource(Job)}
+	 * implementation.
+	 *
+	 * @param jobProgressed The event.
+	 * @return The appropriate events.
+	 */
+	protected abstract Set<AbstractJobEvent> process(final JobProgressed jobProgressed);
+
+	/**
+	 *
+	 * The delegated handler of the resource that will collect the state of the
+	 * active resource. Should be called after a job enters, progresses at, or
+	 * leaves a resource.
+	 *
+	 * @param job job that is related to the changed state of the resource.
+	 * @return event with the state of the active resource.
+	 */
+	protected abstract ActiveResourceStateUpdated publishState(final Job job);
+
+	/**
 	 * Checks whether the job belongs to the resource. This is done by checking
 	 * whether the {@link ProcessingResourceType} specified in the {@link job} and
 	 * this id ({@link #getId()}) are equal.
@@ -80,13 +95,34 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	}
 
 	@Override
-	public Optional<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
+	public Set<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
 		if (!this.jobBelongsToResource(jobInitiated.getEntity())) {
-			return Optional.empty();
+			return Set.of();
 		}
-		final double currentDemand = jobInitiated.getEntity().getDemand();
-		jobInitiated.getEntity().updateDemand(currentDemand/processingRate.calculateRV());
-		return this.process(jobInitiated);
+		final double calculatedDemand = jobInitiated.getEntity().getDemand()/processingRate.calculateRV();
+		jobInitiated.getEntity().updateDemand(calculatedDemand);
+
+		final Optional<AbstractJobEvent> event = this.process(jobInitiated);
+
+		final Set<AbstractJobEvent> resultEvents = new HashSet<>(Set.of(this.publishState(jobInitiated.getEntity()),
+				new ResourceDemandCalculated(jobInitiated.getEntity(), calculatedDemand)));
+		if (event.isPresent()) {
+			resultEvents.add(event.get());
+		}
+
+		return resultEvents;
+	}
+
+	@Override
+	public Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
+		if (!this.jobBelongsToResource(jobProgressed.getEntity())) {
+			return Set.of();
+		}
+
+		final Set<AbstractJobEvent> resultEvents = new HashSet<>(this.process(jobProgressed));
+		resultEvents.add(this.publishState(jobProgressed.getEntity()));
+
+		return resultEvents;
 	}
 
 }

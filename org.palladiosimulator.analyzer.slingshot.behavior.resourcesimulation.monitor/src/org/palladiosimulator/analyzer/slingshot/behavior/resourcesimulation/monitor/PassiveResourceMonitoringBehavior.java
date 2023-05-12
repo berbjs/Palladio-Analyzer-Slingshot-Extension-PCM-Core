@@ -20,7 +20,6 @@ import org.palladiosimulator.edp2.models.measuringpoint.MeasuringPoint;
 import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
-import org.palladiosimulator.pcm.repository.PassiveResource;
 import org.palladiosimulator.pcmmeasuringpoint.AssemblyPassiveResourceMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
@@ -47,8 +46,6 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
 		if (measuringPoint instanceof AssemblyPassiveResourceMeasuringPoint) {
 			final AssemblyPassiveResourceMeasuringPoint passiveResourceMeasuringPoint = (AssemblyPassiveResourceMeasuringPoint) measuringPoint;
-			final PassiveResource passiveResource = passiveResourceMeasuringPoint.getPassiveResource();
-			this.table.addPassiveResource(passiveResource);
 
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.WAITING_TIME_METRIC)) {

@@ -1,6 +1,5 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active;
 
-import java.util.Optional;
 import java.util.Set;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.IResource;
@@ -27,7 +26,7 @@ public interface ActiveResource extends IResource {
 	 * @param jobInitiated The event.
 	 * @return the appropriate events for the active resource.
 	 */
-	Optional<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated);
+	Set<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated);
 
 	/**
 	 * Handles the {@link JobProgressed} event. Typically, this can result in either

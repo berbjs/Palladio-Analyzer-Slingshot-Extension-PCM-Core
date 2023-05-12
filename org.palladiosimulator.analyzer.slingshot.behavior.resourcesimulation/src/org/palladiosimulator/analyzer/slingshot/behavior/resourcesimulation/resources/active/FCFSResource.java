@@ -8,6 +8,7 @@ import java.util.Set;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
@@ -69,7 +70,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 *         {@link JobProgressed} from the next job to handle.
 	 */
 	@Override
-	public Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed) {
+	public Set<AbstractJobEvent> process(final JobProgressed jobProgressed) {
 		final Job job = jobProgressed.getEntity();
 
 		assert MathTools.equalsDouble(0, job.getDemand()) : "Remaining demand (" + job.getDemand() + ") not zero!";
@@ -122,7 +123,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 * <p>
 	 * The event will be delayed by the current job's demand.
 	 *
-	 * @return The new JobProgressed event if there is any, or {@code null}
+	 * @return The new JobProgressed event if there is any, an empty Optional
 	 *         otherwise.
 	 */
 	private Optional<JobProgressed> scheduleNextEvent() {
@@ -130,5 +131,12 @@ public class FCFSResource extends AbstractActiveResource {
 			return Optional.empty();
 		}
 		return Optional.of(new JobProgressed(this.processes.peek(), this.processes.peek().getDemand()));
+	}
+
+	@Override
+	protected ActiveResourceStateUpdated publishState(final Job job) {
+		final int waitingJobs = this.processes.size();
+		final double utilization = this.processes.isEmpty() ? 0 : 1;
+		return new ActiveResourceStateUpdated(job, waitingJobs, utilization);
 	}
 }
