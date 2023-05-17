@@ -8,12 +8,15 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.util.EcoreUtil;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.InterArrivalTime;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.ClosedWorkloadUserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.OpenWorkloadUserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior.BranchScenarioContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior.LoopScenarioBehaviorContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior.RootScenarioContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior.UsageScenarioBehaviorContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.InnerScenarioBehaviorInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.InterArrivalUserInitiated;
@@ -26,6 +29,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserS
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserWokeUp;
 import org.palladiosimulator.analyzer.slingshot.common.utils.TransitionDeterminer;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
+import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.parameter.VariableUsage;
 import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.OperationSignature;
@@ -35,6 +39,7 @@ import org.palladiosimulator.pcm.usagemodel.BranchTransition;
 import org.palladiosimulator.pcm.usagemodel.Delay;
 import org.palladiosimulator.pcm.usagemodel.EntryLevelSystemCall;
 import org.palladiosimulator.pcm.usagemodel.Loop;
+import org.palladiosimulator.pcm.usagemodel.OpenWorkload;
 import org.palladiosimulator.pcm.usagemodel.ScenarioBehaviour;
 import org.palladiosimulator.pcm.usagemodel.Start;
 import org.palladiosimulator.pcm.usagemodel.Stop;
@@ -46,7 +51,7 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 /**
  * The usage scenario interpreter interprets a single usage scenario. In order
  * for it to work, it needs the user instance and the user context.
- * 
+ *
  * @author Julijan Katic
  */
 public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
@@ -58,7 +63,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 
 	/**
 	 * Instantiates the UsageScenarioInterpreter.
-	 * 
+	 *
 	 * @param user        The user using the system.
 	 * @param userContext The context of the user holding further information.
 	 */
@@ -73,7 +78,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	 * UserInterpretationContext will receive a
 	 * {@link UserLoopInterpretationContext} which gives knowledge about the current
 	 * loop count and the number of loops needed.
-	 * 
+	 *
 	 * @return set of {@link UserLoopInitiated} event.
 	 */
 	@Override
@@ -107,7 +112,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 
 	/**
 	 * Interprets the EntryLevelSystemCall of the usage model.
-	 * 
+	 *
 	 * @return set with {@link UserEntryRequested} event.
 	 */
 	@Override
@@ -131,7 +136,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	/**
 	 * Interprets the Stop action and immediately returns the set with
 	 * {@link UserFinished} event.
-	 * 
+	 *
 	 * @return set with {@link UserFinished} event.
 	 */
 	@Override
@@ -150,7 +155,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	 * users re-enters the usage scenario after it has traversed the model. This is
 	 * done when the user finishes ({@link UserFinished}), but not when the user
 	 * starts.
-	 * 
+	 *
 	 * @return set with {@link UserStarted} event, and if it is an open workload
 	 *         user, then also a {@link InterArrivalUserInitiated} event to start a
 	 *         new user after a specified interArrivalTime.
@@ -165,8 +170,28 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 		} else if (this.userContext instanceof OpenWorkloadUserInterpretationContext) {
 			final OpenWorkloadUserInterpretationContext openWorkloadUserContext = (OpenWorkloadUserInterpretationContext) this.userContext;
 			final double interArrivalTime = openWorkloadUserContext.getInterArrivalTime().calculateRV();
+
+			final UsageScenario startedScenario = object.getScenarioBehaviour_AbstractUserAction()
+					.getUsageScenario_SenarioBehaviour();
+
+			final AbstractUserAction firstAction = startedScenario.getScenarioBehaviour_UsageScenario()
+					.getActions_ScenarioBehaviour().stream().filter(Start.class::isInstance).findFirst()
+					.orElseThrow(() -> new IllegalStateException(
+							"There must be a Start user action within the usage scenario."));
+
+			final OpenWorkload workloadSpec = (OpenWorkload) startedScenario.getWorkload_UsageScenario();
+			final PCMRandomVariable interArrivalRV = workloadSpec.getInterArrivalTime_OpenWorkload();
+
+			final RootScenarioContext nextScenarioContext = RootScenarioContext.builder()
+					.withScenarioBehavior(startedScenario.getScenarioBehaviour_UsageScenario()).build();
+
+			final OpenWorkloadUserInterpretationContext nextOpenWorkloadUserInterpretationContext = OpenWorkloadUserInterpretationContext
+					.builder().withUser(new User()).withScenario(startedScenario).withCurrentAction(firstAction)
+					.withInterArrivalTime(new InterArrivalTime(interArrivalRV))
+					.withUsageScenarioBehaviorContext(nextScenarioContext).build();
+
 			resultSet = Set.of(new UserStarted(this.userContext.updateAction(object.getSuccessor())),
-					new InterArrivalUserInitiated(interArrivalTime));
+					new InterArrivalUserInitiated(nextOpenWorkloadUserInterpretationContext, interArrivalTime));
 		} else {
 			LOGGER.info("The user is neither a closed workload nor open workload user");
 			throw new IllegalStateException("The user must be a open workload or closed workload user");
@@ -180,7 +205,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	 * event that is caused by interpreting the first action inside the chosen
 	 * branch transition, and a {@link UserInterpretationProgressed} event that is
 	 * used to hold the action that comes after the whole branch action.
-	 * 
+	 *
 	 * @return set of the events that are returned by the first action of the branch
 	 *         transition, and {@link innerScenarioBehaviorInitiated}.
 	 */
@@ -234,7 +259,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	 * interpret the Start action and result in events if the first action of the
 	 * scenario behavior is a Start action. If it is not the case, then an empty set
 	 * will be returned.
-	 * 
+	 *
 	 * @return set of events by interpreting the first action within the behavior if
 	 *         it is a start action, otherwise an empty set.
 	 */
@@ -254,7 +279,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	 * Interprets the delay of a user by resulting in two events: The
 	 * {@link UserSlept} event will be first returned, and then the
 	 * {@link UserWokeUp} with the delay will be returned.
-	 * 
+	 *
 	 * @return set of the events {@link UserSlept} with no delay and
 	 *         {@link UserWokeUp} with the delay specified.
 	 */
@@ -270,7 +295,7 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	 * Performs the switch on the object an ensures that always an instance is
 	 * returned, but never {@code null}. If the {@code doSwitch} results in a
 	 * {@code null} reference, then an empty set is returned instead.
-	 * 
+	 *
 	 * @return a set or an empty set, if the original method resulted in
 	 *         {@code null}.
 	 * @throws IllegalArgumentException if this was called with a {@code null}
