@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.inject.Inject;
 
 import org.eclipse.emf.ecore.EObject;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior.RootScenarioContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
@@ -82,7 +83,8 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 
 	@Subscribe(reified = Start.class)
 	public Result<ProbeTaken> onUsageScenarioStarted(final UsageModelPassedElement<Start> userStarted) {
-		if(this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())){
+		if (userStarted.getContext().getBehaviorContext() instanceof RootScenarioContext
+				&& this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())) {
 			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());
 			userProbes.userStartedProbe.takeMeasurement(userStarted);
 			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.userStartedProbe).build()));
@@ -92,7 +94,8 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 
 	@Subscribe(reified = Stop.class)
 	public Result<ProbeTaken> onUsageScenarioFinished(final UsageModelPassedElement<Stop> userStopped) {
-		if(this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())){
+		if (userStopped.getContext().getBehaviorContext() instanceof RootScenarioContext
+				&& this.userProbesMap.containsKey(userStopped.getContext().getScenario().getId())) {
 			final UserProbes userProbes = this.userProbesMap.get(userStopped.getContext().getScenario().getId());
 				userProbes.userStoppedProbe.takeMeasurement(userStopped);
 				return Result
