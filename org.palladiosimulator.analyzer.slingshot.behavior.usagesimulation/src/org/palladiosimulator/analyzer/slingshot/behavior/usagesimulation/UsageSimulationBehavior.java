@@ -4,7 +4,6 @@ import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.e
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.inject.Inject;
@@ -278,26 +277,25 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<DESEvent> onInterArrivalUserInitiated(
 			final InterArrivalUserInitiated interArrivalUserInitiated) {
-		final Set<DESEvent> result = new HashSet<>();
 
-		for (final UsageScenarioInterpretationContext usageScenarioContext : this.usageInterpretationContext
-				.getUsageScenarioContexts()) {
-			final AbstractUserAction firstAction = this.usageModelRepository
-					.findFirstActionOf(usageScenarioContext.getScenario())
-					.orElseThrow(
-							() -> new IllegalStateException("There must be a Start action within the usage scenario."));
+		final OpenWorkloadUserInterpretationContext openWorkloadUserInterpretationContext = (OpenWorkloadUserInterpretationContext) interArrivalUserInitiated
+				.getEntity();
 
-			this.interpreteOpenWorkload(result, usageScenarioContext.getScenario(), firstAction);
-		}
+		final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(
+				openWorkloadUserInterpretationContext);
 
-		// The set should only contain UserStarted and InterArrivalUserInitiated events.
-		assert result.stream()
-				.filter(Predicate.not(UserStarted.class::isInstance))
-				.filter(Predicate.not(InterArrivalUserInitiated.class::isInstance))
-				.findAny()
-				.isEmpty();
+		final AbstractUserAction firstAction = openWorkloadUserInterpretationContext.getCurrentAction();
+		// current action is still start, because we have not jet advanced the
+		// interpretation
 
-		return Result.of(result);
+		final Set<DESEvent> events = interpreter.doSwitch(firstAction);
+
+		assert events.size() == 3;
+		assert events.stream().anyMatch(UserStarted.class::isInstance);
+		assert events.stream().anyMatch(InterArrivalUserInitiated.class::isInstance);
+		assert events.stream().anyMatch(UsageModelPassedElement.class::isInstance);
+
+		return Result.of(events);
 	}
 
 	/**
