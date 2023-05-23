@@ -58,6 +58,7 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 						this.calculatorFactory);
 				return Result.of(new CalculatorRegistered(calculator));
 			}
+			// TODO : StateOfPassiveResource
 		}
 		return Result.empty();
 

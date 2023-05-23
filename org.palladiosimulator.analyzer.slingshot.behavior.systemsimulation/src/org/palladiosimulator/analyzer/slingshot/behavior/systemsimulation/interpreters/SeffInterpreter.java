@@ -34,6 +34,7 @@ import org.palladiosimulator.pcm.repository.Parameter;
 import org.palladiosimulator.pcm.seff.AbstractBranchTransition;
 import org.palladiosimulator.pcm.seff.AcquireAction;
 import org.palladiosimulator.pcm.seff.BranchAction;
+import org.palladiosimulator.pcm.seff.CallAction;
 import org.palladiosimulator.pcm.seff.CollectionIteratorAction;
 import org.palladiosimulator.pcm.seff.ExternalCallAction;
 import org.palladiosimulator.pcm.seff.ForkAction;
@@ -45,6 +46,7 @@ import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.SetVariableAction;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
+import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 import org.palladiosimulator.pcm.seff.util.SeffSwitch;
 
@@ -207,6 +209,12 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	}
 
 	@Override
+	public Set<SEFFInterpreted> caseCallAction(final CallAction callAction) {
+
+		return null;
+	}
+
+	@Override
 	public Set<SEFFInterpreted> caseAcquireAction(final AcquireAction object) {
 
 		final ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(
@@ -297,6 +305,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			final ResourceDemandRequested requestEvent = new ResourceDemandRequested(request);
 			events.add(requestEvent);
 		});
+
+		final EList<InfrastructureCall> infrastructureCall = internalAction.getInfrastructureCall__Action();
 
 		return Collections.unmodifiableSet(events);
 	}

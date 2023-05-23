@@ -3,6 +3,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.repos
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.pcm.core.composition.AssemblyConnector;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.core.composition.ProvidedDelegationConnector;
@@ -72,6 +73,8 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 	@Override
 	public Optional<ProvidedDelegationConnector> getConnectedProvidedDelegationConnector(
 			final ProvidedRole providedRole) {
+
+		final EList<ProvidedRole> roles = this.systemModel.getProvidedRoles_InterfaceProvidingEntity();
 
 		final boolean providedRolePresent = this.systemModel.getProvidedRoles_InterfaceProvidingEntity().stream()
 				.filter(systemProvidedRole -> systemProvidedRole.getId().equals(providedRole.getId()))
