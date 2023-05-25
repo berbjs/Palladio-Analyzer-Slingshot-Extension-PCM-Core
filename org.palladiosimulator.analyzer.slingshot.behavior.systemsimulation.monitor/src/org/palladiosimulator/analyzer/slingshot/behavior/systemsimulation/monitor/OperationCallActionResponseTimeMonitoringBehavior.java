@@ -5,7 +5,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.eclipse.emf.ecore.EObject;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
@@ -22,12 +21,15 @@ import org.palladiosimulator.analyzer.slingshot.monitor.data.events.ProbeTaken;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited.MeasurementSpecificationVisited;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited.MonitorModelVisited;
 import org.palladiosimulator.analyzer.slingshot.monitor.utils.probes.EventCurrentSimulationTimeProbe;
-import org.palladiosimulator.commons.emfutils.EMFLoadHelper;
 import org.palladiosimulator.edp2.models.measuringpoint.MeasuringPoint;
 import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
+import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.OperationSignature;
+import org.palladiosimulator.pcm.repository.Role;
+import org.palladiosimulator.pcm.seff.StartAction;
+import org.palladiosimulator.pcmmeasuringpoint.AssemblyOperationMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSets;
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
@@ -75,6 +77,7 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 
 	/**
 	 * Creates probes if a measuring point for it was specified.
+	 *
 	 * @param event
 	 * @return
 	 */
@@ -82,84 +85,107 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 	public Result<CalculatorRegistered> onMeasurementSpecificationVisited(final MeasurementSpecificationVisited event) {
 		final MeasurementSpecification measurementSpecification = event.getEntity();
 		final MeasuringPoint measuringPoint = measurementSpecification.getMonitor().getMeasuringPoint();
-		final EObject eObject = EMFLoadHelper.loadAndResolveEObject(measuringPoint.getResourceURIRepresentation());
 
-
-		if (eObject instanceof OperationSignature
+		if (measuringPoint instanceof AssemblyOperationMeasuringPoint
 				&& MetricDescriptionUtility.metricDescriptionIdsEqual(measurementSpecification.getMetricDescription(),
-				MetricDescriptionConstants.RESPONSE_TIME_METRIC)) {
+						MetricDescriptionConstants.RESPONSE_TIME_METRIC)) {
+			final Role role = ((AssemblyOperationMeasuringPoint) measuringPoint).getRole();
 
-			final OperationSignature signature = (OperationSignature) eObject;
-			final OperationProbes userProbes = new OperationProbes();
-			this.userProbesMap.put(signature.getId(), userProbes);
+			if (role instanceof OperationProvidedRole) {
 
-			final Calculator calculator = this.calculatorFactory.buildCalculator(
-					MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, measuringPoint,
-					DefaultCalculatorProbeSets.createStartStopProbeConfiguration(userProbes.operationStartedProbe,
-							userProbes.operationFinishedProbe));
+				final OperationProbes userProbes = new OperationProbes();
+				this.userProbesMap.put(role.getId(), userProbes);
 
-			return Result.of(new CalculatorRegistered(calculator));
+				final Calculator calculator = this.calculatorFactory.buildCalculator(
+						MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, measuringPoint,
+						DefaultCalculatorProbeSets.createStartStopProbeConfiguration(userProbes.operationStartedProbe,
+								userProbes.operationFinishedProbe));
+
+				return Result.of(new CalculatorRegistered(calculator));
 			}
+		}
+
 		return Result.empty();
 
 	}
-
 
 	@Subscribe
 	public Result<ProbeTaken> onOperationCallStarted(final SEFFExternalActionCalled seffProgressed) {
 
+		// PROBLEM : I only know the Required role, not the provided one.
+
 		if (seffProgressed.getEntity().getSignature() instanceof OperationSignature
 				&& this.userProbesMap.containsKey(seffProgressed.getEntity().getSignature().getId())) {
 
-			final OperationProbes userProbes = this.userProbesMap.get(seffProgressed.getEntity().getSignature().getId());
-			userProbes.operationStartedProbe.takeMeasurement(seffProgressed);
-			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
-		}
-		return Result.empty();
-	}
-
-	@Subscribe
-	public Result<ProbeTaken> onOperationCallStarted(final UserEntryRequested seffProgressed) {
-
-		if (seffProgressed.getEntity().getOperationSignature() instanceof OperationSignature
-				&& this.userProbesMap.containsKey(seffProgressed.getEntity().getOperationSignature().getId())) {
-
 			final OperationProbes userProbes = this.userProbesMap
-					.get(seffProgressed.getEntity().getOperationSignature().getId());
+					.get(seffProgressed.getEntity().getSignature().getId());
 			userProbes.operationStartedProbe.takeMeasurement(seffProgressed);
-			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
+			return Result
+					.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
 		}
 		return Result.empty();
 	}
+
+//	@Subscribe
+//	public Result<ProbeTaken> onOperationCallStarted(final UserEntryRequested seffProgressed) {
+//
+//		if (this.userProbesMap.containsKey(seffProgressed.getEntity().getOperationProvidedRole().getId())) {
+//
+//			final OperationProbes userProbes = this.userProbesMap
+//					.get(seffProgressed.getEntity().getOperationProvidedRole().getId());
+//			userProbes.operationStartedProbe.takeMeasurement(seffProgressed);
+//			return Result
+//					.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
+//		}
+//		return Result.empty();
+//	}
 
 	@Subscribe
 	public Result<ProbeTaken> onOperationCallStarted(final SEFFInterpretationProgressed seffProgressed) {
-//
-//		if (seffProgressed.getEntity().getRequestProcessingContext().ge.getContext().getBehaviorContext() instanceof RootScenarioContext
-//				&& this.userProbesMap.containsKey(userStarted.getContext().getScenario().getId())) {
-//			final UserProbes userProbes = this.userProbesMap.get(userStarted.getContext().getScenario().getId());
-//			userProbes.userStartedProbe.takeMeasurement(userStarted);
-//			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.userStartedProbe).build()));
-//		}
+		// ignore nested SEFFs
+		if (seffProgressed.getEntity().getBehaviorContext().isChild()) {
+			return Result.empty();
+		}
+
+		if (seffProgressed.getEntity().getBehaviorContext().getCurrentProcessedBehavior().getCurrentAction() == null
+				|| !(seffProgressed.getEntity().getBehaviorContext().getCurrentProcessedBehavior()
+				.getCurrentAction().getPredecessor_AbstractAction() instanceof StartAction)) {
+			return Result.empty(); // current action is null?
+		}
+
+		if (this.userProbesMap
+				.containsKey(seffProgressed.getEntity().getRequestProcessingContext().getProvidedRole().getId())) {
+			final OperationProbes userProbes = this.userProbesMap
+					.get(seffProgressed.getEntity().getRequestProcessingContext().getProvidedRole().getId());
+			userProbes.operationStartedProbe.takeMeasurement(seffProgressed);
+			return Result
+					.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
+		}
 		return Result.empty();
 	}
 
 	@Subscribe
 	public Result<ProbeTaken> onOperationCallFinished(final SEFFInterpretationFinished seffFinished) {
-		if (seffFinished.getEntity().getRequestProcessingContext().getUserRequest()
-				.getOperationSignature() instanceof OperationSignature
-				&& this.userProbesMap.containsKey(seffFinished.getEntity().getRequestProcessingContext()
-						.getUserRequest().getOperationSignature().getId())) {
-			final OperationProbes userProbes = this.userProbesMap.get(seffFinished.getEntity()
-					.getRequestProcessingContext().getUserRequest().getOperationSignature().getId());
-			userProbes.operationFinishedProbe.takeMeasurement(seffFinished);
-				return Result
-					.of(new ProbeTaken(
-							ProbeTakenEntity.builder().withProbe(userProbes.operationFinishedProbe).build()));
-			}
+		// ignore nested SEFFs
+		if (seffFinished.getEntity().getBehaviorContext().isChild()) {
 			return Result.empty();
-	}
+		}
 
+		// if it's ext call, we dont have the user request. only entry level system call
+		// has the user request.
+		// actualy, op signature from user request would be wrong here any way.
+		// if i had the provided role though, i could get to the provided op signature.
+
+		if (this.userProbesMap
+				.containsKey(seffFinished.getEntity().getRequestProcessingContext().getProvidedRole().getId())) {
+			final OperationProbes userProbes = this.userProbesMap
+					.get(seffFinished.getEntity().getRequestProcessingContext().getProvidedRole().getId());
+			userProbes.operationFinishedProbe.takeMeasurement(seffFinished);
+			return Result.of(
+					new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationFinishedProbe).build()));
+		}
+		return Result.empty();
+	}
 
 	/**
 	 * Syntactic sugar to group start and finished probe together.
@@ -172,6 +198,7 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 				OperationProbes::passedElement);
 
 		private static RequestContext passedElement(final DESEvent desEvent) {
+			// somehow add something here to identify recursive calls.
 			if (desEvent instanceof SEFFInterpretationFinished) {
 				final SEFFInterpretationFinished el = (SEFFInterpretationFinished) desEvent;
 				return new RequestContext(el.getEntity().getRequestProcessingContext().getUser().getId());
