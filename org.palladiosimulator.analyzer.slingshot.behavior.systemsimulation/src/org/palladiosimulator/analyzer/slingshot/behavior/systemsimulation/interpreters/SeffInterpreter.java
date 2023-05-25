@@ -118,6 +118,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				this.context.getBehaviorContext().getCurrentProcessedBehavior());
 		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
+				.withCaller(this.context.getCaller())
 				.withAssemblyContext(this.context.getAssemblyContext()).build();
 
 		final SEFFChildInterpretationStarted event = new SEFFChildInterpretationStarted(childContext);
@@ -149,6 +150,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				iterationCount);
 		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
+				.withCaller(this.context.getCaller())
 				.withAssemblyContext(this.context.getAssemblyContext()).build();
 
 		return Set.of(new SEFFChildInterpretationStarted(childContext));
@@ -177,6 +179,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final List<SEFFInterpretationContext> childContexts = rdBehaviors.stream()
 				.map(rdBehavior -> SEFFInterpretationContext.builder().withBehaviorContext(forkedBehaviorContext)
 						.withRequestProcessingContext(this.context.getRequestProcessingContext())
+						.withCaller(this.context.getCaller())
 						.withAssemblyContext(this.context.getAssemblyContext()).build())
 				.collect(Collectors.toList());
 

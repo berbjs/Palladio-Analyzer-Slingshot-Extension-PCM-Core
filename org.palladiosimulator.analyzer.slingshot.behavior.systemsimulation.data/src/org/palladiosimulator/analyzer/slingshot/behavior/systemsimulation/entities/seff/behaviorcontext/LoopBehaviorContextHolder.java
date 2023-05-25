@@ -13,7 +13,7 @@ import com.google.common.base.Preconditions;
  * progression of the loop. The loop behavior is considered to be finished as
  * soon as the inner model has finished and the progression reaches the
  * specified loop count.
- * 
+ *
  * @author Julijan Katic
  *
  */
@@ -22,12 +22,12 @@ public final class LoopBehaviorContextHolder extends SingleBehaviorContextHolder
 	private static final Logger LOGGER = Logger.getLogger(LoopBehaviorContextHolder.class);
 
 	private final int maximalLoopCounter;
-	private int progression = 0;
+	private int progression = 1;
 
 	/**
 	 * Instantiates the LoopBehaviorContextHolder. No parameter must be
 	 * {@code null}.
-	 * 
+	 *
 	 * @param behavior           The behavior to interpret.
 	 * @param successor          The successor action after this action.
 	 * @param parent             The model in which the action lies.
@@ -45,7 +45,7 @@ public final class LoopBehaviorContextHolder extends SingleBehaviorContextHolder
 	 * Returns whether the loop behavior has finished. This is only the case if all
 	 * models are finished and the progression has reached the specified loop
 	 * counter.
-	 * 
+	 *
 	 * @return true if each model is finished and the loop counter has been reached.
 	 */
 	@Override

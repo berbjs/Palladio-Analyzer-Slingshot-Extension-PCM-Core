@@ -69,8 +69,9 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final SEFFInterpretationContext entity = finished.getEntity();
 		final Result<AbstractSimulationEvent> result;
 		/*
-		 * If the interpretation is finished in a SEFF that was called from another
-		 * SEFF, continue there. Otherwise, the SEFF comes from a User request.
+		 * If the interpretation is finished in a SEFF that was nested into or called
+		 * from another SEFF, continue there. Otherwise, the SEFF comes from a User
+		 * request.
 		 */
 		if (entity.getBehaviorContext() instanceof ForkBehaviorContextHolder) {
 
@@ -89,12 +90,12 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		} else if (!entity.getBehaviorContext().hasFinished()) {
 			LOGGER.info("repeat scenario");
 			result = Result.of(this.repeat(entity));
-		} else if (entity.getCaller().isPresent()) {
-			LOGGER.info("return to caller");
-			result = Result.of(this.continueInCaller(entity));
 		} else if (entity.getBehaviorContext().isChild()) {
 			LOGGER.info("return to parent");
 			result = Result.of(this.continueInParent(entity));
+		} else if (entity.getCaller().isPresent()) { // only go to caller, iff it is not a child.
+			LOGGER.info("return to caller");
+			result = Result.of(this.continueInCaller(entity));
 		} else {
 			LOGGER.info("finish request");
 			result = Result.of(this.finishUserRequest(entity));
