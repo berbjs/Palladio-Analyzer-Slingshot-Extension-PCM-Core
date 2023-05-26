@@ -22,6 +22,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpreted;
@@ -34,7 +35,6 @@ import org.palladiosimulator.pcm.repository.Parameter;
 import org.palladiosimulator.pcm.seff.AbstractBranchTransition;
 import org.palladiosimulator.pcm.seff.AcquireAction;
 import org.palladiosimulator.pcm.seff.BranchAction;
-import org.palladiosimulator.pcm.seff.CallAction;
 import org.palladiosimulator.pcm.seff.CollectionIteratorAction;
 import org.palladiosimulator.pcm.seff.ExternalCallAction;
 import org.palladiosimulator.pcm.seff.ForkAction;
@@ -209,12 +209,6 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	}
 
 	@Override
-	public Set<SEFFInterpreted> caseCallAction(final CallAction callAction) {
-
-		return null;
-	}
-
-	@Override
 	public Set<SEFFInterpreted> caseAcquireAction(final AcquireAction object) {
 
 		final ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(
@@ -300,13 +294,30 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			final ResourceDemandRequest request = ResourceDemandRequest.builder()
 					.withAssemblyContext(this.context.getAssemblyContext())
 					.withSeffInterpretationContext(this.context)
-					.withResourceType(ResourceType.ACTIVE).withParametricResourceDemand(demand).build();
+					.withResourceType(ResourceType.ACTIVE).withParametricResourceDemand(demand)
+					.withInternalAction(internalAction).build();
 
 			final ResourceDemandRequested requestEvent = new ResourceDemandRequested(request);
 			events.add(requestEvent);
 		});
 
-		final EList<InfrastructureCall> infrastructureCall = internalAction.getInfrastructureCall__Action();
+		if (events.isEmpty()) { // no RD! go straight to Infra calls
+			if (!internalAction.getInfrastructureCall__Action().isEmpty()) {
+				final InfrastructureCall call = internalAction.getInfrastructureCall__Action().get(0);
+
+				// create infra call event -- code duplicate from Subscriber in SystemSimulation
+				// Behaviour.
+				// TODO
+				final GeneralEntryRequest request = GeneralEntryRequest.builder()
+						.withInputVariableUsages(call.getInputVariableUsages__CallAction())
+						.withRequiredRole(call.getRequiredRole__InfrastructureCall())
+						.withSignature(call.getSignature__InfrastructureCall())
+						.withUser(this.context.getRequestProcessingContext().getUser())
+						.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
+
+				events.add(new SEFFInfrastructureCalled(request));
+			}
+		}
 
 		return Collections.unmodifiableSet(events);
 	}

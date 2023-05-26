@@ -6,6 +6,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.pcm.core.composition.AssemblyConnector;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
+import org.palladiosimulator.pcm.core.composition.AssemblyInfrastructureConnector;
 import org.palladiosimulator.pcm.core.composition.ProvidedDelegationConnector;
 import org.palladiosimulator.pcm.repository.BasicComponent;
 import org.palladiosimulator.pcm.repository.ProvidedRole;
@@ -67,6 +68,18 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 				.filter(assemblyConnector -> assemblyConnector.getRequiredRole_AssemblyConnector().getId()
 						.equals(requiredRole.getId()))
 				.map(AssemblyConnector::getProvidingAssemblyContext_AssemblyConnector)
+				.findFirst();
+	}
+
+	@Override
+	public Optional<AssemblyContext> findInfrastructureAssemblyContextFromRequiredRole(
+			final RequiredRole requiredRole) {
+		return this.systemModel.getConnectors__ComposedStructure().stream()
+				.filter(connector -> connector instanceof AssemblyInfrastructureConnector)
+				.map(connector -> (AssemblyInfrastructureConnector) connector)
+				.filter(assemblyInfraConnector -> assemblyInfraConnector
+						.getRequiredRole__AssemblyInfrastructureConnector().getId().equals(requiredRole.getId()))
+				.map(AssemblyInfrastructureConnector::getProvidingAssemblyContext__AssemblyInfrastructureConnector)
 				.findFirst();
 	}
 

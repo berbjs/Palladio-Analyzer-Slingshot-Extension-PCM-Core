@@ -18,6 +18,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.RepositoryInterpretationInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.interpreters.RepositoryInterpreter;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadbalancer.EquallyDistributedSystemLevelLoadBalancer;
@@ -25,6 +26,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadba
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.repository.SystemModelRepository;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserEntryRequested;
+import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.common.utils.SimulatedStackHelper;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
@@ -36,8 +38,10 @@ import org.palladiosimulator.pcm.core.composition.ProvidedDelegationConnector;
 import org.palladiosimulator.pcm.parameter.VariableUsage;
 import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.OperationSignature;
+import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
+import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 
 /**
  * The System simulation behavior is a extension that simulates the system
@@ -49,7 +53,9 @@ import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
 @OnEvent(when = UserEntryRequested.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 @OnEvent(when = RepositoryInterpretationInitiated.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFExternalActionCalled.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
-@OnEvent(when = ActiveResourceFinished.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
+@OnEvent(when = ActiveResourceFinished.class, then = { SEFFInterpretationProgressed.class,
+		SEFFInfrastructureCalled.class }, cardinality = MANY)
+@OnEvent(when = SEFFInfrastructureCalled.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SystemSimulationBehavior.class);
@@ -182,9 +188,55 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result<SEFFInterpretationProgressed> onActiveResourceFinished(
+	public Result<SEFFInterpretationProgressed> onSEFFInfrastructureCalled(final SEFFInfrastructureCalled infraCall) {
+		final GeneralEntryRequest entity = infraCall.getEntity();
+
+		final Optional<AssemblyContext> assemblyContext = this.systemRepository
+				.findInfrastructureAssemblyContextFromRequiredRole(entity.getRequiredRole());
+
+		if (assemblyContext.isPresent()) {
+			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
+					entity.getSignature(), null, entity.getUser(), this.systemRepository,
+					entity.getRequestFrom().getCaller());
+
+			/* Interpret the Component of the system. */
+			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
+					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext());
+
+			return Result.of(appearedEvents);
+		} else {
+			return Result.of();
+		}
+	}
+
+	@Subscribe
+	public Result<DESEvent> onActiveResourceFinished(
 			final ActiveResourceFinished activeResourceFinished) {
-		return Result.of(
+
+		final Optional<InternalAction> parentalAction = activeResourceFinished.getEntity().getParentalInternalAction();
+
+		// no internal action or no infra calls? continue normally.
+		if (parentalAction.isEmpty() || parentalAction.get().getInfrastructureCall__Action().isEmpty()) {
+			return Result.of(
 				new SEFFInterpretationProgressed(activeResourceFinished.getEntity().getSeffInterpretationContext()));
+		}
+
+		// restriction to at most *one* call for the proof of concept.
+		// TODO : consider other infra calls as well.
+		final InfrastructureCall call = parentalAction.get().getInfrastructureCall__Action().get(0);
+
+		// create infra call event.
+		final GeneralEntryRequest request = GeneralEntryRequest.builder()
+				.withInputVariableUsages(call.getInputVariableUsages__CallAction())
+				.withRequiredRole(call.getRequiredRole__InfrastructureCall())
+				.withSignature(call.getSignature__InfrastructureCall())
+				.withUser(activeResourceFinished.getEntity().getSeffInterpretationContext()
+						.getRequestProcessingContext().getUser())
+				.withRequestFrom(activeResourceFinished.getEntity().getSeffInterpretationContext().update()
+						.withCaller(activeResourceFinished.getEntity().getSeffInterpretationContext()).build())
+				.build();
+
+		return Result.of(new SEFFInfrastructureCalled(request));
+
 	}
 }

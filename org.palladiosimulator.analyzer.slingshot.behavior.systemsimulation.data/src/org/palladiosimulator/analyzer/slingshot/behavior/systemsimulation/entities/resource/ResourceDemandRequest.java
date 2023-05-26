@@ -10,6 +10,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.PassiveResource;
+import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 
 import com.google.common.base.Preconditions;
@@ -22,7 +23,7 @@ import com.google.common.base.Preconditions;
  * <p>
  * As with each entity, no field must be {@code null}. However, optional fields
  * are explicitly declared with {@link Optional}.
- * 
+ *
  * @author Julijan Katic
  */
 public final class ResourceDemandRequest {
@@ -60,10 +61,13 @@ public final class ResourceDemandRequest {
 	 */
 	private final Optional<PassiveResource> passiveResource;
 
+	/** to 'stay' in that SEFF action for a while longer */
+	private final Optional<InternalAction> parentalInternalAction;
+
 	/**
 	 * Creates the request. If this is a passive resource, but no passive resource
 	 * is specified, then an exception is thrown.
-	 * 
+	 *
 	 * @param builder
 	 */
 	@Generated("SparkTools")
@@ -77,11 +81,12 @@ public final class ResourceDemandRequest {
 		this.parametricResourceDemand = builder.parametricResourceDemand;
 		this.resourceType = builder.resourceType;
 		this.passiveResource = builder.passiveResource;
+		this.parentalInternalAction = builder.parentalInternalAction;
 	}
 
 	/**
 	 * Returns the assembly context from which the request origins.
-	 * 
+	 *
 	 * @return the assemblyContext
 	 */
 	public AssemblyContext getAssemblyContext() {
@@ -90,7 +95,7 @@ public final class ResourceDemandRequest {
 
 	/**
 	 * Returns the interpretation context from which the request origins.
-	 * 
+	 *
 	 * @return the seffInterpretationContext
 	 */
 	public SEFFInterpretationContext getSeffInterpretationContext() {
@@ -100,7 +105,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Returns the parametric resource demand that specifies how much resource is
 	 * needed.
-	 * 
+	 *
 	 * @return the parametricResourceDemand
 	 */
 	public ParametricResourceDemand getParametricResourceDemand() {
@@ -110,7 +115,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Returns the type of the resource. If not already set by the builder, it
 	 * typically defaults to {@link ResourceType#ACTIVE}.
-	 * 
+	 *
 	 * @return The resource type of the resource.
 	 */
 	public ResourceType getResourceType() {
@@ -120,7 +125,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Short-cut method that directly returns the user by using the interpretation
 	 * context.
-	 * 
+	 *
 	 * @return The user of the interpretation context that requests a resource.
 	 */
 	public User getUser() {
@@ -130,16 +135,20 @@ public final class ResourceDemandRequest {
 	/**
 	 * Returns the passive resource itself that is being requested. This will return
 	 * an empty optional if the resource is actually {@link ResourceType#ACTIVE}.
-	 * 
+	 *
 	 * @return
 	 */
 	public Optional<PassiveResource> getPassiveResource() {
 		return this.passiveResource;
 	}
 
+	public Optional<InternalAction> getParentalInternalAction() {
+		return this.parentalInternalAction;
+	}
+
 	/**
 	 * Creates builder to build {@link ResourceDemandRequest}.
-	 * 
+	 *
 	 * @return created builder
 	 */
 	@Generated("SparkTools")
@@ -157,6 +166,7 @@ public final class ResourceDemandRequest {
 		private ParametricResourceDemand parametricResourceDemand;
 		private ResourceType resourceType = ResourceType.ACTIVE;
 		private Optional<PassiveResource> passiveResource = Optional.empty();
+		private Optional<InternalAction> parentalInternalAction = Optional.empty();
 
 		private Builder() {
 		}
@@ -186,6 +196,15 @@ public final class ResourceDemandRequest {
 				this.passiveResource = Optional.empty();
 			} else {
 				this.passiveResource = Optional.of(passiveResource);
+			}
+			return this;
+		}
+
+		public Builder withInternalAction(final InternalAction parentalInternalAction) {
+			if (parentalInternalAction == null) {
+				this.parentalInternalAction = Optional.empty();
+			} else {
+				this.parentalInternalAction = Optional.of(parentalInternalAction);
 			}
 			return this;
 		}
