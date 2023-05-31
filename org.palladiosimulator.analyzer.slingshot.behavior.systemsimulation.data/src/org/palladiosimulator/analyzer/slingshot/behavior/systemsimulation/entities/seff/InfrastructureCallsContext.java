@@ -12,21 +12,23 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 
 /**
  *
- * TODO
+ * Tracks the progress during {@link InfrastructureCall} interpretation.
+ *
+ * Basically an iterator over all InfrastructureCalls of an InternalAction.
  *
  * @author Sarah Stieß
  *
  */
 public class InfrastructureCallsContext implements Iterator<InfrastructureCall> {
 
-	private final SEFFInterpretationContext enclosingSEFF;
+	private final SEFFInterpretationContext enclosingSEFFContext;
 	private final InternalAction enclosingInternalAction;
 	private final Iterator<InfrastructureCall> calls;
 
-	public InfrastructureCallsContext(final SEFFInterpretationContext enclosingSEFF,
+	public InfrastructureCallsContext(final SEFFInterpretationContext enclosingSEFFContext,
 			final InternalAction enclosingInternalAction) {
 		super();
-		this.enclosingSEFF = enclosingSEFF;
+		this.enclosingSEFFContext = enclosingSEFFContext;
 		this.enclosingInternalAction = enclosingInternalAction;
 		final List<InfrastructureCall> tmp = new ArrayList<>();
 
@@ -35,7 +37,7 @@ public class InfrastructureCallsContext implements Iterator<InfrastructureCall> 
 		for (final InfrastructureCall infrastructureCall : infrastructureCalls) {
 			final int numberOfCalls = StackContext.evaluateStatic(
 					infrastructureCall.getNumberOfCalls__InfrastructureCall().getSpecification(), Integer.class,
-					enclosingSEFF.getRequestProcessingContext().getUser().getStack().currentStackFrame());
+					enclosingSEFFContext.getRequestProcessingContext().getUser().getStack().currentStackFrame());
 
 			for (int i = 0; i < numberOfCalls; i++) {
 				tmp.add(infrastructureCall);
@@ -43,7 +45,6 @@ public class InfrastructureCallsContext implements Iterator<InfrastructureCall> 
 		}
 
 		this.calls = tmp.iterator();
-
 	}
 
 	@Override
@@ -56,12 +57,11 @@ public class InfrastructureCallsContext implements Iterator<InfrastructureCall> 
 		return this.calls.next();
 	}
 
-	public SEFFInterpretationContext getEnclosingSEFF() {
-		return enclosingSEFF;
+	public SEFFInterpretationContext getEnclosingSEFFContext() {
+		return enclosingSEFFContext;
 	}
 
 	public InternalAction getEnclosingInternalAction() {
 		return enclosingInternalAction;
 	}
-
 }

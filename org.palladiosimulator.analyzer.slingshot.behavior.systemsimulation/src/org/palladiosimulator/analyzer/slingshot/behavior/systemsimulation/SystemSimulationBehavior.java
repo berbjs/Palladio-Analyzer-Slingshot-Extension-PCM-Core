@@ -230,8 +230,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 				activeResourceFinished.getEntity().getSeffInterpretationContext(),
 				activeResourceFinished.getEntity().getParentalInternalAction().get());
 
-		return Result.of(new SEFFInfrastructureCallsProgressed(infraContext,
-				activeResourceFinished.getEntity().getSeffInterpretationContext()));
+		return Result.of(new SEFFInfrastructureCallsProgressed(infraContext));
 	}
 
 }

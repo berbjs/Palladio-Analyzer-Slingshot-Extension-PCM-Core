@@ -78,7 +78,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	public Result<DESEvent> onSEFFInfrastructureCallsProgressed(
 			final SEFFInfrastructureCallsProgressed infraCallsProgressed) {
 
-		final InfrastructureCallsContext infraContext = infraCallsProgressed.getInfraContext();
+		final InfrastructureCallsContext infraContext = infraCallsProgressed.getEntity();
 
 		if (infraContext.hasNext()) {
 			final InfrastructureCall call = infraContext.next();
@@ -87,16 +87,18 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 					.withInputVariableUsages(call.getInputVariableUsages__CallAction())
 					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
 					.withSignature(call.getSignature__InfrastructureCall())
-					.withUser(infraCallsProgressed.getEntity().getRequestProcessingContext().getUser())
+					.withUser(infraCallsProgressed.getEntity().getEnclosingSEFFContext().getRequestProcessingContext()
+							.getUser())
 					.withRequestFrom(
-							infraCallsProgressed.getEntity().update().withCaller(infraCallsProgressed.getEntity())
-									.withInfraCaller(infraCallsProgressed.getInfraContext()).build())
+							infraCallsProgressed.getEntity().getEnclosingSEFFContext().update()
+									.withCaller(infraCallsProgressed.getEntity().getEnclosingSEFFContext())
+									.withInfraCaller(infraCallsProgressed.getEntity()).build())
 					.build();
 
 			return Result.of(new SEFFInfrastructureCalled(request));
 		}
 
-		return Result.of(new SEFFInterpretationProgressed(infraCallsProgressed.getEntity()));
+		return Result.of(new SEFFInterpretationProgressed(infraCallsProgressed.getEntity().getEnclosingSEFFContext()));
 	}
 
 	@Subscribe
@@ -188,9 +190,8 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 */
 	private SEFFInfrastructureCallsProgressed continueInInfraCaller(final SEFFInterpretationContext entity) {
 		final InfrastructureCallsContext infraContext = entity.getInfraCaller().get();
-		final SEFFInterpretationContext seffInterpretationContext = entity.getCaller().get();
 
-		return new SEFFInfrastructureCallsProgressed(infraContext, seffInterpretationContext);
+		return new SEFFInfrastructureCallsProgressed(infraContext);
 	}
 
 	private SEFFInterpretationProgressed repeat(final SEFFInterpretationContext entity) {

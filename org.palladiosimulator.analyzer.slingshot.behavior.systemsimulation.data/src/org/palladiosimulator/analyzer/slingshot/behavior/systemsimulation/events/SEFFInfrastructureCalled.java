@@ -4,9 +4,10 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractEntityChangedEvent;
 
 /**
- * Tells that a Infrastructure is called. Very similar to external calls.
- * Typically, this event will be published when an {@code InfrastructureCall}
- * occurs insides an {@code InternalAction}.
+ * Indicates that an infrastructure got called.
+ *
+ * Similar to {@code ExternalCallAction} except that the Call is based on
+ * infrastructure interface instead of 'normal' interfaces.
  *
  * @author Sarah Stieß
  *

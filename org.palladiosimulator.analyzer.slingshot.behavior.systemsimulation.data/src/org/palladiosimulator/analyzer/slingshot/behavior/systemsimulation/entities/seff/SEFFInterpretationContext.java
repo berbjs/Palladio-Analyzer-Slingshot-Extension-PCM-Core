@@ -12,9 +12,9 @@ import com.google.common.base.Preconditions;
 
 /**
  * The SEFFInterpretationContext is used for keeping track of the RDSeff
- * interpertation.
+ * interpretation.
  *
- * @author Julijan Katic
+ * @author Julijan Katic, Sarah Stieß
  * @version 1.0
  */
 public final class SEFFInterpretationContext {
@@ -60,6 +60,10 @@ public final class SEFFInterpretationContext {
 		return this.calledFrom;
 	}
 
+	/**
+	 *
+	 * @return the calling
+	 */
 	public Optional<InfrastructureCallsContext> getInfraCaller() {
 		return this.calledFromInfra;
 	}

@@ -308,7 +308,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				final InfrastructureCallsContext infraContext = new InfrastructureCallsContext(
 						this.context, internalAction);
 
-				events.add(new SEFFInfrastructureCallsProgressed(infraContext, this.context));
+				events.add(new SEFFInfrastructureCallsProgressed(infraContext));
 			}
 		}
 
