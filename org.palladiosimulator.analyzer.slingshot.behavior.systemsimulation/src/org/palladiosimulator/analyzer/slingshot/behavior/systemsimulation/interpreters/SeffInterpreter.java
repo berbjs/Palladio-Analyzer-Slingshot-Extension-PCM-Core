@@ -14,6 +14,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureCallsContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.BranchBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
@@ -22,7 +23,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCallsProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpreted;
@@ -46,7 +47,6 @@ import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.SetVariableAction;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
-import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 import org.palladiosimulator.pcm.seff.util.SeffSwitch;
 
@@ -303,19 +303,12 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 		if (events.isEmpty()) { // no RD! go straight to Infra calls
 			if (!internalAction.getInfrastructureCall__Action().isEmpty()) {
-				final InfrastructureCall call = internalAction.getInfrastructureCall__Action().get(0);
-
 				// create infra call event -- code duplicate from Subscriber in SystemSimulation
 				// Behaviour.
-				// TODO
-				final GeneralEntryRequest request = GeneralEntryRequest.builder()
-						.withInputVariableUsages(call.getInputVariableUsages__CallAction())
-						.withRequiredRole(call.getRequiredRole__InfrastructureCall())
-						.withSignature(call.getSignature__InfrastructureCall())
-						.withUser(this.context.getRequestProcessingContext().getUser())
-						.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
+				final InfrastructureCallsContext infraContext = new InfrastructureCallsContext(
+						this.context, internalAction);
 
-				events.add(new SEFFInfrastructureCalled(request));
+				events.add(new SEFFInfrastructureCallsProgressed(infraContext, this.context));
 			}
 		}
 

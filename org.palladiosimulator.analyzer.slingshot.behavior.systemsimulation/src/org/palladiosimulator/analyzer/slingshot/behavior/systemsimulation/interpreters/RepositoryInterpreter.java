@@ -9,6 +9,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.eclipse.emf.ecore.EClass;
 import org.eclipse.emf.ecore.EObject;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureCallsContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
@@ -67,6 +68,9 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	/** The context of the calling seff */
 	private final Optional<SEFFInterpretationContext> callerContext;
 
+	/** The context of the calling infra seff */
+	private final Optional<InfrastructureCallsContext> infraCallerContext;
+
 	/**
 	 * Instantiates the interpreter with given information. Depending on the
 	 * interpretation, not every parameter must be set (every parameter CAN be
@@ -83,13 +87,15 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	 */
 	public RepositoryInterpreter(final AssemblyContext context, final Signature signature,
 			final ProvidedRole providedRole, final User user, final SystemModelRepository modelRepository,
-			final Optional<SEFFInterpretationContext> callerContext) {
+			final Optional<SEFFInterpretationContext> callerContext,
+			final Optional<InfrastructureCallsContext> infraCallerContext) {
 		this.assemblyContext = context;
 		this.signature = signature;
 		this.providedRole = providedRole;
 		this.user = user;
 		this.modelRepository = modelRepository;
 		this.callerContext = callerContext;
+		this.infraCallerContext = infraCallerContext;
 	}
 
 	/**
@@ -122,7 +128,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		    		 */
 			        final SEFFInterpretationContext context = SEFFInterpretationContext.builder()
 			        		.withAssemblyContext(this.assemblyContext)
-			        		.withCaller(callerContext)
+							.withCaller(this.callerContext).withInfraCaller(this.infraCallerContext)
 			        		.withBehaviorContext(new RootBehaviorContextHolder(rdSeff))
 			        		.withRequestProcessingContext(RequestProcessingContext.builder()
 			        				.withAssemblyContext(this.assemblyContext)
@@ -205,7 +211,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		final RepositoryInterpreter repositoryInterpreter = new RepositoryInterpreter(
 		        connectedProvidedDelegationConnector.getAssemblyContext_ProvidedDelegationConnector(), this.signature,
 		        connectedProvidedDelegationConnector.getInnerProvidedRole_ProvidedDelegationConnector(), this.user,
-		        this.modelRepository, Optional.empty());
+				this.modelRepository, Optional.empty(), Optional.empty());
 		return repositoryInterpreter
 		        .doSwitch(connectedProvidedDelegationConnector.getInnerProvidedRole_ProvidedDelegationConnector());
 	}

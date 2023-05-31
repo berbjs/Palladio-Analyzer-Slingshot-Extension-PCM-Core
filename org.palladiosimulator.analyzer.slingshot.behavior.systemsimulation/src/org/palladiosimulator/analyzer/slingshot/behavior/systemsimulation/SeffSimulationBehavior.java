@@ -1,13 +1,19 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation;
 
+import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.SINGLE;
+
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureCallsContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCallsProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpreted;
@@ -16,11 +22,13 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.Use
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserRequestFinished;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractSimulationEvent;
+import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 
 /**
  * This behavior module both interprets and generates events specifically for
@@ -33,6 +41,8 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 		UserRequestFinished.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = SEFFChildInterpretationStarted.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
 @OnEvent(when = PassiveResourceAcquired.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
+@OnEvent(when = SEFFInfrastructureCallsProgressed.class, then = { SEFFInfrastructureCalled.class,
+		SEFFInterpretationProgressed.class }, cardinality = SINGLE)
 public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SeffSimulationBehavior.class);
@@ -65,6 +75,31 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
+	public Result<DESEvent> onSEFFInfrastructureCallsProgressed(
+			final SEFFInfrastructureCallsProgressed infraCallsProgressed) {
+
+		final InfrastructureCallsContext infraContext = infraCallsProgressed.getInfraContext();
+
+		if (infraContext.hasNext()) {
+			final InfrastructureCall call = infraContext.next();
+			// create infra call event.
+			final GeneralEntryRequest request = GeneralEntryRequest.builder()
+					.withInputVariableUsages(call.getInputVariableUsages__CallAction())
+					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
+					.withSignature(call.getSignature__InfrastructureCall())
+					.withUser(infraCallsProgressed.getEntity().getRequestProcessingContext().getUser())
+					.withRequestFrom(
+							infraCallsProgressed.getEntity().update().withCaller(infraCallsProgressed.getEntity())
+									.withInfraCaller(infraCallsProgressed.getInfraContext()).build())
+					.build();
+
+			return Result.of(new SEFFInfrastructureCalled(request));
+		}
+
+		return Result.of(new SEFFInterpretationProgressed(infraCallsProgressed.getEntity()));
+	}
+
+	@Subscribe
 	public Result<AbstractSimulationEvent> onSEFFInterpretationFinished(final SEFFInterpretationFinished finished) {
 		final SEFFInterpretationContext entity = finished.getEntity();
 		final Result<AbstractSimulationEvent> result;
@@ -89,6 +124,9 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		} else if (!entity.getBehaviorContext().hasFinished()) {
 			LOGGER.info("repeat scenario");
 			result = Result.of(this.repeat(entity));
+		} else if (entity.getCaller().isPresent() && entity.getInfraCaller().isPresent()) {
+			LOGGER.info("return to infra caller");
+			result = Result.of(this.continueInInfraCaller(entity));
 		} else if (entity.getCaller().isPresent()) {
 			LOGGER.info("return to caller");
 			result = Result.of(this.continueInCaller(entity));
@@ -141,11 +179,22 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 */
 	private SEFFInterpretationProgressed continueInCaller(final SEFFInterpretationContext entity) {
 		final SEFFInterpretationContext seffInterpretationContext = entity.getCaller().get();
-
 		return new SEFFInterpretationProgressed(seffInterpretationContext);
+	}
+
+	/**
+	 * @param entity
+	 * @return
+	 */
+	private SEFFInfrastructureCallsProgressed continueInInfraCaller(final SEFFInterpretationContext entity) {
+		final InfrastructureCallsContext infraContext = entity.getInfraCaller().get();
+		final SEFFInterpretationContext seffInterpretationContext = entity.getCaller().get();
+
+		return new SEFFInfrastructureCallsProgressed(infraContext, seffInterpretationContext);
 	}
 
 	private SEFFInterpretationProgressed repeat(final SEFFInterpretationContext entity) {
 		return new SEFFInterpretationProgressed(entity);
 	}
+
 }

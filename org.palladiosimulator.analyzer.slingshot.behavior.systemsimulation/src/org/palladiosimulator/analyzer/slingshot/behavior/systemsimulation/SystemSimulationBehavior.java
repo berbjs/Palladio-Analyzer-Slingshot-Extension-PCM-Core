@@ -12,6 +12,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.RepositoryInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureCallsContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
@@ -19,6 +20,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.RepositoryInterpretationInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCallsProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.interpreters.RepositoryInterpreter;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadbalancer.EquallyDistributedSystemLevelLoadBalancer;
@@ -41,7 +43,6 @@ import org.palladiosimulator.pcm.repository.OperationSignature;
 import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
-import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 
 /**
  * The System simulation behavior is a extension that simulates the system
@@ -54,7 +55,7 @@ import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 @OnEvent(when = RepositoryInterpretationInitiated.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFExternalActionCalled.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = ActiveResourceFinished.class, then = { SEFFInterpretationProgressed.class,
-		SEFFInfrastructureCalled.class }, cardinality = MANY)
+		SEFFInfrastructureCallsProgressed.class }, cardinality = MANY)
 @OnEvent(when = SEFFInfrastructureCalled.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
@@ -147,7 +148,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		final RepositoryInterpreter interpreter = new RepositoryInterpreter(context.getAssemblyContext(),
 				context.getSignature(), context.getProvidedRole(), context.getUser(), this.systemRepository,
-				Optional.empty());
+				Optional.empty(), Optional.empty());
 		final Set<SEFFInterpretationProgressed> appearedEvents = interpreter.doSwitch(context.getProvidedRole());
 
 		return Result.of(appearedEvents);
@@ -175,7 +176,8 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(),
-					null, entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
+					null, entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller(),
+					entity.getRequestFrom().getInfraCaller());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
@@ -197,7 +199,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), null, entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller());
+					entity.getRequestFrom().getCaller(), entity.getRequestFrom().getInfraCaller());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
@@ -223,20 +225,13 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		// restriction to at most *one* call for the proof of concept.
 		// TODO : consider other infra calls as well.
-		final InfrastructureCall call = parentalAction.get().getInfrastructureCall__Action().get(0);
 
-		// create infra call event.
-		final GeneralEntryRequest request = GeneralEntryRequest.builder()
-				.withInputVariableUsages(call.getInputVariableUsages__CallAction())
-				.withRequiredRole(call.getRequiredRole__InfrastructureCall())
-				.withSignature(call.getSignature__InfrastructureCall())
-				.withUser(activeResourceFinished.getEntity().getSeffInterpretationContext()
-						.getRequestProcessingContext().getUser())
-				.withRequestFrom(activeResourceFinished.getEntity().getSeffInterpretationContext().update()
-						.withCaller(activeResourceFinished.getEntity().getSeffInterpretationContext()).build())
-				.build();
+		final InfrastructureCallsContext infraContext = new InfrastructureCallsContext(
+				activeResourceFinished.getEntity().getSeffInterpretationContext(),
+				activeResourceFinished.getEntity().getParentalInternalAction().get());
 
-		return Result.of(new SEFFInfrastructureCalled(request));
-
+		return Result.of(new SEFFInfrastructureCallsProgressed(infraContext,
+				activeResourceFinished.getEntity().getSeffInterpretationContext()));
 	}
+
 }

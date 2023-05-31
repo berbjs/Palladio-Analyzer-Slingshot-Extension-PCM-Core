@@ -13,7 +13,7 @@ import com.google.common.base.Preconditions;
 /**
  * The SEFFInterpretationContext is used for keeping track of the RDSeff
  * interpertation.
- * 
+ *
  * @author Julijan Katic
  * @version 1.0
  */
@@ -27,6 +27,7 @@ public final class SEFFInterpretationContext {
 	private final AssemblyContext assemblyContext;
 
 	private final Optional<SEFFInterpretationContext> calledFrom;
+	private final Optional<InfrastructureCallsContext> calledFromInfra;
 
 	@Generated("SparkTools")
 	private SEFFInterpretationContext(final Builder builder) {
@@ -34,6 +35,7 @@ public final class SEFFInterpretationContext {
 		this.behaviorContext = builder.behaviorContext;
 		this.requestProcessingContext = builder.requestProcessingContext;
 		this.assemblyContext = builder.assemblyContext;
+		this.calledFromInfra = builder.calledFromInfra;
 	}
 
 	/**
@@ -58,6 +60,10 @@ public final class SEFFInterpretationContext {
 		return this.calledFrom;
 	}
 
+	public Optional<InfrastructureCallsContext> getInfraCaller() {
+		return this.calledFromInfra;
+	}
+
 	public Builder update() {
 		return builder()
 				.withBehaviorContext(this.behaviorContext)
@@ -67,7 +73,7 @@ public final class SEFFInterpretationContext {
 
 	/**
 	 * Creates builder to build {@link SEFFInterpretationContext}.
-	 * 
+	 *
 	 * @return created builder
 	 */
 	@Generated("SparkTools")
@@ -84,6 +90,7 @@ public final class SEFFInterpretationContext {
 		private RequestProcessingContext requestProcessingContext;
 		private AssemblyContext assemblyContext;
 		private Optional<SEFFInterpretationContext> calledFrom = Optional.empty();
+		private Optional<InfrastructureCallsContext> calledFromInfra = Optional.empty();
 
 		private Builder() {
 		}
@@ -102,6 +109,15 @@ public final class SEFFInterpretationContext {
 			return this;
 		}
 
+		public Builder withInfraCaller(final InfrastructureCallsContext calledFromInfra) {
+			if (calledFromInfra != null) {
+				this.calledFromInfra = Optional.of(calledFromInfra);
+			} else {
+				this.calledFromInfra = Optional.empty();
+			}
+			return this;
+		}
+
 		public Builder withRequestProcessingContext(final RequestProcessingContext requestProcessingContext) {
 			this.requestProcessingContext = builderNonNull(requestProcessingContext);
 			return this;
@@ -114,6 +130,11 @@ public final class SEFFInterpretationContext {
 
 		public Builder withCaller(final Optional<SEFFInterpretationContext> caller) {
 			this.calledFrom = builderNonNull(caller);
+			return this;
+		}
+
+		public Builder withInfraCaller(final Optional<InfrastructureCallsContext> infraCaller) {
+			this.calledFromInfra = builderNonNull(infraCaller);
 			return this;
 		}
 
