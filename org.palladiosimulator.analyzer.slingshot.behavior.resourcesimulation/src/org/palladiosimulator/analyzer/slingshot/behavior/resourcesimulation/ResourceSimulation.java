@@ -23,6 +23,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.reso
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.PassiveResourceCompoundKey;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.PassiveResourceTable;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.SimplePassiveResource;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.ResourceEnvironmentChange;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
@@ -219,12 +221,24 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		return Result.of(new ActiveResourceFinished(evt.getEntity().getRequest(), 0));
 	}
 
-//	@Subscribe
-//	public Result onModelAdjusted(final ModelAdjusted modelChanged) {
-//		// TODO: Notice the changes and add them to load balancer accordingly.
-//		return Result.empty();
-//	}
-//
+	@Subscribe
+	public Result<?> onModelAdjusted(final ModelAdjusted modelChanged) {
+		modelChanged.getChanges().stream()
+								 .filter(change -> change instanceof ResourceEnvironmentChange)
+								 .map(ResourceEnvironmentChange.class::cast)
+								 .forEach(this::changeActiveResourceTableFromModelChange);
+		
+		return Result.empty();
+	}
+	
+	private void changeActiveResourceTableFromModelChange(final ResourceEnvironmentChange change) {
+		change.getNewResourceContainers().forEach(newContainer -> 
+			this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));
+		
+		change.getDeletedResourceContainers().forEach(deletedContainer ->
+			this.resourceTable.removeActiveResources(deletedContainer));
+	}
+
 	/*
 	 * TODO: When GeneralEntryRequest,
 	 * 	1. (System): Find appropriate assembly context -> AllocationContextRequested
