@@ -13,7 +13,7 @@ public abstract class MultiBehaviorContextHolder extends SeffBehaviorContextHold
 	protected MultiBehaviorContextHolder(final List<ResourceDemandingBehaviour> behaviors,
 			final Optional<AbstractAction> successor, final Optional<SeffBehaviorWrapper> parent) {
 		super(behaviors, successor, parent);
-		Preconditions.checkArgument(behaviors.size() > 1);
+		Preconditions.checkArgument(behaviors.size() > 0);
 	}
 
 }
