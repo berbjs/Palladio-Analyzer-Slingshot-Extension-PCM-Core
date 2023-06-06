@@ -13,8 +13,12 @@ import com.google.common.base.Preconditions;
 /**
  * The SEFFInterpretationContext is used for keeping track of the RDSeff
  * interpertation.
- * 
- * @author Julijan Katic
+ *
+ * Child contexts (i.e. nested SEFFs) always hold the caller
+ * ({@code calledFrom}) of their parent context. However, only Root behaviours
+ * should return to their callers. Others should return to their parent.
+ *
+ * @author Julijan Katic, Sarah Stieß
  * @version 1.0
  */
 public final class SEFFInterpretationContext {
@@ -67,7 +71,7 @@ public final class SEFFInterpretationContext {
 
 	/**
 	 * Creates builder to build {@link SEFFInterpretationContext}.
-	 * 
+	 *
 	 * @return created builder
 	 */
 	@Generated("SparkTools")
