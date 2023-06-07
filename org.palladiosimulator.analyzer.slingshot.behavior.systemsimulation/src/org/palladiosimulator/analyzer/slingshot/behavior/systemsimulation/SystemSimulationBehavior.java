@@ -12,7 +12,7 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.RepositoryInterpretationContext;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureCallsContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureSegmentContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
@@ -40,6 +40,7 @@ import org.palladiosimulator.pcm.core.composition.ProvidedDelegationConnector;
 import org.palladiosimulator.pcm.parameter.VariableUsage;
 import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.OperationSignature;
+import org.palladiosimulator.pcm.seff.AbstractAction;
 import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
@@ -148,7 +149,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		final RepositoryInterpreter interpreter = new RepositoryInterpreter(context.getAssemblyContext(),
 				context.getSignature(), context.getProvidedRole(), context.getUser(), this.systemRepository,
-				Optional.empty(), Optional.empty());
+				Optional.empty());
 		final Set<SEFFInterpretationProgressed> appearedEvents = interpreter.doSwitch(context.getProvidedRole());
 
 		return Result.of(appearedEvents);
@@ -176,8 +177,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(),
-					null, entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller(),
-					entity.getRequestFrom().getInfraCaller());
+					null, entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
@@ -199,7 +199,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), null, entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller(), entity.getRequestFrom().getInfraCaller());
+					entity.getRequestFrom().getCaller());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
@@ -215,10 +215,15 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	public Result<DESEvent> onActiveResourceFinished(
 			final ActiveResourceFinished activeResourceFinished) {
 
-		final Optional<InternalAction> parentalAction = activeResourceFinished.getEntity().getParentalInternalAction();
+
+		final SEFFInterpretationContext parentContext = activeResourceFinished.getEntity()
+				.getSeffInterpretationContext();
+		final AbstractAction parentalAction = parentContext.getBehaviorContext().getCurrentProcessedBehavior()
+				.getCurrentAction();
 
 		// no internal action or no infra calls? continue normally.
-		if (parentalAction.isEmpty() || parentalAction.get().getInfrastructureCall__Action().isEmpty()) {
+		if (!(parentalAction instanceof InternalAction)
+				|| ((InternalAction) parentalAction).getInfrastructureCall__Action().isEmpty()) {
 			return Result.of(
 				new SEFFInterpretationProgressed(activeResourceFinished.getEntity().getSeffInterpretationContext()));
 		}
@@ -226,11 +231,17 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		// restriction to at most *one* call for the proof of concept.
 		// TODO : consider other infra calls as well.
 
-		final InfrastructureCallsContext infraContext = new InfrastructureCallsContext(
+		final InfrastructureSegmentContextHolder infraContext = new InfrastructureSegmentContextHolder(
 				activeResourceFinished.getEntity().getSeffInterpretationContext(),
 				activeResourceFinished.getEntity().getParentalInternalAction().get());
 
-		return Result.of(new SEFFInfrastructureCallsProgressed(infraContext));
+
+		final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
+				.withBehaviorContext(infraContext)
+				.withRequestProcessingContext(parentContext.getRequestProcessingContext())
+				.withCaller(parentContext.getCaller()).withAssemblyContext(parentContext.getAssemblyContext()).build();
+
+		return Result.of(new SEFFInfrastructureCallsProgressed(infraChildContext));
 	}
 
 }

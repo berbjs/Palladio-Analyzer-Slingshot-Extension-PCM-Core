@@ -14,7 +14,7 @@ import org.eclipse.emf.ecore.EObject;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureCallsContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureSegmentContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.BranchBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
@@ -306,12 +306,16 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 		if (events.isEmpty()) { // no RD! go straight to Infra calls
 			if (!internalAction.getInfrastructureCall__Action().isEmpty()) {
-				// create infra call event -- code duplicate from Subscriber in SystemSimulation
-				// Behaviour.
-				final InfrastructureCallsContext infraContext = new InfrastructureCallsContext(
+				final InfrastructureSegmentContextHolder infraContext = new InfrastructureSegmentContextHolder(
 						this.context, internalAction);
 
-				events.add(new SEFFInfrastructureCallsProgressed(infraContext));
+				final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
+						.withBehaviorContext(infraContext)
+						.withRequestProcessingContext(this.context.getRequestProcessingContext())
+						.withCaller(this.context).withAssemblyContext(this.context.getAssemblyContext())
+						.build();
+
+				events.add(new SEFFInfrastructureCallsProgressed(infraChildContext));
 			}
 		}
 

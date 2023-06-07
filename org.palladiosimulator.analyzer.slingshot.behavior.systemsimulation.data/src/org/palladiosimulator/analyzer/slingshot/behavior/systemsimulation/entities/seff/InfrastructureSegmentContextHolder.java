@@ -3,8 +3,12 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entit
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
 
 import org.eclipse.emf.common.util.EList;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
+import org.palladiosimulator.pcm.seff.AbstractAction;
 import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 
@@ -19,17 +23,14 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
  * @author Sarah Stieß
  *
  */
-public class InfrastructureCallsContext implements Iterator<InfrastructureCall> {
+public class InfrastructureSegmentContextHolder extends SeffBehaviorContextHolder implements Iterator<InfrastructureCall> {
 
-	private final SEFFInterpretationContext enclosingSEFFContext;
-	private final InternalAction enclosingInternalAction;
 	private final Iterator<InfrastructureCall> calls;
 
-	public InfrastructureCallsContext(final SEFFInterpretationContext enclosingSEFFContext,
+	public InfrastructureSegmentContextHolder(final SEFFInterpretationContext enclosingSEFFContext,
 			final InternalAction enclosingInternalAction) {
-		super();
-		this.enclosingSEFFContext = enclosingSEFFContext;
-		this.enclosingInternalAction = enclosingInternalAction;
+		super(List.of(), Optional.empty(), Optional.empty());
+
 		final List<InfrastructureCall> tmp = new ArrayList<>();
 
 		final EList<InfrastructureCall> infrastructureCalls = enclosingInternalAction.getInfrastructureCall__Action();
@@ -57,11 +58,23 @@ public class InfrastructureCallsContext implements Iterator<InfrastructureCall> 
 		return this.calls.next();
 	}
 
-	public SEFFInterpretationContext getEnclosingSEFFContext() {
-		return enclosingSEFFContext;
+	@Override
+	public SeffBehaviorWrapper getCurrentProcessedBehavior() {
+		throw new IllegalStateException("this is Infra Context");
 	}
 
-	public InternalAction getEnclosingInternalAction() {
-		return enclosingInternalAction;
+	@Override
+	public boolean hasFinished() {
+		return !this.hasNext();
+	}
+
+	@Override
+	public AbstractAction getNextAction() {
+		throw new IllegalStateException("this is Infra Context");
+	}
+
+	@Override
+	public Optional<AbstractAction> getSuccessor() {
+		throw new IllegalStateException("this is Infra Context");
 	}
 }

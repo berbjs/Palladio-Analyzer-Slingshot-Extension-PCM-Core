@@ -1,7 +1,6 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events;
 
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureCallsContext;
-import org.palladiosimulator.analyzer.slingshot.common.events.AbstractEntityChangedEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 
 /**
@@ -12,10 +11,10 @@ import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
  * @author Sarah Stieß
  *
  */
-public class SEFFInfrastructureCallsProgressed extends AbstractEntityChangedEvent<InfrastructureCallsContext>
+public class SEFFInfrastructureCallsProgressed extends AbstractSEFFInterpretationEvent
 		implements SEFFInterpreted {
 
-	public SEFFInfrastructureCallsProgressed(final InfrastructureCallsContext infraContext) {
-		super(infraContext, 0);
+	public SEFFInfrastructureCallsProgressed(final SEFFInterpretationContext infraChildContext) {
+		super(infraChildContext, 0);
 	}
 }
