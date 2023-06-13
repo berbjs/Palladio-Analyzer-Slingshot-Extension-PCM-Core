@@ -98,6 +98,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 			return Result.of(new SEFFInfrastructureCalled(request));
 		}
 
+		LOGGER.info("return to parent of infra");
 		return Result.of(new SEFFInterpretationProgressed(infraCallsProgressed.getEntity().getCaller().get()));
 	}
 
