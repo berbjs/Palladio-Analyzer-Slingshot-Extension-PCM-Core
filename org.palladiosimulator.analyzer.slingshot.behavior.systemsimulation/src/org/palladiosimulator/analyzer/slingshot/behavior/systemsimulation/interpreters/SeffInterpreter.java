@@ -318,6 +318,11 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			}
 		}
 
+		if (events.isEmpty()) { // empty internal action, just progress.
+			events.add(new SEFFInterpretationProgressed(this.context));
+
+		}
+
 		return Collections.unmodifiableSet(events);
 	}
 
