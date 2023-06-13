@@ -20,6 +20,10 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
  *
  * Basically an iterator over all InfrastructureCalls of an InternalAction.
  *
+ * Does not hold a SEFFBehaviourContext, but the Context of InfratructureCalls
+ * of an InternalAction, and those Calls are a simple List without counters.
+ *
+ *
  * @author Sarah Stieß
  *
  */
@@ -28,8 +32,8 @@ public class InfrastructureSegmentContextHolder extends SeffBehaviorContextHolde
 	private final Iterator<InfrastructureCall> calls;
 
 	public InfrastructureSegmentContextHolder(final SEFFInterpretationContext enclosingSEFFContext,
-			final InternalAction enclosingInternalAction) {
-		super(List.of(), Optional.empty(), Optional.empty());
+			final InternalAction enclosingInternalAction, final SeffBehaviorWrapper parent) {
+		super(List.of(), Optional.empty(), Optional.of(parent));
 
 		final List<InfrastructureCall> tmp = new ArrayList<>();
 

@@ -173,8 +173,6 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
 
 		if (assemblyContext.isPresent()) {
-
-
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(),
 					null, entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
@@ -189,6 +187,15 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		}
 	}
 
+	/**
+	 * TODO it would be possible to scratch {@link SEFFInfrastructureCalled} and use
+	 * {@link SEFFExternalActionCalled} for infrastructure calls as well. However,
+	 * in my opinion it is better to keep them separated for now, as it is still
+	 * unclear what will happen to the handling of external calls.
+	 *
+	 * @param infraCall
+	 * @return
+	 */
 	@Subscribe
 	public Result<SEFFInterpretationProgressed> onSEFFInfrastructureCalled(final SEFFInfrastructureCalled infraCall) {
 		final GeneralEntryRequest entity = infraCall.getEntity();
@@ -219,27 +226,28 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		final SEFFInterpretationContext parentContext = activeResourceFinished.getEntity()
 				.getSeffInterpretationContext();
 		final AbstractAction parentalAction = parentContext.getBehaviorContext().getCurrentProcessedBehavior()
-				.getCurrentAction();
+				.getCurrentAction().getPredecessor_AbstractAction();
 
-		// no internal action or no infra calls? continue normally.
+		// we are "done" with the internal action that called the active resource, i.e.
+		// current action is already the "stop" action.
+
+		// not an internal action or no infra calls? continue normally.
 		if (!(parentalAction instanceof InternalAction)
 				|| ((InternalAction) parentalAction).getInfrastructureCall__Action().isEmpty()) {
 			return Result.of(
 				new SEFFInterpretationProgressed(activeResourceFinished.getEntity().getSeffInterpretationContext()));
 		}
 
-		// restriction to at most *one* call for the proof of concept.
-		// TODO : consider other infra calls as well.
-
 		final InfrastructureSegmentContextHolder infraContext = new InfrastructureSegmentContextHolder(
 				activeResourceFinished.getEntity().getSeffInterpretationContext(),
-				activeResourceFinished.getEntity().getParentalInternalAction().get());
+				(InternalAction) parentalAction, activeResourceFinished.getEntity().getSeffInterpretationContext()
+						.getBehaviorContext().getCurrentProcessedBehavior());
 
 
 		final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
 				.withBehaviorContext(infraContext)
 				.withRequestProcessingContext(parentContext.getRequestProcessingContext())
-				.withCaller(parentContext.getCaller()).withAssemblyContext(parentContext.getAssemblyContext()).build();
+				.withCaller(parentContext).withAssemblyContext(parentContext.getAssemblyContext()).build();
 
 		return Result.of(new SEFFInfrastructureCallsProgressed(infraChildContext));
 	}

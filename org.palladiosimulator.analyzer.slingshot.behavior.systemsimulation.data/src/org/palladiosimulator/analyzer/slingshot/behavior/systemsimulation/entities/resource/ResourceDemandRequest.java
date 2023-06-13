@@ -10,7 +10,6 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.PassiveResource;
-import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 
 import com.google.common.base.Preconditions;
@@ -61,9 +60,6 @@ public final class ResourceDemandRequest {
 	 */
 	private final Optional<PassiveResource> passiveResource;
 
-	/** to 'stay' in that SEFF action for a while longer */
-	private final Optional<InternalAction> parentalInternalAction;
-
 	/**
 	 * Creates the request. If this is a passive resource, but no passive resource
 	 * is specified, then an exception is thrown.
@@ -81,7 +77,6 @@ public final class ResourceDemandRequest {
 		this.parametricResourceDemand = builder.parametricResourceDemand;
 		this.resourceType = builder.resourceType;
 		this.passiveResource = builder.passiveResource;
-		this.parentalInternalAction = builder.parentalInternalAction;
 	}
 
 	/**
@@ -142,10 +137,6 @@ public final class ResourceDemandRequest {
 		return this.passiveResource;
 	}
 
-	public Optional<InternalAction> getParentalInternalAction() {
-		return this.parentalInternalAction;
-	}
-
 	/**
 	 * Creates builder to build {@link ResourceDemandRequest}.
 	 *
@@ -166,7 +157,6 @@ public final class ResourceDemandRequest {
 		private ParametricResourceDemand parametricResourceDemand;
 		private ResourceType resourceType = ResourceType.ACTIVE;
 		private Optional<PassiveResource> passiveResource = Optional.empty();
-		private Optional<InternalAction> parentalInternalAction = Optional.empty();
 
 		private Builder() {
 		}
@@ -196,15 +186,6 @@ public final class ResourceDemandRequest {
 				this.passiveResource = Optional.empty();
 			} else {
 				this.passiveResource = Optional.of(passiveResource);
-			}
-			return this;
-		}
-
-		public Builder withInternalAction(final InternalAction parentalInternalAction) {
-			if (parentalInternalAction == null) {
-				this.parentalInternalAction = Optional.empty();
-			} else {
-				this.parentalInternalAction = Optional.of(parentalInternalAction);
 			}
 			return this;
 		}

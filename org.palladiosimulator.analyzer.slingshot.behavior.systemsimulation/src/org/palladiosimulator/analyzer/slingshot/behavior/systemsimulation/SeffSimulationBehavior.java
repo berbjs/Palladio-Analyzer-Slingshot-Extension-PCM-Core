@@ -127,14 +127,14 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		} else if (!entity.getBehaviorContext().hasFinished()) {
 			LOGGER.info("repeat scenario");
 			result = Result.of(this.repeat(entity));
+		} else if (entity.getBehaviorContext().isChild()) { // go to parents first, only go to caller if no parent.
+			LOGGER.info("return to parent");
+			result = Result.of(this.continueInParent(entity));
 		} else if (entity.getCaller().isPresent()
 				&& (entity.getCaller().get().getBehaviorContext() instanceof InfrastructureSegmentContextHolder)) {
 			LOGGER.info("return to infra caller");
 			result = Result.of(this.continueInInfraCaller(entity));
-		} else if (entity.getBehaviorContext().isChild()) {
-			LOGGER.info("return to parent");
-			result = Result.of(this.continueInParent(entity));
-		} else if (entity.getCaller().isPresent()) { // only go to caller, iff it is not a child.
+		} else if (entity.getCaller().isPresent()) {
 			LOGGER.info("return to caller");
 			result = Result.of(this.continueInCaller(entity));
 		} else {

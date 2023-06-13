@@ -297,8 +297,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			final ResourceDemandRequest request = ResourceDemandRequest.builder()
 					.withAssemblyContext(this.context.getAssemblyContext())
 					.withSeffInterpretationContext(this.context)
-					.withResourceType(ResourceType.ACTIVE).withParametricResourceDemand(demand)
-					.withInternalAction(internalAction).build();
+					.withResourceType(ResourceType.ACTIVE).withParametricResourceDemand(demand).build();
 
 			final ResourceDemandRequested requestEvent = new ResourceDemandRequested(request);
 			events.add(requestEvent);
@@ -307,7 +306,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		if (events.isEmpty()) { // no RD! go straight to Infra calls
 			if (!internalAction.getInfrastructureCall__Action().isEmpty()) {
 				final InfrastructureSegmentContextHolder infraContext = new InfrastructureSegmentContextHolder(
-						this.context, internalAction);
+						this.context, internalAction, this.context.getBehaviorContext().getCurrentProcessedBehavior());
 
 				final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
 						.withBehaviorContext(infraContext)
