@@ -10,6 +10,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.AbstractSEFFInterpretationEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
@@ -131,10 +132,6 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		} else if (entity.getBehaviorContext().isChild()) { // go to parents first, only go to caller if no parent.
 			LOGGER.info("return to parent");
 			result = Result.of(this.continueInParent(entity));
-		} else if (entity.getCaller().isPresent()
-				&& (entity.getCaller().get().getBehaviorContext() instanceof InfrastructureSegmentContextHolder)) {
-			LOGGER.info("return to infra caller");
-			result = Result.of(this.continueInInfraCaller(entity));
 		} else if (entity.getCaller().isPresent()) {
 			LOGGER.info("return to caller");
 			result = Result.of(this.continueInCaller(entity));
@@ -182,17 +179,13 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * @param entity
 	 * @return
 	 */
-	private SEFFInterpretationProgressed continueInCaller(final SEFFInterpretationContext entity) {
+	private AbstractSEFFInterpretationEvent continueInCaller(final SEFFInterpretationContext entity) {
 		final SEFFInterpretationContext seffInterpretationContext = entity.getCaller().get();
-		return new SEFFInterpretationProgressed(seffInterpretationContext);
-	}
+		if (seffInterpretationContext.getBehaviorContext() instanceof InfrastructureSegmentContextHolder) {
+			return new SEFFInfrastructureCallsProgressed(seffInterpretationContext);
+		}
 
-	/**
-	 * @param entity
-	 * @return
-	 */
-	private SEFFInfrastructureCallsProgressed continueInInfraCaller(final SEFFInterpretationContext entity) {
-		return new SEFFInfrastructureCallsProgressed(entity.getCaller().get());
+		return new SEFFInterpretationProgressed(seffInterpretationContext);
 	}
 
 	private SEFFInterpretationProgressed repeat(final SEFFInterpretationContext entity) {

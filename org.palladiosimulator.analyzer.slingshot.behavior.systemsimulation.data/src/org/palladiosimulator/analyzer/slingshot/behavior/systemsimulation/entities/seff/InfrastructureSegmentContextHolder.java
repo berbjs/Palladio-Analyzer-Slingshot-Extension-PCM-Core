@@ -64,7 +64,8 @@ public class InfrastructureSegmentContextHolder extends SeffBehaviorContextHolde
 
 	@Override
 	public SeffBehaviorWrapper getCurrentProcessedBehavior() {
-		throw new IllegalStateException("this is Infra Context");
+		throw new IllegalStateException(
+				"InfrastructureSegmentContextHolder has no current processed behaviour, as InfraCalls are modelled as a simple list.");
 	}
 
 	@Override
@@ -74,11 +75,13 @@ public class InfrastructureSegmentContextHolder extends SeffBehaviorContextHolde
 
 	@Override
 	public AbstractAction getNextAction() {
-		throw new IllegalStateException("this is Infra Context");
+		throw new IllegalStateException(
+				"InfrastructureSegmentContextHolder has no next action, as InfraCalls are modelled as a simple list.");
 	}
 
 	@Override
 	public Optional<AbstractAction> getSuccessor() {
-		throw new IllegalStateException("this is Infra Context");
+		throw new IllegalStateException(
+				"InfrastructureSegmentContextHolder has no succeeding action, as InfraCalls are modelled as a simple list.");
 	}
 }
