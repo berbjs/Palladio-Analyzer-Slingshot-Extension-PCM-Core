@@ -23,6 +23,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCallsProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
@@ -36,6 +37,7 @@ import org.palladiosimulator.pcm.repository.Parameter;
 import org.palladiosimulator.pcm.seff.AbstractBranchTransition;
 import org.palladiosimulator.pcm.seff.AcquireAction;
 import org.palladiosimulator.pcm.seff.BranchAction;
+import org.palladiosimulator.pcm.seff.CallAction;
 import org.palladiosimulator.pcm.seff.CollectionIteratorAction;
 import org.palladiosimulator.pcm.seff.ExternalCallAction;
 import org.palladiosimulator.pcm.seff.ForkAction;
@@ -47,6 +49,7 @@ import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.SetVariableAction;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
+import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 import org.palladiosimulator.pcm.seff.seff_performance.ParametricResourceDemand;
 import org.palladiosimulator.pcm.seff.util.SeffSwitch;
 
@@ -280,6 +283,30 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		SimulatedStackHelper.addParameterToStackFrame(stackFrame, object.getLocalVariableUsages_SetVariableAction(),
 				stackFrame);
 		return Set.of(new SEFFInterpretationProgressed(this.context));
+	}
+	
+	@Override
+	public Set<SEFFInterpreted> caseCallAction(final CallAction callAction){
+		
+		if(callAction instanceof InfrastructureCall) {
+			InfrastructureCall call = (InfrastructureCall) callAction;
+			// create infra call event.
+		 	final GeneralEntryRequest request = GeneralEntryRequest.builder()
+					.withInputVariableUsages(call.getInputVariableUsages__CallAction())
+					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
+					.withSignature(call.getSignature__InfrastructureCall())
+					.withUser(this.context.getRequestProcessingContext()
+							.getUser())
+					.withRequestFrom(
+							this.context.update().withCaller(this.context)
+									.build())
+					.build();
+
+			return Set.of(new SEFFInfrastructureCalled(request));
+		}
+		else {
+			return Set.of();
+		}
 	}
 
 	/**
