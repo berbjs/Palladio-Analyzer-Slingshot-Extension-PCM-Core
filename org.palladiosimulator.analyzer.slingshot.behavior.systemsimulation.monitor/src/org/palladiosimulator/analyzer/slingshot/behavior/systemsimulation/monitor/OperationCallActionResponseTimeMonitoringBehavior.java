@@ -36,7 +36,7 @@ import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory
 import org.palladiosimulator.probeframework.measurement.RequestContext;
 
 /**
- * A system model monitoring monitors call actions.
+ * A system model monitoring that monitors call actions.
  *
  * What's the fucking difference between {@link SystemOperationMeasuringPoint}
  * and {@link AssemblyOperationMeasuringPoint}?? SystemOpMP refs a system,
@@ -153,6 +153,7 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 			return Result.empty(); // current action is null?
 		}
 
+		// for the system level entry call, the provided role is the outer role.
 		if (this.userProbesMap
 				.containsKey(seffProgressed.getEntity().getRequestProcessingContext().getProvidedRole().getId())) {
 			final OperationProbes userProbes = this.userProbesMap
@@ -173,7 +174,7 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 
 		// if it's ext call, we dont have the user request. only entry level system call
 		// has the user request.
-		// actualy, op signature from user request would be wrong here any way.
+		// actualy, op signature from user request would be wrong here anyway.
 		// if i had the provided role though, i could get to the provided op signature.
 
 		if (this.userProbesMap
@@ -198,7 +199,6 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 				OperationProbes::passedElement);
 
 		private static RequestContext passedElement(final DESEvent desEvent) {
-			// somehow add something here to identify recursive calls.
 			if (desEvent instanceof SEFFInterpretationFinished) {
 				final SEFFInterpretationFinished el = (SEFFInterpretationFinished) desEvent;
 				return new RequestContext(el.getEntity().getRequestProcessingContext().getUser().getId());
