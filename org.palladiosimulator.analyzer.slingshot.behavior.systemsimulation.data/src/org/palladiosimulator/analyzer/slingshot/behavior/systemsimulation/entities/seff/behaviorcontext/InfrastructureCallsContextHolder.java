@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
-import org.palladiosimulator.pcm.seff.AbstractAction;
 import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 
@@ -65,11 +64,5 @@ public class InfrastructureCallsContextHolder extends SeffBehaviorContextHolder 
 	@Override
 	public InfrastructureCall getNextAction() {
 		return this.calls.next();
-	}
-
-	@Override
-	public Optional<AbstractAction> getSuccessor() {
-		throw new IllegalStateException(
-				"InfrastructureSegmentContextHolder has no succeeding action, as InfraCalls are modelled as a simple list.");
 	}
 }
