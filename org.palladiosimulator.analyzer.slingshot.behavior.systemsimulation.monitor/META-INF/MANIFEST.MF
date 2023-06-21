@@ -16,4 +16,5 @@ Require-Bundle: org.palladiosimulator.analyzer.slingshot.core,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.monitor;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data,
- org.palladiosimulator.pcm.edp2.measuringpoint;bundle-version="5.1.0"
+ org.palladiosimulator.pcm.edp2.measuringpoint;bundle-version="5.1.0",
+ org.palladiosimulator.analyzer.slingshot.common.utils

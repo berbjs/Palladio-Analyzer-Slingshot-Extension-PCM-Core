@@ -5,10 +5,8 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
-import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserEntryRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
@@ -26,9 +24,10 @@ import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.repository.OperationProvidedRole;
-import org.palladiosimulator.pcm.repository.OperationSignature;
+import org.palladiosimulator.pcm.repository.ProvidedRole;
 import org.palladiosimulator.pcm.repository.Role;
 import org.palladiosimulator.pcm.seff.StartAction;
+import org.palladiosimulator.pcm.seff.StopAction;
 import org.palladiosimulator.pcmmeasuringpoint.AssemblyOperationMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSets;
@@ -38,36 +37,33 @@ import org.palladiosimulator.probeframework.measurement.RequestContext;
 /**
  * A system model monitoring that monitors call actions.
  *
- * What's the fucking difference between {@link SystemOperationMeasuringPoint}
- * and {@link AssemblyOperationMeasuringPoint}?? SystemOpMP refs a system,
- * AssemblyOpMP refs an Assembly. regarding the operations/roles they are equal.
- * Differens probs appears as soon as i got a system with multiple
- * AssemblyContext, cuz then i have access to Ops from all context if i choose
- * the system.
+ * There are two MeasuringPoint for assemblies, namely
+ * {@link SystemOperationMeasuringPoint} and
+ * {@link AssemblyOperationMeasuringPoint}. The former references an entire
+ * system, while the latter reference a specific assembly. However, both have a
+ * reference to the role ({@link ProvidedRole} or it won't work) to be measured
+ * at.
  *
- * for now, lemme stick to AssemblyOpMP, cause it's easier. - with an
- * AssemblRef, i'm closer to the RepositoryComponent, which might be useful?
+ * This Monitor uses {@link AssemblyOperationMeasuringPoint}.
  *
- * - cannot go for extcall action, because the first call ist not extcall but
- * entrylevel call.
+ * SEFFs might be nested, but nested SEFFs do not belong to a call of their own,
+ * thus this monitor ignores all SEFFs with parents.
  *
- * start : SeffInterpretationProgressed + CurrentElement "Start" + top level
- * stop : SeffInterpretationProgressed + CurrentElement "Stop" + top level
- *
+ * Depending on whether an operation gets called by another assembly
+ * (ExternalCall) or from the UsageModel (EntryLevelSystemCall), the
+ * {@link ProvidedRole} in the {@link SEFFInterpretationContext} might differ.
+ * However, it shall be upon the user to specify the correct role in the
+ * measuring point.
  *
  *
  * @author Sarah Stiess
  *
  */
 @OnEvent(when = MonitorModelVisited.class, then = CalculatorRegistered.class, cardinality = EventCardinality.SINGLE)
-@OnEvent(when = SEFFExternalActionCalled.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
-@OnEvent(when = UserEntryRequested.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
-@OnEvent(when = SEFFInterpretationProgressed.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
-@OnEvent(when = SEFFInterpretationFinished.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
+@OnEvent(when = SEFFModelPassedElement.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 public class OperationCallActionResponseTimeMonitoringBehavior implements SimulationBehaviorExtension {
 
 	private final IGenericCalculatorFactory calculatorFactory;
-
 	private final Map<String, OperationProbes> userProbesMap = new HashMap<>();
 
 	@Inject
@@ -76,7 +72,7 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 	}
 
 	/**
-	 * Creates probes if a measuring point for it was specified.
+	 * Creates probes for {@link AssemblyOperationMeasuringPoint}s.
 	 *
 	 * @param event
 	 * @return
@@ -109,78 +105,33 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 
 	}
 
-	@Subscribe
-	public Result<ProbeTaken> onOperationCallStarted(final SEFFExternalActionCalled seffProgressed) {
+	@Subscribe(reified = StartAction.class)
+	public Result<ProbeTaken> onOperationCallStarted(final SEFFModelPassedElement<StartAction> seffStarted) {
+		if (seffStarted.getContext().getBehaviorContext().isChild()) {
+			return Result.empty();
+		}
 
-		// PROBLEM : I only know the Required role, not the provided one.
+		final ProvidedRole role = seffStarted.getContext().getRequestProcessingContext().getProvidedRole();
 
-		if (seffProgressed.getEntity().getSignature() instanceof OperationSignature
-				&& this.userProbesMap.containsKey(seffProgressed.getEntity().getSignature().getId())) {
-
-			final OperationProbes userProbes = this.userProbesMap
-					.get(seffProgressed.getEntity().getSignature().getId());
-			userProbes.operationStartedProbe.takeMeasurement(seffProgressed);
+		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(role.getId())) {
+			final OperationProbes userProbes = this.userProbesMap.get(role.getId());
+			userProbes.operationStartedProbe.takeMeasurement(seffStarted);
 			return Result
 					.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
 		}
 		return Result.empty();
 	}
 
-//	@Subscribe
-//	public Result<ProbeTaken> onOperationCallStarted(final UserEntryRequested seffProgressed) {
-//
-//		if (this.userProbesMap.containsKey(seffProgressed.getEntity().getOperationProvidedRole().getId())) {
-//
-//			final OperationProbes userProbes = this.userProbesMap
-//					.get(seffProgressed.getEntity().getOperationProvidedRole().getId());
-//			userProbes.operationStartedProbe.takeMeasurement(seffProgressed);
-//			return Result
-//					.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
-//		}
-//		return Result.empty();
-//	}
-
-	@Subscribe
-	public Result<ProbeTaken> onOperationCallStarted(final SEFFInterpretationProgressed seffProgressed) {
-		// ignore nested SEFFs
-		if (seffProgressed.getEntity().getBehaviorContext().isChild()) {
+	@Subscribe(reified = StopAction.class)
+	public Result<ProbeTaken> onOperationCallStopped(final SEFFModelPassedElement<StopAction> seffFinished) {
+		if (seffFinished.getContext().getBehaviorContext().isChild()) {
 			return Result.empty();
 		}
 
-		if (seffProgressed.getEntity().getBehaviorContext().getCurrentProcessedBehavior().getCurrentAction() == null
-				|| !(seffProgressed.getEntity().getBehaviorContext().getCurrentProcessedBehavior()
-				.getCurrentAction().getPredecessor_AbstractAction() instanceof StartAction)) {
-			return Result.empty(); // current action is null?
-		}
+		final ProvidedRole role = seffFinished.getContext().getRequestProcessingContext().getProvidedRole();
 
-		// for the system level entry call, the provided role is the outer role.
-		if (this.userProbesMap
-				.containsKey(seffProgressed.getEntity().getRequestProcessingContext().getProvidedRole().getId())) {
-			final OperationProbes userProbes = this.userProbesMap
-					.get(seffProgressed.getEntity().getRequestProcessingContext().getProvidedRole().getId());
-			userProbes.operationStartedProbe.takeMeasurement(seffProgressed);
-			return Result
-					.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
-		}
-		return Result.empty();
-	}
-
-	@Subscribe
-	public Result<ProbeTaken> onOperationCallFinished(final SEFFInterpretationFinished seffFinished) {
-		// ignore nested SEFFs
-		if (seffFinished.getEntity().getBehaviorContext().isChild()) {
-			return Result.empty();
-		}
-
-		// if it's ext call, we dont have the user request. only entry level system call
-		// has the user request.
-		// actualy, op signature from user request would be wrong here anyway.
-		// if i had the provided role though, i could get to the provided op signature.
-
-		if (this.userProbesMap
-				.containsKey(seffFinished.getEntity().getRequestProcessingContext().getProvidedRole().getId())) {
-			final OperationProbes userProbes = this.userProbesMap
-					.get(seffFinished.getEntity().getRequestProcessingContext().getProvidedRole().getId());
+		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(role.getId())) {
+			final OperationProbes userProbes = this.userProbesMap.get(role.getId());
 			userProbes.operationFinishedProbe.takeMeasurement(seffFinished);
 			return Result.of(
 					new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationFinishedProbe).build()));
@@ -199,21 +150,9 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 				OperationProbes::passedElement);
 
 		private static RequestContext passedElement(final DESEvent desEvent) {
-			if (desEvent instanceof SEFFInterpretationFinished) {
-				final SEFFInterpretationFinished el = (SEFFInterpretationFinished) desEvent;
-				return new RequestContext(el.getEntity().getRequestProcessingContext().getUser().getId());
-			}
-			if (desEvent instanceof SEFFInterpretationProgressed) {
-				final SEFFInterpretationProgressed el = (SEFFInterpretationProgressed) desEvent;
-				return new RequestContext(el.getEntity().getRequestProcessingContext().getUser().getId());
-			}
-			if (desEvent instanceof SEFFExternalActionCalled) {
-				final SEFFExternalActionCalled el = (SEFFExternalActionCalled) desEvent;
-				return new RequestContext(el.getEntity().getUser().getId());
-			}
-			if (desEvent instanceof UserEntryRequested) {
-				final UserEntryRequested el = (UserEntryRequested) desEvent;
-				return new RequestContext(el.getEntity().getUser().getId());
+			if (desEvent instanceof SEFFModelPassedElement<?>) {
+				final SEFFModelPassedElement<?> el = (SEFFModelPassedElement<?>) desEvent;
+				return new RequestContext(el.getContext().getRequestProcessingContext().getUser().getId());
 			}
 			return RequestContext.EMPTY_REQUEST_CONTEXT;
 		}
