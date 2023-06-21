@@ -1,4 +1,4 @@
-package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff;
+package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -6,8 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.eclipse.emf.common.util.EList;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.pcm.seff.AbstractAction;
 import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
@@ -27,11 +26,11 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
  * @author Sarah Stieß
  *
  */
-public class InfrastructureSegmentContextHolder extends SeffBehaviorContextHolder implements Iterator<InfrastructureCall> {
+public class InfrastructureCallsContextHolder extends SeffBehaviorContextHolder {
 
 	private final Iterator<InfrastructureCall> calls;
 
-	public InfrastructureSegmentContextHolder(final SEFFInterpretationContext enclosingSEFFContext,
+	public InfrastructureCallsContextHolder(final SEFFInterpretationContext enclosingSEFFContext,
 			final InternalAction enclosingInternalAction, final SeffBehaviorWrapper parent) {
 		super(List.of(), Optional.empty(), Optional.of(parent));
 
@@ -53,16 +52,6 @@ public class InfrastructureSegmentContextHolder extends SeffBehaviorContextHolde
 	}
 
 	@Override
-	public boolean hasNext() {
-		return this.calls.hasNext();
-	}
-
-	@Override
-	public InfrastructureCall next() {
-		return this.calls.next();
-	}
-
-	@Override
 	public SeffBehaviorWrapper getCurrentProcessedBehavior() {
 		throw new IllegalStateException(
 				"InfrastructureSegmentContextHolder has no current processed behaviour, as InfraCalls are modelled as a simple list.");
@@ -70,13 +59,12 @@ public class InfrastructureSegmentContextHolder extends SeffBehaviorContextHolde
 
 	@Override
 	public boolean hasFinished() {
-		return !this.hasNext();
+		return !this.calls.hasNext();
 	}
 
 	@Override
-	public AbstractAction getNextAction() {
-		throw new IllegalStateException(
-				"InfrastructureSegmentContextHolder has no next action, as InfraCalls are modelled as a simple list.");
+	public InfrastructureCall getNextAction() {
+		return this.calls.next();
 	}
 
 	@Override

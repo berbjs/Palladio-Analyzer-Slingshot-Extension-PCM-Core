@@ -14,17 +14,16 @@ import org.eclipse.emf.ecore.EObject;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureSegmentContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.BranchBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.LoopBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCallsProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpreted;
@@ -284,12 +283,12 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				stackFrame);
 		return Set.of(new SEFFInterpretationProgressed(this.context));
 	}
-	
+
 	@Override
-	public Set<SEFFInterpreted> caseCallAction(final CallAction callAction){
-		
-		if(callAction instanceof InfrastructureCall) {
-			InfrastructureCall call = (InfrastructureCall) callAction;
+	public Set<SEFFInterpreted> caseCallAction(final CallAction callAction) {
+
+		if (callAction instanceof InfrastructureCall) {
+			final InfrastructureCall call = (InfrastructureCall) callAction;
 			// create infra call event.
 		 	final GeneralEntryRequest request = GeneralEntryRequest.builder()
 					.withInputVariableUsages(call.getInputVariableUsages__CallAction())
@@ -303,8 +302,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 					.build();
 
 			return Set.of(new SEFFInfrastructureCalled(request));
-		}
-		else {
+		} else {
 			return Set.of();
 		}
 	}
@@ -332,16 +330,16 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 		if (events.isEmpty()) { // no RD! go straight to Infra calls
 			if (!internalAction.getInfrastructureCall__Action().isEmpty()) {
-				final InfrastructureSegmentContextHolder infraContext = new InfrastructureSegmentContextHolder(
+				final InfrastructureCallsContextHolder infraContext = new InfrastructureCallsContextHolder(
 						this.context, internalAction, this.context.getBehaviorContext().getCurrentProcessedBehavior());
 
 				final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
 						.withBehaviorContext(infraContext)
 						.withRequestProcessingContext(this.context.getRequestProcessingContext())
-						.withCaller(this.context).withAssemblyContext(this.context.getAssemblyContext())
+						.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext())
 						.build();
 
-				events.add(new SEFFInfrastructureCallsProgressed(infraChildContext));
+				events.add(new SEFFInterpretationProgressed(infraChildContext));
 			}
 		}
 

@@ -6,7 +6,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.palladiosimulator.analyzer.slingshot.common.utils.Logic;
+import org.palladiosimulator.pcm.core.entity.Entity;
 import org.palladiosimulator.pcm.seff.AbstractAction;
+import org.palladiosimulator.pcm.seff.CallAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 
 import com.google.common.base.Preconditions;
@@ -32,7 +34,7 @@ import com.google.common.base.Preconditions;
  * model are interpreted concurrently. In
  * {@link #getCurrentProcessedBehavior()}, the way of selecting the next model
  * to interpret is defined.
- * 
+ *
  * @author Julijan Katic
  */
 public abstract class SeffBehaviorContextHolder {
@@ -44,7 +46,7 @@ public abstract class SeffBehaviorContextHolder {
 	/**
 	 * Constructs the behavior context holder. If the behavior context has a
 	 * successor defined, then this must be a child context holder.
-	 * 
+	 *
 	 * @param behaviors the list of resource demanding behaviors that are referenced
 	 *                  here. They will be mapped to {@link SeffBehaviorWrapper}s
 	 *                  each.
@@ -65,7 +67,7 @@ public abstract class SeffBehaviorContextHolder {
 
 	/**
 	 * Returns the successor action of this model.
-	 * 
+	 *
 	 * @return the successor action optional.
 	 */
 	public Optional<AbstractAction> getSuccessor() {
@@ -76,7 +78,7 @@ public abstract class SeffBehaviorContextHolder {
 	 * Returns whether the interpretation has finished in this context. The context
 	 * is said to be finished if each referenced {@link SeffBehaviorWrapper} is
 	 * finished.
-	 * 
+	 *
 	 * @return false if there is a {@link SeffBehaviorWrapper} that is not finished
 	 *         yet, oterhwise true.
 	 * @see SeffBehaviorWrapper#hasFinished()
@@ -87,7 +89,7 @@ public abstract class SeffBehaviorContextHolder {
 
 	/**
 	 * Returns the common parent of the models.
-	 * 
+	 *
 	 * @return the common parent of the models if it exists.
 	 */
 	public Optional<SeffBehaviorWrapper> getParent() {
@@ -98,7 +100,7 @@ public abstract class SeffBehaviorContextHolder {
 	 * Returns whether this context holder is a child of another SEFF behavior. If
 	 * this is true, then {@link #getParent()} will returns a non-empty
 	 * SeffBehaviorWrapper.
-	 * 
+	 *
 	 * @return true if a parent was set.
 	 */
 	public boolean isChild() {
@@ -108,13 +110,17 @@ public abstract class SeffBehaviorContextHolder {
 	/**
 	 * Returns the next action to be interpreted. This depends of the current
 	 * processing behavior. Also, this method allows for iteration over the actions.
-	 * 
+	 *
+	 * Depending on the behaviour context, the next Action can be an
+	 * {@link AbstractAction} as well as an {@link CallAction}. Sadly, their
+	 * smallest common parent type is {@link Entity}.
+	 *
 	 * @return the abstract action to interpret.
 	 * @throws NoSuchElementException if the model has already finished (see
 	 *                                {@link #hasFinished()}.
 	 * @see #getCurrentProcessedBehavior()
 	 */
-	public AbstractAction getNextAction() {
+	public Entity getNextAction() {
 		if (this.hasFinished()) {
 			throw new NoSuchElementException("There is no action to interpret anymore, as this model has finished.");
 		}
@@ -123,7 +129,7 @@ public abstract class SeffBehaviorContextHolder {
 
 	/**
 	 * Returns the list of referenced behaviors.
-	 * 
+	 *
 	 * @return the list of behaviors.
 	 */
 	protected List<SeffBehaviorWrapper> getBehaviors() {
@@ -139,7 +145,7 @@ public abstract class SeffBehaviorContextHolder {
 	 * <p>
 	 * Typically, this behavior model will consist the action to be interpreted
 	 * next.
-	 * 
+	 *
 	 * @return the behavior model to interpret.
 	 */
 	public abstract SeffBehaviorWrapper getCurrentProcessedBehavior();

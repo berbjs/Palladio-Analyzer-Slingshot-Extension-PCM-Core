@@ -12,15 +12,14 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.RepositoryInterpretationContext;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureSegmentContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.RepositoryInterpretationInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCallsProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.interpreters.RepositoryInterpreter;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadbalancer.EquallyDistributedSystemLevelLoadBalancer;
@@ -55,8 +54,7 @@ import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
 @OnEvent(when = UserEntryRequested.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 @OnEvent(when = RepositoryInterpretationInitiated.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFExternalActionCalled.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
-@OnEvent(when = ActiveResourceFinished.class, then = { SEFFInterpretationProgressed.class,
-		SEFFInfrastructureCallsProgressed.class }, cardinality = MANY)
+@OnEvent(when = ActiveResourceFinished.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFInfrastructureCalled.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
@@ -238,7 +236,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 				new SEFFInterpretationProgressed(activeResourceFinished.getEntity().getSeffInterpretationContext()));
 		}
 
-		final InfrastructureSegmentContextHolder infraContext = new InfrastructureSegmentContextHolder(
+		final InfrastructureCallsContextHolder infraContext = new InfrastructureCallsContextHolder(
 				activeResourceFinished.getEntity().getSeffInterpretationContext(),
 				(InternalAction) parentalAction, activeResourceFinished.getEntity().getSeffInterpretationContext()
 						.getBehaviorContext().getCurrentProcessedBehavior());
@@ -247,9 +245,9 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
 				.withBehaviorContext(infraContext)
 				.withRequestProcessingContext(parentContext.getRequestProcessingContext())
-				.withCaller(parentContext).withAssemblyContext(parentContext.getAssemblyContext()).build();
+				.withCaller(parentContext.getCaller()).withAssemblyContext(parentContext.getAssemblyContext()).build();
 
-		return Result.of(new SEFFInfrastructureCallsProgressed(infraChildContext));
+		return Result.of(new SEFFInterpretationProgressed(infraChildContext));
 	}
 
 }

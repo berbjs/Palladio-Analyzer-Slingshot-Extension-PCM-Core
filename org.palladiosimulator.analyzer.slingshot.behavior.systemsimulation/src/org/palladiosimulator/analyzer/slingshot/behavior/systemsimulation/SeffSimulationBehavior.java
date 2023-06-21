@@ -1,20 +1,16 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation;
 
-import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.SINGLE;
-
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.InfrastructureSegmentContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.AbstractSEFFInterpretationEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCallsProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpreted;
@@ -23,13 +19,11 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.Use
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserRequestFinished;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractSimulationEvent;
-import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 
 /**
  * This behavior module both interprets and generates events specifically for
@@ -42,8 +36,6 @@ import org.palladiosimulator.pcm.seff.seff_performance.InfrastructureCall;
 		UserRequestFinished.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = SEFFChildInterpretationStarted.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
 @OnEvent(when = PassiveResourceAcquired.class, then = SEFFInterpreted.class, cardinality = EventCardinality.MANY)
-@OnEvent(when = SEFFInfrastructureCallsProgressed.class, then = { SEFFInfrastructureCalled.class,
-		SEFFInterpretationProgressed.class }, cardinality = SINGLE)
 public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SeffSimulationBehavior.class);
@@ -51,8 +43,18 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<SEFFInterpreted> onSeffInterpretationProgressed(final SEFFInterpretationProgressed progressed) {
 		final SeffInterpreter interpreter = new SeffInterpreter(progressed.getEntity());
-		final Set<SEFFInterpreted> events = interpreter
-				.doSwitch(progressed.getEntity().getBehaviorContext().getNextAction());
+		final SeffBehaviorContextHolder contextHolder = progressed.getEntity().getBehaviorContext();
+
+		// for infra calls, there is no "stop" action, i.e. cannot switch to "finished"
+		// inside the SEFFInterpreter.
+		if (contextHolder instanceof InfrastructureCallsContextHolder) {
+			if (contextHolder.hasFinished()) {
+				LOGGER.info("return to parent of infra");
+				return Result.of(new SEFFInterpretationFinished(progressed.getEntity()));
+			}
+		}
+
+		final Set<SEFFInterpreted> events = interpreter.doSwitch(contextHolder.getNextAction());
 		return Result.of(events);
 	}
 
@@ -73,34 +75,6 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final Set<SEFFInterpreted> events = interpreter
 				.doSwitch(seffChildInterpretationStarted.getEntity().getBehaviorContext().getNextAction());
 		return Result.of(events);
-	}
-
-	@Subscribe
-	public Result<DESEvent> onSEFFInfrastructureCallsProgressed(
-			final SEFFInfrastructureCallsProgressed infraCallsProgressed) {
-
-		final InfrastructureSegmentContextHolder infraContext = (InfrastructureSegmentContextHolder) infraCallsProgressed
-				.getEntity().getBehaviorContext();
-
-		if (infraContext.hasNext()) {
-			final InfrastructureCall call = infraContext.next();
-			// create infra call event.
-			final GeneralEntryRequest request = GeneralEntryRequest.builder()
-					.withInputVariableUsages(call.getInputVariableUsages__CallAction())
-					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
-					.withSignature(call.getSignature__InfrastructureCall())
-					.withUser(infraCallsProgressed.getEntity().getRequestProcessingContext()
-							.getUser())
-					.withRequestFrom(
-							infraCallsProgressed.getEntity().update().withCaller(infraCallsProgressed.getEntity())
-									.build())
-					.build();
-
-			return Result.of(new SEFFInfrastructureCalled(request));
-		}
-
-		LOGGER.info("return to parent of infra");
-		return Result.of(new SEFFInterpretationProgressed(infraCallsProgressed.getEntity().getCaller().get()));
 	}
 
 	@Subscribe
@@ -181,10 +155,6 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 */
 	private AbstractSEFFInterpretationEvent continueInCaller(final SEFFInterpretationContext entity) {
 		final SEFFInterpretationContext seffInterpretationContext = entity.getCaller().get();
-		if (seffInterpretationContext.getBehaviorContext() instanceof InfrastructureSegmentContextHolder) {
-			return new SEFFInfrastructureCallsProgressed(seffInterpretationContext);
-		}
-
 		return new SEFFInterpretationProgressed(seffInterpretationContext);
 	}
 
