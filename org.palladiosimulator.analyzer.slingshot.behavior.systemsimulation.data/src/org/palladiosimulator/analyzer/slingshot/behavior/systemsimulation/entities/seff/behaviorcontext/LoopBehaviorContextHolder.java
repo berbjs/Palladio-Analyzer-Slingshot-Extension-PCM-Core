@@ -62,6 +62,7 @@ public final class LoopBehaviorContextHolder extends SingleBehaviorContextHolder
 			this.progression++;
 			this.getCurrentProcessedBehavior().repeatScenario();
 		}
-		return super.getNextAction();
+		// Loops has no InfrastructureCalls next Action is always AbstractAction
+		return (AbstractAction) super.getNextAction();
 	}
 }

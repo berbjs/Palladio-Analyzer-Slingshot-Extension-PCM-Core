@@ -3,8 +3,10 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.repos
 import java.util.Optional;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.pcm.core.composition.AssemblyConnector;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
+import org.palladiosimulator.pcm.core.composition.AssemblyInfrastructureConnector;
 import org.palladiosimulator.pcm.core.composition.ProvidedDelegationConnector;
 import org.palladiosimulator.pcm.repository.BasicComponent;
 import org.palladiosimulator.pcm.repository.OperationProvidedRole;
@@ -81,8 +83,22 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 	}
 
 	@Override
+	public Optional<AssemblyContext> findInfrastructureAssemblyContextFromRequiredRole(
+			final RequiredRole requiredRole) {
+		return this.systemModel.getConnectors__ComposedStructure().stream()
+				.filter(connector -> connector instanceof AssemblyInfrastructureConnector)
+				.map(connector -> (AssemblyInfrastructureConnector) connector)
+				.filter(assemblyInfraConnector -> assemblyInfraConnector
+						.getRequiredRole__AssemblyInfrastructureConnector().getId().equals(requiredRole.getId()))
+				.map(AssemblyInfrastructureConnector::getProvidingAssemblyContext__AssemblyInfrastructureConnector)
+				.findFirst();
+	}
+
+	@Override
 	public Optional<ProvidedDelegationConnector> getConnectedProvidedDelegationConnector(
 			final ProvidedRole providedRole) {
+
+		final EList<ProvidedRole> roles = this.systemModel.getProvidedRoles_InterfaceProvidingEntity();
 
 		final boolean providedRolePresent = this.systemModel.getProvidedRoles_InterfaceProvidingEntity().stream()
 				.filter(systemProvidedRole -> systemProvidedRole.getId().equals(providedRole.getId()))

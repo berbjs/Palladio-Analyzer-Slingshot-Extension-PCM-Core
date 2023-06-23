@@ -104,6 +104,14 @@ public interface SystemModelRepository {
 	Optional<AssemblyContext> findAssemblyContextByProvidedRole(ProvidedRole role);
 
 	/**
+	 * TODO
+	 *
+	 * @param requiredRole
+	 * @return
+	 */
+	Optional<AssemblyContext> findInfrastructureAssemblyContextFromRequiredRole(RequiredRole requiredRole);
+
+	/**
 	 * A short-cut method to find the assembly context by any role, regardless of
 	 * whether it is a required or a provided role. However, the role must be either
 	 * one of them.
