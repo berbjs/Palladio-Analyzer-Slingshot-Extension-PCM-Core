@@ -22,7 +22,7 @@ import com.google.common.base.Preconditions;
  * <p>
  * As with each entity, no field must be {@code null}. However, optional fields
  * are explicitly declared with {@link Optional}.
- * 
+ *
  * @author Julijan Katic
  */
 public final class ResourceDemandRequest {
@@ -63,7 +63,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Creates the request. If this is a passive resource, but no passive resource
 	 * is specified, then an exception is thrown.
-	 * 
+	 *
 	 * @param builder
 	 */
 	@Generated("SparkTools")
@@ -81,7 +81,7 @@ public final class ResourceDemandRequest {
 
 	/**
 	 * Returns the assembly context from which the request origins.
-	 * 
+	 *
 	 * @return the assemblyContext
 	 */
 	public AssemblyContext getAssemblyContext() {
@@ -90,7 +90,7 @@ public final class ResourceDemandRequest {
 
 	/**
 	 * Returns the interpretation context from which the request origins.
-	 * 
+	 *
 	 * @return the seffInterpretationContext
 	 */
 	public SEFFInterpretationContext getSeffInterpretationContext() {
@@ -100,7 +100,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Returns the parametric resource demand that specifies how much resource is
 	 * needed.
-	 * 
+	 *
 	 * @return the parametricResourceDemand
 	 */
 	public ParametricResourceDemand getParametricResourceDemand() {
@@ -110,7 +110,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Returns the type of the resource. If not already set by the builder, it
 	 * typically defaults to {@link ResourceType#ACTIVE}.
-	 * 
+	 *
 	 * @return The resource type of the resource.
 	 */
 	public ResourceType getResourceType() {
@@ -120,7 +120,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Short-cut method that directly returns the user by using the interpretation
 	 * context.
-	 * 
+	 *
 	 * @return The user of the interpretation context that requests a resource.
 	 */
 	public User getUser() {
@@ -130,7 +130,7 @@ public final class ResourceDemandRequest {
 	/**
 	 * Returns the passive resource itself that is being requested. This will return
 	 * an empty optional if the resource is actually {@link ResourceType#ACTIVE}.
-	 * 
+	 *
 	 * @return
 	 */
 	public Optional<PassiveResource> getPassiveResource() {
@@ -139,7 +139,7 @@ public final class ResourceDemandRequest {
 
 	/**
 	 * Creates builder to build {@link ResourceDemandRequest}.
-	 * 
+	 *
 	 * @return created builder
 	 */
 	@Generated("SparkTools")
