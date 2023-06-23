@@ -4,7 +4,7 @@
    <extension
          point="org.palladiosimulator.analyzer.slingshot">
       <slingshot-extension
-            module="org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor.SystenModelMonitorModule">
+            module="org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor.SystemModelMonitorModule">
       </slingshot-extension>
    </extension>
 

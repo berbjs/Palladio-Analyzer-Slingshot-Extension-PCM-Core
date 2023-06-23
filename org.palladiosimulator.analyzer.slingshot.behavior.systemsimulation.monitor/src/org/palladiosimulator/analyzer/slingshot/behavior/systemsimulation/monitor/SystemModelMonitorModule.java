@@ -2,7 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monit
 
 import org.palladiosimulator.analyzer.slingshot.core.extension.AbstractSlingshotExtension;
 
-public class SystenModelMonitorModule extends AbstractSlingshotExtension {
+public class SystemModelMonitorModule extends AbstractSlingshotExtension {
 
 	@Override
 	protected void configure() {
