@@ -45,12 +45,11 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final SeffInterpreter interpreter = new SeffInterpreter(progressed.getEntity());
 		final SeffBehaviorContextHolder contextHolder = progressed.getEntity().getBehaviorContext();
 
-		// for infra calls, there is no "stop" action, i.e. cannot switch to "finished"
-		// inside the SEFFInterpreter.
 		if (contextHolder instanceof InfrastructureCallsContextHolder) {
 			if (contextHolder.hasFinished()) {
-				LOGGER.info("return to parent of infra");
-				return Result.of(new SEFFInterpretationFinished(progressed.getEntity()));
+				// continue in parent -> a follow up SEFFInterpretationProgressed in the parent 
+				LOGGER.info("progression to parent of infra");
+				return Result.of(continueInParent(progressed.getEntity()));
 			}
 		}
 
