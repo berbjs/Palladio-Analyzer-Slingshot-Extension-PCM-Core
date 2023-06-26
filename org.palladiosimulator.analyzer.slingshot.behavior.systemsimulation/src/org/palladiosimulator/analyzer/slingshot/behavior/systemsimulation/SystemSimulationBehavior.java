@@ -156,12 +156,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Used to interpret the next SEFF that is requested by another seff. For
 	 * example, when an External Call action was performed.
-	 *
-	 * @deprecated This method does not incooperate linking resources where
-	 * 				the call might actually be hit. Instead, the responsibility
-	 * 				now lies in the ResourceSimulation.
 	 */
-	@Deprecated
 	@Subscribe
 	public Result<SEFFInterpretationProgressed> onRequestInitiated(
 			final SEFFExternalActionCalled requestInitiated) {
