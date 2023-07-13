@@ -165,10 +165,13 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
 				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
 
-		if (assemblyContext.isPresent()) {
+		final Optional<OperationProvidedRole> providedRole = this.systemRepository
+				.findProvidedRoleFromRequiredRole(entity.getRequiredRole());
+
+		if (assemblyContext.isPresent() && providedRole.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(),
-					null, entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
+					providedRole.get(), entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter

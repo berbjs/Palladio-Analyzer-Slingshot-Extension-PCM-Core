@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.core.composition.ProvidedDelegationConnector;
+import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.ProvidedRole;
 import org.palladiosimulator.pcm.repository.RequiredRole;
 import org.palladiosimulator.pcm.repository.Role;
@@ -54,6 +55,8 @@ public interface SystemModelRepository {
 	 * @return The assembly context if it exists.
 	 */
 	Optional<AssemblyContext> findAssemblyContextFromRequiredRole(RequiredRole requiredRole);
+
+	Optional<OperationProvidedRole> findProvidedRoleFromRequiredRole(final RequiredRole requiredRole);
 
 	/**
 	 * Get the delegation connector from a provided role. The provided role is the

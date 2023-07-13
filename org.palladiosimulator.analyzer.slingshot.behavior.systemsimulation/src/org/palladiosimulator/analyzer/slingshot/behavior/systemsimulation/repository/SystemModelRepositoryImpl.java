@@ -9,6 +9,7 @@ import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.core.composition.AssemblyInfrastructureConnector;
 import org.palladiosimulator.pcm.core.composition.ProvidedDelegationConnector;
 import org.palladiosimulator.pcm.repository.BasicComponent;
+import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.ProvidedRole;
 import org.palladiosimulator.pcm.repository.RepositoryComponent;
 import org.palladiosimulator.pcm.repository.RequiredRole;
@@ -69,6 +70,16 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 						.equals(requiredRole.getId()))
 				.map(AssemblyConnector::getProvidingAssemblyContext_AssemblyConnector)
 				.findFirst();
+	}
+
+	@Override
+	public Optional<OperationProvidedRole> findProvidedRoleFromRequiredRole(final RequiredRole requiredRole) {
+		return this.systemModel.getConnectors__ComposedStructure().stream()
+				.filter(connector -> connector instanceof AssemblyConnector)
+				.map(connector -> (AssemblyConnector) connector)
+				.filter(assemblyConnector -> assemblyConnector.getRequiredRole_AssemblyConnector().getId()
+						.equals(requiredRole.getId()))
+				.map(AssemblyConnector::getProvidedRole_AssemblyConnector).findFirst();
 	}
 
 	@Override

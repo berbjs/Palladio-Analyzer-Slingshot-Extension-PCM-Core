@@ -27,6 +27,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpreted;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.common.utils.SimulatedStackHelper;
 import org.palladiosimulator.analyzer.slingshot.common.utils.TransitionDeterminer;
 import org.palladiosimulator.pcm.parameter.VariableUsage;
@@ -354,10 +355,19 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 	@Override
 	public Set<SEFFInterpreted> doSwitch(final EClass eClass, final EObject eObject) {
-		Set<SEFFInterpreted> result = super.doSwitch(eClass, eObject);
-		if (result == null) {
-			result = Set.of();
+		if (eObject == null) {
+			throw new IllegalArgumentException("called interpretation on a null reference");
 		}
+
+		final Set<SEFFInterpreted> result = new HashSet<>();
+		result.add(new SEFFModelPassedElement<>(eObject, this.context));
+
+		final Set<SEFFInterpreted> returningEvents = super.doSwitch(eClass, eObject);
+
+		if (returningEvents != null) {
+			result.addAll(returningEvents);
+		}
+
 		return result;
 	}
 
