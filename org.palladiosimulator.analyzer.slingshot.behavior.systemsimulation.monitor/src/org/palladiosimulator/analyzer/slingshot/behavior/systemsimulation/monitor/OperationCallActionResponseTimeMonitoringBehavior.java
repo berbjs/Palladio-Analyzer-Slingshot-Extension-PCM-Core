@@ -64,7 +64,7 @@ import org.palladiosimulator.probeframework.measurement.RequestContext;
 public class OperationCallActionResponseTimeMonitoringBehavior implements SimulationBehaviorExtension {
 
 	private final IGenericCalculatorFactory calculatorFactory;
-	private final Map<String, OperationProbes> userProbesMap = new HashMap<>();
+	private final Map<AssemblyOperationCompoundKey, OperationProbes> userProbesMap = new HashMap<>();
 
 	@Inject
 	public OperationCallActionResponseTimeMonitoringBehavior(final IGenericCalculatorFactory calculatorFactory) {
@@ -90,7 +90,8 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 			if (role instanceof OperationProvidedRole) {
 
 				final OperationProbes userProbes = new OperationProbes();
-				this.userProbesMap.put(role.getId(), userProbes);
+				final AssemblyOperationCompoundKey key = AssemblyOperationCompoundKey.of(((AssemblyOperationMeasuringPoint) measuringPoint).getAssembly(), (OperationProvidedRole) role);
+				this.userProbesMap.put(key, userProbes);
 
 				final Calculator calculator = this.calculatorFactory.buildCalculator(
 						MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, measuringPoint,
@@ -112,9 +113,11 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 		}
 
 		final ProvidedRole role = seffStarted.getContext().getRequestProcessingContext().getProvidedRole();
+		final AssemblyOperationCompoundKey key = AssemblyOperationCompoundKey
+				.of(seffStarted.getContext().getAssemblyContext(), role);
 
-		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(role.getId())) {
-			final OperationProbes userProbes = this.userProbesMap.get(role.getId());
+		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(key)) {
+			final OperationProbes userProbes = this.userProbesMap.get(key);
 			userProbes.operationStartedProbe.takeMeasurement(seffStarted);
 			return Result
 					.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationStartedProbe).build()));
@@ -129,9 +132,11 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 		}
 
 		final ProvidedRole role = seffFinished.getContext().getRequestProcessingContext().getProvidedRole();
+		final AssemblyOperationCompoundKey key = AssemblyOperationCompoundKey
+				.of(seffFinished.getContext().getAssemblyContext(), role);
 
-		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(role.getId())) {
-			final OperationProbes userProbes = this.userProbesMap.get(role.getId());
+		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(key)) {
+			final OperationProbes userProbes = this.userProbesMap.get(key);
 			userProbes.operationFinishedProbe.takeMeasurement(seffFinished);
 			return Result.of(
 					new ProbeTaken(ProbeTakenEntity.builder().withProbe(userProbes.operationFinishedProbe).build()));
