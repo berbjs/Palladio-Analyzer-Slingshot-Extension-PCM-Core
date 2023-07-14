@@ -96,7 +96,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	@Override
 	public Set<SEFFInterpreted> caseStopAction(final StopAction object) {
 		LOGGER.debug("Seff stopped.");
-		return Set.of(new SEFFInterpretationFinished(this.context));
+		return Set.of(new SEFFInterpretationFinished(this.context),
+				new SEFFModelPassedElement<StopAction>(object, this.context));
 	}
 
 	@Override
@@ -116,15 +117,15 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			throw new IllegalStateException("No branch transition was active. This is not allowed.");
 		}
 
-		LOGGER.info("Branch chosen: " + branchTransition.getEntityName());
+		LOGGER.info(String.format("Branch chosen: %s with id %s", branchTransition.getEntityName(),
+				branchTransition.getId()));
 
 		final BranchBehaviorContextHolder holder = new BranchBehaviorContextHolder(
 				branchTransition.getBranchBehaviour_BranchTransition(), branchAction.getSuccessor_AbstractAction(),
 				this.context.getBehaviorContext().getCurrentProcessedBehavior());
 		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withCaller(this.context.getCaller())
-				.withAssemblyContext(this.context.getAssemblyContext()).build();
+				.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext()).build();
 
 		final SEFFChildInterpretationStarted event = new SEFFChildInterpretationStarted(childContext);
 
@@ -140,7 +141,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	@Override
 	public Set<SEFFInterpreted> caseStartAction(final StartAction object) {
 		LOGGER.debug("Found starting action of SEFF");
-		return Set.of(new SEFFInterpretationProgressed(this.context));
+		return Set.of(new SEFFInterpretationProgressed(this.context),
+				new SEFFModelPassedElement<StartAction>(object, this.context));
 	}
 
 	@Override
@@ -155,8 +157,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				iterationCount);
 		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withCaller(this.context.getCaller())
-				.withAssemblyContext(this.context.getAssemblyContext()).build();
+				.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext()).build();
 
 		return Set.of(new SEFFChildInterpretationStarted(childContext));
 	}
@@ -184,8 +185,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final List<SEFFInterpretationContext> childContexts = rdBehaviors.stream()
 				.map(rdBehavior -> SEFFInterpretationContext.builder().withBehaviorContext(forkedBehaviorContext)
 						.withRequestProcessingContext(this.context.getRequestProcessingContext())
-						.withCaller(this.context.getCaller())
-						.withAssemblyContext(this.context.getAssemblyContext()).build())
+						.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext())
+						.build())
 				.collect(Collectors.toList());
 
 		return childContexts.stream().map(childContext -> new SEFFChildInterpretationStarted(childContext))
@@ -291,16 +292,12 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		if (callAction instanceof InfrastructureCall) {
 			final InfrastructureCall call = (InfrastructureCall) callAction;
 			// create infra call event.
-		 	final GeneralEntryRequest request = GeneralEntryRequest.builder()
+			final GeneralEntryRequest request = GeneralEntryRequest.builder()
 					.withInputVariableUsages(call.getInputVariableUsages__CallAction())
 					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
 					.withSignature(call.getSignature__InfrastructureCall())
-					.withUser(this.context.getRequestProcessingContext()
-							.getUser())
-					.withRequestFrom(
-							this.context.update().withCaller(this.context)
-									.build())
-					.build();
+					.withUser(this.context.getRequestProcessingContext().getUser())
+					.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
 
 			return Set.of(new SEFFInfrastructureCalled(request));
 		} else {
@@ -322,8 +319,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			LOGGER.debug("Demand found with: " + demand);
 
 			final ResourceDemandRequest request = ResourceDemandRequest.builder()
-					.withAssemblyContext(this.context.getAssemblyContext())
-					.withSeffInterpretationContext(this.context)
+					.withAssemblyContext(this.context.getAssemblyContext()).withSeffInterpretationContext(this.context)
 					.withResourceType(ResourceType.ACTIVE).withParametricResourceDemand(demand).build();
 
 			final ResourceDemandRequested requestEvent = new ResourceDemandRequested(request);
@@ -332,8 +328,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 		if (events.isEmpty()) { // no RD! go straight to Infra calls
 			if (!internalAction.getInfrastructureCall__Action().isEmpty()) {
-				final InfrastructureCallsContextHolder infraContext = new InfrastructureCallsContextHolder(
-						this.context, internalAction, this.context.getBehaviorContext().getCurrentProcessedBehavior());
+				final InfrastructureCallsContextHolder infraContext = new InfrastructureCallsContextHolder(this.context,
+						internalAction, this.context.getBehaviorContext().getCurrentProcessedBehavior());
 
 				final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
 						.withBehaviorContext(infraContext)
@@ -359,15 +355,10 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			throw new IllegalArgumentException("called interpretation on a null reference");
 		}
 
-		final Set<SEFFInterpreted> result = new HashSet<>();
-		result.add(new SEFFModelPassedElement<>(eObject, this.context));
-
-		final Set<SEFFInterpreted> returningEvents = super.doSwitch(eClass, eObject);
-
-		if (returningEvents != null) {
-			result.addAll(returningEvents);
+		Set<SEFFInterpreted> result = super.doSwitch(eClass, eObject);
+		if (result == null) {
+			result = Set.of();
 		}
-
 		return result;
 	}
 
