@@ -14,6 +14,10 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
 import de.uka.ipd.sdq.probfunction.math.util.MathTools;
 
+
+/*
+ * TODO: Wait on progressing jobs before deleting ~(or JobCancelled)~
+ */
 /**
  * A FCFSResource handles first jobs first, and then the remaining jobs will be
  * handled (first-come, first-served).

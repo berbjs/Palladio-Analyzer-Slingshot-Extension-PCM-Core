@@ -2,6 +2,10 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation;
 
 import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.SINGLE;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,6 +13,13 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.URI;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.emf.ecore.resource.ResourceSet;
+import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
+import org.eclipse.emf.ecore.xmi.XMLResource;
+import org.eclipse.emf.ecore.xmi.impl.XMLResourceFactoryImpl;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.WaitingJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
@@ -23,6 +34,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.reso
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.PassiveResourceCompoundKey;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.PassiveResourceTable;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.SimplePassiveResource;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.ResourceEnvironmentChange;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
@@ -43,6 +56,8 @@ import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.PassiveResource;
 import org.palladiosimulator.pcm.resourceenvironment.LinkingResource;
+import org.palladiosimulator.pcm.resourceenvironment.ResourceEnvironment;
+import org.palladiosimulator.pcm.resourceenvironment.ResourceenvironmentFactory;
 
 import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 
@@ -61,7 +76,7 @@ import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 @OnEvent(when = PassiveResourceReleased.class, then = PassiveResourceAcquired.class, cardinality = EventCardinality.MANY)
 @OnEvent(when = ResourceDemandRequested.class, then = { JobInitiated.class,
 		PassiveResourceAcquired.class }, cardinality = SINGLE)
-//@OnEvent(when = ModelAdjusted.class, then = {})
+@OnEvent(when = ModelAdjusted.class, then = {})
 public class ResourceSimulation implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(ResourceSimulation.class);
@@ -219,12 +234,24 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		return Result.of(new ActiveResourceFinished(evt.getEntity().getRequest(), 0));
 	}
 
-//	@Subscribe
-//	public Result onModelAdjusted(final ModelAdjusted modelChanged) {
-//		// TODO: Notice the changes and add them to load balancer accordingly.
-//		return Result.empty();
-//	}
-//
+	@Subscribe
+	public Result<?> onModelAdjusted(final ModelAdjusted modelChanged) {
+		modelChanged.getChanges().stream()
+								 .filter(change -> change instanceof ResourceEnvironmentChange)
+								 .map(ResourceEnvironmentChange.class::cast)
+								 .forEach(this::changeActiveResourceTableFromModelChange);
+		
+		return Result.empty();
+	}
+	
+	private void changeActiveResourceTableFromModelChange(final ResourceEnvironmentChange change) {
+		change.getNewResourceContainers().forEach(newContainer -> 
+			this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));
+		
+		change.getDeletedResourceContainers().forEach(deletedContainer ->
+			this.resourceTable.removeActiveResources(deletedContainer));
+	}
+
 	/*
 	 * TODO: When GeneralEntryRequest,
 	 * 	1. (System): Find appropriate assembly context -> AllocationContextRequested
@@ -273,7 +300,39 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 */
 	@Subscribe
 	public void onSimulationFinished(final SimulationFinished simulationFinished) {
+		setupAndSaveResourceModel();
+		
 		this.resourceTable.clearResourcesFromJobs();
 		this.passiveResourceTable.clearResourcesFromJobs();
+	}
+	
+	/*
+	 * Only for debugging!
+	 */
+	private void setupAndSaveResourceModel() {
+		final ResourceSet rs = new ResourceSetImpl();
+		final Resource reResource = createResource("platform:/resource/RemoteMeasuringMosaic/rm_output.resourceenvironment", rs);
+		reResource.getContents().add(allocation.getTargetResourceEnvironment_Allocation());
+		saveResource(reResource);
+	}
+	
+	private Resource createResource(final String outputFile, final ResourceSet rs) { 
+		rs.getResourceFactoryRegistry().getExtensionToFactoryMap().put("resourceenvironment", new XMLResourceFactoryImpl());
+		final URI uri = URI.createURI(outputFile);
+		final Resource resource = rs.createResource(uri);
+		((ResourceImpl) resource).setIntrinsicIDToEObjectMap(new HashMap<>());
+		return resource;
+	}
+	
+	private void saveResource(final Resource resource) {
+		final Map saveOptions = ((XMLResource) resource).getDefaultSaveOptions();
+		saveOptions.put(XMLResource.OPTION_CONFIGURATION_CACHE, Boolean.TRUE);
+		saveOptions.put(XMLResource.OPTION_USE_CACHED_LOOKUP_TABLE, new ArrayList<>());
+		
+		try {
+			resource.save(saveOptions);
+		} catch (final IOException e) {
+			LOGGER.error(e);
+		}
 	}
 }
