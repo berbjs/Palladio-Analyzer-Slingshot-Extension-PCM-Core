@@ -5,9 +5,11 @@ import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.e
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -27,6 +29,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.PassiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.repository.ResourceEnvironmentAccessor;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active.ActiveResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active.ActiveResourceCompoundKey;
@@ -38,6 +41,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.ResourceEnvironmentChange;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.AbstractResourceRequestEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
@@ -56,9 +60,6 @@ import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.PassiveResource;
 import org.palladiosimulator.pcm.resourceenvironment.LinkingResource;
-import org.palladiosimulator.pcm.resourceenvironment.ResourceEnvironment;
-import org.palladiosimulator.pcm.resourceenvironment.ResourceenvironmentFactory;
-
 import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 
 /**
@@ -115,7 +116,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	/**
 	 * @param request
 	 */
-	private Optional<PassiveResourceAcquired> initiatePassiveResource(final ResourceDemandRequest request) {
+	private Set<AbstractResourceRequestEvent> initiatePassiveResource(final ResourceDemandRequest request) {
 		final PassiveResource passiveResource = request.getPassiveResource().get();
 		final AssemblyContext assemblyContext = request.getAssemblyContext();
 		final Optional<SimplePassiveResource> passiveResourceInstance = this.passiveResourceTable
@@ -123,9 +124,13 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 		if (passiveResourceInstance.isPresent()) {
 			final WaitingJob waitingJob = this.createWaitingJob(request, passiveResource);
-			return passiveResourceInstance.get().acquire(waitingJob);
+			final Optional<PassiveResourceAcquired> aquired = passiveResourceInstance.get().acquire(waitingJob);
+			if (aquired.isPresent()) {
+				return Set.of(aquired.get(), new PassiveResourceStateUpdated(request,
+						passiveResourceInstance.get().getCurrentlyAvailable()));
+			}
 		}
-		return Optional.empty();
+		return Set.of();
 	}
 
 	/**
@@ -192,7 +197,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result<PassiveResourceAcquired> onPassiveResourceReleased(
+	public Result<AbstractResourceRequestEvent> onPassiveResourceReleased(
 			final PassiveResourceReleased passiveResourceReleased) {
 		final ResourceDemandRequest entity = passiveResourceReleased.getEntity();
 		final Optional<SimplePassiveResource> passiveResource = this.passiveResourceTable.getPassiveResource(
@@ -204,7 +209,12 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		}
 
 		final WaitingJob waitingJob = this.createWaitingJob(entity, entity.getPassiveResource().get());
-		return Result.of(passiveResource.get().release(waitingJob));
+
+		final Set<AbstractResourceRequestEvent> newEvents = new HashSet<>();
+		newEvents.addAll(passiveResource.get().release(waitingJob));
+		newEvents.add(new PassiveResourceStateUpdated(entity, passiveResource.get().getCurrentlyAvailable()));
+
+		return Result.of(newEvents);
 	}
 
 	@Subscribe
@@ -240,14 +250,14 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 								 .filter(change -> change instanceof ResourceEnvironmentChange)
 								 .map(ResourceEnvironmentChange.class::cast)
 								 .forEach(this::changeActiveResourceTableFromModelChange);
-		
+
 		return Result.empty();
 	}
-	
+
 	private void changeActiveResourceTableFromModelChange(final ResourceEnvironmentChange change) {
-		change.getNewResourceContainers().forEach(newContainer -> 
+		change.getNewResourceContainers().forEach(newContainer ->
 			this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));
-		
+
 		change.getDeletedResourceContainers().forEach(deletedContainer ->
 			this.resourceTable.removeActiveResources(deletedContainer));
 	}
@@ -301,11 +311,11 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	@Subscribe
 	public void onSimulationFinished(final SimulationFinished simulationFinished) {
 		setupAndSaveResourceModel();
-		
+
 		this.resourceTable.clearResourcesFromJobs();
 		this.passiveResourceTable.clearResourcesFromJobs();
 	}
-	
+
 	/*
 	 * Only for debugging!
 	 */
@@ -315,20 +325,20 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		reResource.getContents().add(allocation.getTargetResourceEnvironment_Allocation());
 		saveResource(reResource);
 	}
-	
-	private Resource createResource(final String outputFile, final ResourceSet rs) { 
+
+	private Resource createResource(final String outputFile, final ResourceSet rs) {
 		rs.getResourceFactoryRegistry().getExtensionToFactoryMap().put("resourceenvironment", new XMLResourceFactoryImpl());
 		final URI uri = URI.createURI(outputFile);
 		final Resource resource = rs.createResource(uri);
 		((ResourceImpl) resource).setIntrinsicIDToEObjectMap(new HashMap<>());
 		return resource;
 	}
-	
+
 	private void saveResource(final Resource resource) {
 		final Map saveOptions = ((XMLResource) resource).getDefaultSaveOptions();
 		saveOptions.put(XMLResource.OPTION_CONFIGURATION_CACHE, Boolean.TRUE);
 		saveOptions.put(XMLResource.OPTION_USE_CACHED_LOOKUP_TABLE, new ArrayList<>());
-		
+
 		try {
 			resource.save(saveOptions);
 		} catch (final IOException e) {

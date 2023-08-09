@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.mon
 
 import javax.inject.Inject;
 
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.PassiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
@@ -29,6 +30,7 @@ import org.palladiosimulator.probeframework.probes.Probe;
 @OnEvent(when = ResourceDemandRequested.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = PassiveResourceAcquired.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = PassiveResourceReleased.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
+@OnEvent(when = PassiveResourceStateUpdated.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExtension {
 
 	private final IGenericCalculatorFactory calculatorFactory;
@@ -57,8 +59,12 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 				final Calculator calculator = this.table.setupHoldingTimeCalculator(passiveResourceMeasuringPoint,
 						this.calculatorFactory);
 				return Result.of(new CalculatorRegistered(calculator));
+			} else if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
+					MetricDescriptionConstants.STATE_OF_PASSIVE_RESOURCE_METRIC)) {
+				final Calculator calculator = this.table
+						.setupStateOfPassiveResourceCalculator(passiveResourceMeasuringPoint, this.calculatorFactory);
+				return Result.of(new CalculatorRegistered(calculator));
 			}
-			// TODO : StateOfPassiveResource
 		}
 		return Result.empty();
 
@@ -90,6 +96,16 @@ public class PassiveResourceMonitoringBehavior implements SimulationBehaviorExte
 			final Probe probe = this.table.currentTimeOfPassiveResourceReleased(passiveResourceReleased);
 			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
 		}
+		return Result.empty();
+	}
+
+	@Subscribe
+	public Result<ProbeTaken> onPassiveResourceStateUpdated(final PassiveResourceStateUpdated stateUpdated) {
+		if (stateUpdated.getEntity().getResourceType() == ResourceType.PASSIVE) {
+			final Probe probe = this.table.stateOfPassiveResourceUpdated(stateUpdated);
+			return Result.of(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
+		}
+
 		return Result.empty();
 	}
 
