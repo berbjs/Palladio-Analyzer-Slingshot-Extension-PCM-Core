@@ -3,6 +3,8 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.mon
 import java.util.HashMap;
 import java.util.Map;
 
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.PassiveResourceStateUpdated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.StateOfPassiveResourceProbe;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
@@ -59,6 +61,17 @@ public final class PassiveResourceProbeTable {
 		return null;
 	}
 
+	public Probe stateOfPassiveResourceUpdated(final PassiveResourceStateUpdated passiveResourceStateUpdated) {
+		final PassiveResource passiveResource = passiveResourceStateUpdated.getEntity().getPassiveResource()
+				.orElseThrow();
+		final Probes probes = this.probes.get(passiveResource.getId());
+		if (probes != null) {
+			probes.passiveResourceStateProbe.takeMeasurement(passiveResourceStateUpdated);
+			return probes.passiveResourceStateProbe;
+		}
+		return null;
+	}
+
 
 	public Calculator setupWaitingTimeCalculator(final AssemblyPassiveResourceMeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory) {
@@ -78,10 +91,20 @@ public final class PassiveResourceProbeTable {
 						probes.passiveResourceReleasedProbe));
 	}
 
+	public Calculator setupStateOfPassiveResourceCalculator(final AssemblyPassiveResourceMeasuringPoint measuringPoint,
+			final IGenericCalculatorFactory calculatorFactory) {
+		this.addPassiveResource(measuringPoint.getPassiveResource());
+		final Probes probes = this.probes.get(measuringPoint.getPassiveResource().getId());
+		return calculatorFactory.buildCalculator(MetricDescriptionConstants.STATE_OF_PASSIVE_RESOURCE_METRIC_TUPLE,
+				measuringPoint,
+				DefaultCalculatorProbeSets.createSingularProbeConfiguration(probes.passiveResourceStateProbe));
+	}
+
 	private static final class Probes {
 		private final EventCurrentSimulationTimeProbe resourceDemandRequestedProbe = new EventCurrentSimulationTimeProbe(t -> new RequestContext(((ResourceDemandRequested) t).getEntity().getSeffInterpretationContext().getRequestProcessingContext().getUserId()));
 		private final EventCurrentSimulationTimeProbe passiveResourceAcquiredProbe = new EventCurrentSimulationTimeProbe(t -> new RequestContext(((PassiveResourceAcquired) t).getEntity().getSeffInterpretationContext().getRequestProcessingContext().getUserId()));
 		private final EventCurrentSimulationTimeProbe passiveResourceReleasedProbe = new EventCurrentSimulationTimeProbe(t -> new RequestContext(((PassiveResourceReleased) t).getEntity().getSeffInterpretationContext().getRequestProcessingContext().getUserId()));
+		private final StateOfPassiveResourceProbe passiveResourceStateProbe = new StateOfPassiveResourceProbe();
 	}
 
 
