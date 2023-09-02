@@ -12,6 +12,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
+
 import de.uka.ipd.sdq.probfunction.math.util.MathTools;
 
 
@@ -91,6 +92,11 @@ public class FCFSResource extends AbstractActiveResource {
 	@Override
 	public void clearJobs() {
 		this.processes.clear();
+	}
+
+	@Override
+	public void abortJob(final Job job) {
+		this.processes.remove(job);
 	}
 
 	/**

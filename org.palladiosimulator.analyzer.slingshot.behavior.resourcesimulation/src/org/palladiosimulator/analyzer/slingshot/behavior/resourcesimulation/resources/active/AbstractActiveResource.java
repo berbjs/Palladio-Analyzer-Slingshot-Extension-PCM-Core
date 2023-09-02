@@ -81,6 +81,14 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	protected abstract ActiveResourceStateUpdated publishState(final Job job);
 
 	/**
+	 * Instructs that a job should be aborted (and thus removed from the queue)
+	 * safely.
+	 * 
+	 * @param job The job to abort.
+	 */
+	protected abstract void abortJob(final Job job);
+
+	/**
 	 * Checks whether the job belongs to the resource. This is done by checking
 	 * whether the {@link ProcessingResourceType} specified in the {@link job} and
 	 * this id ({@link #getId()}) are equal.
