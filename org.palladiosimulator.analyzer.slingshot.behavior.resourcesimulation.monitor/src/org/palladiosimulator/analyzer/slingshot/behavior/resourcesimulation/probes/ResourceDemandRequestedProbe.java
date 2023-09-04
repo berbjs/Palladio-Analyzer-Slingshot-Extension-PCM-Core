@@ -17,6 +17,8 @@ import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
  * resource demand as a "[..] (resource demand, point in time)-tuple, [..]",
  * which is upside down compared to all other metric set descriptions.
  *
+ * This now take care of in the parent class. (Probably)
+ *
  * @author Sarah Stieß
  *
  */
@@ -29,19 +31,8 @@ public final class ResourceDemandRequestedProbe extends EventBasedListProbe<Doub
 		super(MetricDescriptionConstants.RESOURCE_DEMAND_METRIC_TUPLE);
 	}
 
-	/**
-	 * Is actually getTime
-	 */
 	@Override
 	public Measure<Double, Duration> getMeasurement(final DESEvent event) {
-		return Measure.valueOf(event.time(), SI.SECOND);
-	}
-
-	/**
-	 * Is actually getMeasurement
-	 */
-	@Override
-	public Measure<Double, Duration> getTime(final DESEvent event) {
 		if (event instanceof ResourceDemandCalculated) {
 			return Measure.valueOf(((ResourceDemandCalculated) event).getResourceDemandRequested(), SI.SECOND);
 		}
