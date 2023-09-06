@@ -3,6 +3,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation;
 import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.MANY;
 import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.SINGLE;
 
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ExternalCallRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.RepositoryInterpretationInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
@@ -127,9 +129,8 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 					.build();
 
 			return Result.of(new SEFFInterpretationProgressed(context));
-		} else {
-			LOGGER.info("Either seff or assembly context is not found => stop interpretation for this request.");
 		}
+		LOGGER.info("Either seff or assembly context is not found => stop interpretation for this request.");
 
 		return Result.of();
 	}
@@ -158,7 +159,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	 * example, when an External Call action was performed.
 	 */
 	@Subscribe
-	public Result<SEFFInterpretationProgressed> onRequestInitiated(
+	public Result<?> onRequestInitiated(
 			final SEFFExternalActionCalled requestInitiated) {
 		final GeneralEntryRequest entity = requestInitiated.getEntity();
 
@@ -174,13 +175,15 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 					providedRole.get(), entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
 
 			/* Interpret the Component of the system. */
-			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
-					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext());
+			final Set<DESEvent> appearedEvents = new HashSet<>(interpreter
+					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext()));
+			
+			appearedEvents.add(new ExternalCallRequested(entity.getRequestFrom().getAssemblyContext(),
+					assemblyContext.get(), entity.getSignature()));
 
-			return Result.from(appearedEvents);
-		} else {
-			return Result.of();
+			return Result.of(appearedEvents);
 		}
+		return Result.of();
 	}
 
 	/**
@@ -209,9 +212,8 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext());
 
 			return Result.of(appearedEvents);
-		} else {
-			return Result.of();
 		}
+		return Result.of();
 	}
 
 	@Subscribe

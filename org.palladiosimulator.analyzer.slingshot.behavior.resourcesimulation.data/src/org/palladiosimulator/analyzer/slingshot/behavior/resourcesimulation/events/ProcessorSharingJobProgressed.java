@@ -8,8 +8,8 @@ public final class ProcessorSharingJobProgressed extends JobProgressed {
 
 	private final UUID expectedState;
 
-	public ProcessorSharingJobProgressed(final Job entity, final double delay, final UUID expectedState) {
-		super(entity, delay);
+	public ProcessorSharingJobProgressed(final Job shortestJob, final double delay, final UUID expectedState) {
+		super(shortestJob, delay);
 		this.expectedState = expectedState;
 	}
 

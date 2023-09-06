@@ -12,8 +12,8 @@ public final class ResourceDemandCalculated extends AbstractJobEvent {
 
 	private final double calculatedResourceDemand;
 
-	public ResourceDemandCalculated(final Job entity, final double calculatedResourceDemand) {
-		super(entity, 0.0);
+	public ResourceDemandCalculated(final Job job, final double calculatedResourceDemand) {
+		super(job, 0.0);
 		this.calculatedResourceDemand = calculatedResourceDemand;
 	}
 

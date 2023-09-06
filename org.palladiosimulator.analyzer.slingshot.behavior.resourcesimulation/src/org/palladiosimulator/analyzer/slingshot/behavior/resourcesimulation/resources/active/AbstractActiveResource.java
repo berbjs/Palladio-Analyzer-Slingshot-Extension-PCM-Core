@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.ActiveJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
@@ -17,7 +18,7 @@ import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 
 /**
  * The abstract super class of every active resource. It provides a method to
- * check whether a {@link Job} belongs to this instance of resource.
+ * check whether a {@link ActiveJob} belongs to this instance of resource.
  * <p>
  * This abstract already overrides the {@link #onJobInitiated(JobInitiated)}
  * handler by checking whether the job belongs to this instance. If so, then the
@@ -51,7 +52,7 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 
 	/**
 	 * The delegated handler of the resource that will be processed if the job
-	 * belongs to this resource according to {@link #jobBelongsToResource(Job)}
+	 * belongs to this resource according to {@link #jobBelongsToResource(ActiveJob)}
 	 * implementation.
 	 *
 	 * @param jobInitiated The event.
@@ -61,7 +62,7 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 
 	/**
 	 * The delegated handler of the resource that will be processed if the job
-	 * belongs to this resource according to {@link #jobBelongsToResource(Job)}
+	 * belongs to this resource according to {@link #jobBelongsToResource(ActiveJob)}
 	 * implementation.
 	 *
 	 * @param jobProgressed The event.
@@ -96,10 +97,16 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 * @param job The job to check.
 	 * @return true if the job belongs to this resource.
 	 */
-	protected boolean jobBelongsToResource(final Job job) {
-		final ActiveResourceCompoundKey jobId = ActiveResourceCompoundKey.of(
-				job.getAllocationContext().getResourceContainer_AllocationContext(), job.getProcessingResourceType());
-		return this.getId().equals(jobId);
+	@Override
+	public boolean jobBelongsToResource(final Job job) {
+		if (job instanceof ActiveJob) {
+			final ActiveJob activeJob = (ActiveJob) job;
+			final ActiveResourceCompoundKey jobId = ActiveResourceCompoundKey.of(
+					activeJob.getAllocationContext().getResourceContainer_AllocationContext(),
+					activeJob.getProcessingResourceType());
+			return this.getId().equals(jobId);
+		}
+		return false;
 	}
 
 	@Override
