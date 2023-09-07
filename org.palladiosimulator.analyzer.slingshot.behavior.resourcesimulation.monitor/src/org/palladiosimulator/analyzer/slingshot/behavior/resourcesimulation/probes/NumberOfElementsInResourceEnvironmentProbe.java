@@ -2,46 +2,41 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.pro
 
 import javax.measure.Measure;
 import javax.measure.quantity.Dimensionless;
-import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
-import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.ResourceEnvironmentChange;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventBasedListProbe;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
+import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
 
 /**
+ * Probe for the Number of Elements in a Elastic Infrastructure.
+ *
+ * The Number of Elements is always calculated with regard to a certain target
+ * group configuration, i.e. only elements of a given target group are
+ * aconsidered.
  *
  * @author Sarah Stieß
  *
  */
 public final class NumberOfElementsInResourceEnvironmentProbe extends EventBasedListProbe<Long, Dimensionless> {
 
+	private final ElasticInfrastructureCfg elasticInfrastructureConfiguration;
+
 	/**
-	 * Constructs a StateOfActiveResourceProbe.
+	 * Constructor for NumberOfElementsInResourceEnvironmentProbe.
+	 *
+	 * @param elasticInfrastructureConfiguration configuration of target group that
+	 *                                           will be measured.
 	 */
-	public NumberOfElementsInResourceEnvironmentProbe() {
+	public NumberOfElementsInResourceEnvironmentProbe(
+			final ElasticInfrastructureCfg elasticInfrastructureConfiguration) {
 		super(MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS_OVER_TIME);
 		// yes, this one subsumes
+		this.elasticInfrastructureConfiguration = elasticInfrastructureConfiguration;
 	}
 
 	@Override
 	public Measure<Long, Dimensionless> getMeasurement(final DESEvent event) {
-		if (event instanceof ModelAdjusted) {
-
-			final ResourceEnvironmentChange resEnvChange = ((ModelAdjusted) event).getChanges().stream()
-					.filter(change -> (change instanceof ResourceEnvironmentChange))
-					.map(change -> (ResourceEnvironmentChange) change).findAny().orElseGet(() -> {
-						throw new IllegalArgumentException(
-								String.format("Expected an ResourceEnvironmentChange, but found none."));
-					});
-
-			final int numberOfElements = resEnvChange.getOldResourceContainers().size()
-					- resEnvChange.getDeletedResourceContainers().size()
-					+ resEnvChange.getNewResourceContainers().size();
-
-			return Measure.valueOf(Long.valueOf(numberOfElements), Dimensionless.UNIT);
-		}
-		throw new IllegalArgumentException(String.format("Wrong eventype. Expected %s but got %s.",
-				ActiveResourceStateUpdated.class.getSimpleName(), event.getClass().getSimpleName()));
+		return Measure.valueOf(Long.valueOf(elasticInfrastructureConfiguration.getElements().size()),
+				Dimensionless.UNIT);
 	}
 }
