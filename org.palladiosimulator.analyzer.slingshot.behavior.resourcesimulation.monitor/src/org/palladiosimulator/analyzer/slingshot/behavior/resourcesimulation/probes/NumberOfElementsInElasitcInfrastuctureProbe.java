@@ -17,7 +17,7 @@ import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
  * @author Sarah Stieß
  *
  */
-public final class NumberOfElementsInResourceEnvironmentProbe extends EventBasedListProbe<Long, Dimensionless> {
+public final class NumberOfElementsInElasitcInfrastuctureProbe extends EventBasedListProbe<Long, Dimensionless> {
 
 	private final ElasticInfrastructureCfg elasticInfrastructureConfiguration;
 
@@ -27,7 +27,7 @@ public final class NumberOfElementsInResourceEnvironmentProbe extends EventBased
 	 * @param elasticInfrastructureConfiguration configuration of target group that
 	 *                                           will be measured.
 	 */
-	public NumberOfElementsInResourceEnvironmentProbe(
+	public NumberOfElementsInElasitcInfrastuctureProbe(
 			final ElasticInfrastructureCfg elasticInfrastructureConfiguration) {
 		super(MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS_OVER_TIME);
 		// yes, this one subsumes

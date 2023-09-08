@@ -8,7 +8,7 @@ import java.util.Set;
 
 import javax.inject.Inject;
 
-import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.NumberOfElementsInResourceEnvironmentProbe;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.NumberOfElementsInElasitcInfrastuctureProbe;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
@@ -61,7 +61,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	private final IGenericCalculatorFactory calculatorFactory;
 	private final Configuration semanticConfiguration;
 
-	private final Map<ResourceContainer, NumberOfElementsInResourceEnvironmentProbe> probes = new HashMap<>();
+	private final Map<ResourceContainer, NumberOfElementsInElasitcInfrastuctureProbe> probes = new HashMap<>();
 
 	@Inject
 	public NumberOfElementsMonitorBehavior(final IGenericCalculatorFactory calculatorFactory,
@@ -130,7 +130,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	public Result<ProbeTaken> onModelAdjusted(final ModelAdjusted stateUpdated) {
 		final Set<ProbeTaken> probesTaken = new HashSet<>();
 
-		for (final NumberOfElementsInResourceEnvironmentProbe probe : probes.values()) {
+		for (final NumberOfElementsInElasitcInfrastuctureProbe probe : probes.values()) {
 			probe.takeMeasurement(stateUpdated);
 			probesTaken.add(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
 		}
@@ -146,8 +146,8 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	 */
 	public Calculator setupNumberOfElementsCalculator(final MeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory, final ElasticInfrastructureCfg eiCfg) {
-		this.probes.putIfAbsent(eiCfg.getUnit(), new NumberOfElementsInResourceEnvironmentProbe(eiCfg));
-		final NumberOfElementsInResourceEnvironmentProbe probe = this.probes.get(eiCfg.getUnit());
+		this.probes.putIfAbsent(eiCfg.getUnit(), new NumberOfElementsInElasitcInfrastuctureProbe(eiCfg));
+		final NumberOfElementsInElasitcInfrastuctureProbe probe = this.probes.get(eiCfg.getUnit());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS_OVER_TIME,
 				measuringPoint, DefaultCalculatorProbeSets.createSingularProbeConfiguration(probe));
 	}
