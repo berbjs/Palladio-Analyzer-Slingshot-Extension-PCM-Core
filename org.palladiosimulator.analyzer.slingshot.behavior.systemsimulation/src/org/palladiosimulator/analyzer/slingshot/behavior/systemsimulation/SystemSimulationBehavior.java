@@ -178,8 +178,10 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			final Set<DESEvent> appearedEvents = new HashSet<>(interpreter
 					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext()));
 			
+			SimulatedStackHelper.createAndPushNewStackFrame(entity.getUser().getStack(),
+					entity.getInputVariableUsages());
 			appearedEvents.add(new ExternalCallRequested(entity.getRequestFrom().getAssemblyContext(),
-					assemblyContext.get(), entity.getSignature()));
+					assemblyContext.get(), entity.getSignature(), entity.getUser()));
 
 			return Result.of(appearedEvents);
 		}

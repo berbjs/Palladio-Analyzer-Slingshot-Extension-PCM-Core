@@ -53,6 +53,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractSimulationEvent;
 //import org.palladiosimulator.analyzer.slingshot.scalingpolicy.data.events.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
@@ -65,8 +66,10 @@ import org.palladiosimulator.pcm.allocation.Allocation;
 import org.palladiosimulator.pcm.allocation.AllocationContext;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.PassiveResource;
+import org.palladiosimulator.pcm.resourceenvironment.LinkingResource;
 
 import de.uka.ipd.sdq.simucomframework.variables.StackContext;
+import de.uka.ipd.sdq.simucomframework.variables.converter.NumberConverter;
 
 /**
  * The resource simulation behavior initializes all the available resources on
@@ -318,10 +321,28 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				.findResourceContainerOfComponent(externalCallRequested.getTo()).orElseThrow();
 
 		final List<SimulatedLinkingResource> linkingResources = this.linkingResourceTable.findLinkingResourceBetweenContainers(fromAlC.getResourceContainer_AllocationContext(), toAlC.getResourceContainer_AllocationContext());
-		final Set<?> jobs = linkingResources.stream()
-				.map(lr -> new LinkingJob(UUID.randomUUID().toString(), 10, lr.getLinkingResource()))
+		final Set<JobInitiated> jobInitiated = linkingResources.stream()
+				.map(lr -> createLinkingJobFromResource(lr.getLinkingResource(), externalCallRequested.getUser()))
 				.map(job -> new JobInitiated(job, 0.0)).collect(Collectors.toSet());
-		return Result.of(jobs);
+		return Result.of(jobInitiated);
+	}
+
+	/**
+	 * Sums up all the BYTESIZE values from the user's current stackframe which is
+	 * going to be sent over the wire, and uses this as a demand for a new
+	 * {@link LinkingJob}. If there are no such information, the default demand will
+	 * be 0. However, there might still be a latency on the linking resource.
+	 * 
+	 * @param linkingResource The linking resource on which the job will be.
+	 * @param user            The user that is going to make the call.
+	 * @return A new linking job
+	 */
+	private LinkingJob createLinkingJobFromResource(final LinkingResource linkingResource, final User user) {
+		final double demand = user.getStack().currentStackFrame().getContents().stream()
+				.filter(entry -> entry.getKey().endsWith("BYTESIZE"))
+				.mapToDouble(entry -> NumberConverter.toDouble(entry.getValue())).sum();
+
+		return new LinkingJob(UUID.randomUUID().toString(), demand, linkingResource);
 	}
 
 	/**
