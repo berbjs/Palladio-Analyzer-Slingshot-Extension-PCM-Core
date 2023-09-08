@@ -33,23 +33,30 @@ import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSet
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
 import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
-import org.palladiosimulator.semanticspd.TargetGroupCfg;
 
 /**
  *
  * Behavior to monitor the number of elements in a Elastic Infrastructure.
  *
  * The behavior creates Probes and Calculators for
- * {@link ResourceEnvironmentMeasuringPoint}s and
- * {@link ResourceContainerMeasuringPoint}s.
+ * {@link ResourceContainerMeasuringPoint}s. Beware it does *not* react to
+ * {@link ResourceEnvironmentMeasuringPoint}s, as we cannot determine the target
+ * group configuration from that measuring point.
  *
  * For a {@link ResourceContainerMeasuringPoint}, the behavior creates a probe
  * and a calculator for the given resource container, iff the resource container
  * is {@code unit} in any of the given target configurations.
  *
- * For a {@link ResourceEnvironmentMeasuringPoint}, the behavior creates probes
- * and calculators for all {@code unit} resource containers in the target
- * configurations.
+ * The metric specification must be the base metric "number of resource
+ * containers".
+ *
+ * Beware : this behaviour is only a temporary workaround. In the future there
+ * should be a afor a target group. In that way the modeller knows that the
+ * measuring point is bound to the concepts that SPD contributes. In the current
+ * way the modeller is unaware that the combination MP on the Resource Container
+ * and the metric Number of Resource Container is valid only when the SPD
+ * extension is active in Slingshot.
+ *
  *
  * @author Sarah Stieß
  *
@@ -80,29 +87,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 		final MeasurementSpecification spec = m.getEntity();
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
 
-		if (measuringPoint instanceof ResourceEnvironmentMeasuringPoint) {
-			// Env MP --> register probes for all EI
-			final ResourceEnvironmentMeasuringPoint resourceEnvironmentMeasuringPoint = (ResourceEnvironmentMeasuringPoint) measuringPoint;
-
-			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
-					MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) {
-
-				final Set<CalculatorRegistered> calculators = new HashSet<>();
-
-				for (final TargetGroupCfg cfg : this.semanticConfiguration.getTargetCfgs()) {
-					if (cfg instanceof ElasticInfrastructureCfg) {
-						final Calculator calculator = this.setupNumberOfElementsCalculator(
-								resourceEnvironmentMeasuringPoint, this.calculatorFactory,
-								(ElasticInfrastructureCfg) cfg);
-
-						calculators.add(new CalculatorRegistered(calculator));
-					}
-				}
-
-				return Result.of(calculators);
-
-			}
-		} else if (measuringPoint instanceof ResourceContainerMeasuringPoint) {
+		if (measuringPoint instanceof ResourceContainerMeasuringPoint) {
 			// Container MP --> register probe for EI where container is unit
 			final ResourceContainerMeasuringPoint resourceContainerMeasuringPoint = (ResourceContainerMeasuringPoint) measuringPoint;
 
