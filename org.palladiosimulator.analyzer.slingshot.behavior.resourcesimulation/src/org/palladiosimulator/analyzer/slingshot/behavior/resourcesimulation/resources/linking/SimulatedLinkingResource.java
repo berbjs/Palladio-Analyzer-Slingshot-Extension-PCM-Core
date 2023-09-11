@@ -2,11 +2,13 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.res
 
 import java.util.Set;
 
+import org.apache.log4j.Logger;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.LinkingJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.ProcessingRate;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobAborted;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active.FCFSResource;
 import org.palladiosimulator.pcm.resourceenvironment.CommunicationLinkResourceSpecification;
@@ -14,12 +16,14 @@ import org.palladiosimulator.pcm.resourceenvironment.LinkingResource;
 
 public class SimulatedLinkingResource extends FCFSResource {
 
+	private static final Logger LOGGER = Logger.getLogger(SimulatedLinkingResource.class);
+
 	private final ProcessingRate latency;
 	private final double failureRate;
 	private final LinkingResource linkingResource;
 
 	public SimulatedLinkingResource(final LinkingResource linkingResource) {
-		super(null, linkingResource.getEntityName(), 1, new ProcessingRate(linkingResource
+		super(linkingResource.getId(), linkingResource.getEntityName(), 1, new ProcessingRate(linkingResource
 				.getCommunicationLinkResourceSpecifications_LinkingResource()
 				.getThroughput_CommunicationLinkResourceSpecification()));
 		
@@ -29,6 +33,15 @@ public class SimulatedLinkingResource extends FCFSResource {
 		this.linkingResource = linkingResource;
 		this.latency = new ProcessingRate(spec.getLatency_CommunicationLinkResourceSpecification());
 		this.failureRate = spec.getFailureProbability();
+	}
+
+	@Override
+	public Set<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
+		final LinkingJob linkingJob = (LinkingJob) jobInitiated.getEntity();
+		LOGGER.info("Initiate linking job of id " + linkingJob.getId() + " in the resource " + this.getId()
+				+ " of demand " + linkingJob.getDemand());
+
+		return super.onJobInitiated(jobInitiated);
 	}
 
 	@Override

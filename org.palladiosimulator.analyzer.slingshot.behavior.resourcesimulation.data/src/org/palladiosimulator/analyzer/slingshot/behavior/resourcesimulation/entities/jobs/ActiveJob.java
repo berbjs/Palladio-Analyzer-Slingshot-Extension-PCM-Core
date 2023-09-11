@@ -11,8 +11,6 @@ import org.palladiosimulator.pcm.allocation.AllocationContext;
 import org.palladiosimulator.pcm.resourceenvironment.ProcessingResourceSpecification;
 import org.palladiosimulator.pcm.resourcetype.ProcessingResourceType;
 
-import de.uka.ipd.sdq.probfunction.math.util.MathTools;
-
 /**
  * A {@link ActiveJob} represents an active resource job that either has to be
  * processed, is being processed or was already processed by the simulator.
@@ -49,16 +47,6 @@ public class ActiveJob extends Job {
 
 	public ResourceDemandRequest getRequest() {
 		return this.request;
-	}
-
-	/**
-	 * Returns whether the job has finished yet. The job is considered finished when
-	 * there is no demand left, i.e. {@code this.getDemand() == 0}.
-	 *
-	 * @return true iff there is no demand left anymore.
-	 */
-	public boolean isFinished() {
-		return MathTools.equalsDouble(this.getDemand(), 0);
 	}
 
 	/**

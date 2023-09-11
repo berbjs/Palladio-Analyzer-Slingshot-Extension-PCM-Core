@@ -45,7 +45,7 @@ public abstract class AbstractActiveResource extends AbstractResource implements
 	 * @param capacity The maximum capacity of the resource.
 	 * @param rate     The specified PCM processing rate of the resource.
 	 */
-	public AbstractActiveResource(final ActiveResourceCompoundKey id, final String name, final long capacity, final ProcessingRate rate) {
+	public AbstractActiveResource(final Object id, final String name, final long capacity, final ProcessingRate rate) {
 		super(capacity, name, id);
 		this.processingRate = rate;
 	}

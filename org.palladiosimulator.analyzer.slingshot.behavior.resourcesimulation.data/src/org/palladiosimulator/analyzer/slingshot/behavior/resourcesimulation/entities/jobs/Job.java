@@ -2,6 +2,8 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.ent
 
 import java.util.Objects;
 
+import de.uka.ipd.sdq.probfunction.math.util.MathTools;
+
 public abstract class Job {
 
 	/** The unique id of the job */
@@ -42,6 +44,16 @@ public abstract class Job {
 	 */
 	public String getId() {
 		return id;
+	}
+
+	/**
+	 * Returns whether the job has finished yet. The job is considered finished when
+	 * there is no demand left, i.e. {@code this.getDemand() == 0}.
+	 *
+	 * @return true iff there is no demand left anymore.
+	 */
+	public boolean isFinished() {
+		return MathTools.equalsDouble(this.getDemand(), 0);
 	}
 
 	@Override

@@ -43,7 +43,7 @@ public class FCFSResource extends AbstractActiveResource {
 	 * @param name     The name of the resource.
 	 * @param capacity The maximum capacity of the resource.
 	 */
-	public FCFSResource(final ActiveResourceCompoundKey type, final String name, final long capacity, final ProcessingRate rate) {
+	public FCFSResource(final Object type, final String name, final long capacity, final ProcessingRate rate) {
 		super(type, name, capacity, rate);
 	}
 

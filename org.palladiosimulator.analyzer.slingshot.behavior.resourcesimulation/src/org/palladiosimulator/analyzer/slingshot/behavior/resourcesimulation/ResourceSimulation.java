@@ -12,7 +12,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 
@@ -30,10 +29,12 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.enti
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.WaitingJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.PassiveResourceStateUpdated;
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.repository.ResourceEnvironmentAccessor;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active.ActiveResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.active.ActiveResourceCompoundKey;
@@ -45,10 +46,13 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.reso
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.SimplePassiveResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.ResourceEnvironmentChange;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest.ResourceType;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.AbstractResourceRequestEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireAborted;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireSucceeded;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ExternalCallRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
@@ -79,14 +83,18 @@ import de.uka.ipd.sdq.simucomframework.variables.converter.NumberConverter;
  */
 @OnEvent(when = SimulationFinished.class, then = {})
 @OnEvent(when = JobInitiated.class, then = { JobProgressed.class,
-		ActiveResourceStateUpdated.class }, cardinality = EventCardinality.MANY)
+		ActiveResourceStateUpdated.class, ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
 @OnEvent(when = JobProgressed.class, then = { AbstractJobEvent.class,
-		ActiveResourceStateUpdated.class }, cardinality = EventCardinality.MANY)
-@OnEvent(when = JobFinished.class, then = ActiveResourceFinished.class, cardinality = EventCardinality.SINGLE)
+		ActiveResourceStateUpdated.class, ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
+@OnEvent(when = JobFinished.class, then = { ActiveResourceFinished.class,
+		CallOverWireSucceeded.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = PassiveResourceReleased.class, then = PassiveResourceAcquired.class, cardinality = EventCardinality.MANY)
 @OnEvent(when = ResourceDemandRequested.class, then = { JobInitiated.class,
 		PassiveResourceAcquired.class }, cardinality = SINGLE)
 @OnEvent(when = ModelAdjusted.class, then = {})
+@OnEvent(when = ExternalCallRequested.class, then = { JobInitiated.class,
+		CallOverWireSucceeded.class }, cardinality = EventCardinality.SINGLE)
+@OnEvent(when = JobAborted.class, then = CallOverWireAborted.class, cardinality = SINGLE)
 public class ResourceSimulation implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(ResourceSimulation.class);
@@ -219,7 +227,12 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				return Result.of();
 			}
 
-			return Result.of(linkingResource.get().onJobInitiated(jobInitiated));
+			LOGGER.info("A linking job has started with id " + linkingJob.getId() + " and demand (without latency) "
+					+ linkingJob.getDemand());
+			final Set<AbstractJobEvent> jobs = linkingResource.get().onJobInitiated(jobInitiated);
+			LOGGER.debug("Size: " + jobs.size());
+			jobs.forEach(j -> LOGGER.debug("Job is of type: " + j.getClass().getName() + " and id " + j.getId()));
+			return Result.of(jobs);
 		}
 
 		return Result.empty();
@@ -273,7 +286,9 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				LOGGER.error("No such resource found!");
 				return Result.of();
 			}
-			
+
+			LOGGER.info("A linking job has been progressed: " + linkingJob.getId() + " with demand "
+					+ linkingJob.getDemand());
 			return Result.of(linkingResource.get().onJobProgressed(jobProgressed));
 		}
 
@@ -287,10 +302,25 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @return Set containing {@link ActiveResourceFinished}.
 	 */
 	@Subscribe
-	public Result<ActiveResourceFinished> onJobFinished(final JobFinished evt) {
+	public Result<?> onJobFinished(final JobFinished evt) {
 		if (evt.getEntity() instanceof ActiveJob) {
 			final ActiveJob activeJob = (ActiveJob) evt.getEntity();
 			return Result.of(new ActiveResourceFinished(activeJob.getRequest(), 0));
+		}
+		if (evt.getEntity() instanceof LinkingJob) {
+			/* This is just for Debugging Purposes */
+			final LinkingJob linkingJob = (LinkingJob) evt.getEntity();
+			LOGGER.info("The linking job with id " + linkingJob.getId() + " has finished");
+			return Result.of(new CallOverWireSucceeded(linkingJob.getRequest()));
+		}
+
+		return Result.empty();
+	}
+
+	public Result<?> onJobAborted(final JobAborted aborted) {
+		if (aborted.getEntity() instanceof LinkingJob) {
+			final LinkingJob linkingJob = (LinkingJob) aborted.getEntity();
+			return Result.of(new CallOverWireAborted(linkingJob.getRequest()));
 		}
 
 		return Result.empty();
@@ -314,17 +344,36 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 			this.resourceTable.removeActiveResources(deletedContainer));
 	}
 
+	@Subscribe
 	public Result<?> onSEFFExternalCallAction(final ExternalCallRequested externalCallRequested) {
 		final AllocationContext fromAlC = this.resourceEnvironmentAccessor
-				.findResourceContainerOfComponent(externalCallRequested.getFrom()).orElseThrow();
+				.findResourceContainerOfComponent(externalCallRequested.getRequest().getFrom()).orElseThrow();
 		final AllocationContext toAlC = this.resourceEnvironmentAccessor
-				.findResourceContainerOfComponent(externalCallRequested.getTo()).orElseThrow();
+				.findResourceContainerOfComponent(externalCallRequested.getRequest().getTo()).orElseThrow();
+
+		/* Check if they are on the same resource; if so, no call over wire required */
+		if (fromAlC.getResourceContainer_AllocationContext().getId()
+				.equals(toAlC.getResourceContainer_AllocationContext().getId())) {
+			LOGGER.info("Both components lie on the same resource container -> no call over wire required.");
+			return Result.of(new CallOverWireSucceeded(externalCallRequested.getRequest()));
+		}
 
 		final List<SimulatedLinkingResource> linkingResources = this.linkingResourceTable.findLinkingResourceBetweenContainers(fromAlC.getResourceContainer_AllocationContext(), toAlC.getResourceContainer_AllocationContext());
-		final Set<JobInitiated> jobInitiated = linkingResources.stream()
-				.map(lr -> createLinkingJobFromResource(lr.getLinkingResource(), externalCallRequested.getUser()))
-				.map(job -> new JobInitiated(job, 0.0)).collect(Collectors.toSet());
-		return Result.of(jobInitiated);
+		return Result.of(linkingResources.stream()
+
+				/* For now, it doesn't matter which linking resource we use */
+				.findAny()
+
+				/* For this one linking resource, create the job with the initial demand */
+				.map(lr -> createLinkingJobFromResource(lr.getLinkingResource(),
+						externalCallRequested.getRequest().getUser(), externalCallRequested.getRequest()))
+				
+				/* If a linking resource exists, create a job for that */
+				.map(job -> new JobInitiated(job, 0.0))
+				
+				/* Otherwise, the list is empty if they are not connected */
+				.orElseThrow(() -> new IllegalArgumentException(
+						"The resource containers of the assembly contexts are not directly connected by a linking resource")));
 	}
 
 	/**
@@ -337,12 +386,13 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @param user            The user that is going to make the call.
 	 * @return A new linking job
 	 */
-	private LinkingJob createLinkingJobFromResource(final LinkingResource linkingResource, final User user) {
+	private LinkingJob createLinkingJobFromResource(final LinkingResource linkingResource, final User user,
+			final CallOverWireRequest request) {
 		final double demand = user.getStack().currentStackFrame().getContents().stream()
 				.filter(entry -> entry.getKey().endsWith("BYTESIZE"))
 				.mapToDouble(entry -> NumberConverter.toDouble(entry.getValue())).sum();
 
-		return new LinkingJob(UUID.randomUUID().toString(), demand, linkingResource);
+		return new LinkingJob(UUID.randomUUID().toString(), demand, linkingResource, request);
 	}
 
 	/**
@@ -356,6 +406,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 		this.resourceTable.clearResourcesFromJobs();
 		this.passiveResourceTable.clearResourcesFromJobs();
+		this.linkingResourceTable.clearResourcesFromJobs();
 	}
 
 	/*
