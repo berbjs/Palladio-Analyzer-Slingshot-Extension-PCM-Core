@@ -41,6 +41,7 @@ public class SimulatedLinkingResource extends FCFSResource {
 		LOGGER.info("Initiate linking job of id " + linkingJob.getId() + " in the resource " + this.getId()
 				+ " of demand " + linkingJob.getDemand());
 
+		linkingJob.updateDemand(linkingJob.getDemand() + latency.calculateRV());
 		return super.onJobInitiated(jobInitiated);
 	}
 
@@ -57,7 +58,7 @@ public class SimulatedLinkingResource extends FCFSResource {
 					ranNumber, this.failureRate)));
 		}
 
-		job.updateDemand(job.getDemand() + latency.calculateRV());
+
 		return super.onJobProgressed(jobProgressed);
 	}
 
