@@ -1,5 +1,6 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.linking;
 
+import java.util.Optional;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -35,14 +36,16 @@ public class SimulatedLinkingResource extends FCFSResource {
 		this.failureRate = spec.getFailureProbability();
 	}
 
-	@Override
-	public Set<AbstractJobEvent> onJobInitiated(final JobInitiated jobInitiated) {
-		final LinkingJob linkingJob = (LinkingJob) jobInitiated.getEntity();
-		LOGGER.info("Initiate linking job of id " + linkingJob.getId() + " in the resource " + this.getId()
-				+ " of demand " + linkingJob.getDemand());
 
-		linkingJob.updateDemand(linkingJob.getDemand() + latency.calculateRV());
-		return super.onJobInitiated(jobInitiated);
+
+	@Override
+	protected Optional<AbstractJobEvent> process(final JobInitiated jobInitiated) {
+		/*
+		 * Note that here, according to FCFS, this event already considers the
+		 * throughput
+		 */
+		jobInitiated.getEntity().updateDemand(jobInitiated.getEntity().getDemand() + latency.calculateRV());
+		return super.process(jobInitiated);
 	}
 
 	@Override
