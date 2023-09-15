@@ -152,7 +152,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		final RepositoryInterpreter interpreter = new RepositoryInterpreter(context.getAssemblyContext(),
 				context.getSignature(), context.getProvidedRole(), context.getUser(), this.systemRepository,
-				Optional.empty());
+				Optional.empty(), null);
 		final Set<SEFFInterpretationProgressed> appearedEvents = interpreter.doSwitch(context.getProvidedRole());
 
 		return Result.of(appearedEvents);
@@ -165,12 +165,11 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<?> onRequestInitiated(
 			final SEFFExternalActionCalled requestInitiated) {
+		
 		return requestCallOverWire(requestInitiated.getEntity());
 	}
 
 	private Result<?> requestCallOverWire(final GeneralEntryRequest entity) {
-		// final GeneralEntryRequest entity = requestInitiated.getEntity();
-
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
 				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
 
@@ -178,28 +177,20 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 				.findProvidedRoleFromRequiredRole(entity.getRequiredRole());
 
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
-			// final RepositoryInterpreter interpreter = new
-			// RepositoryInterpreter(assemblyContext.get(),
-			// entity.getSignature(),
-			// providedRole.get(), entity.getUser(), this.systemRepository,
-			// entity.getRequestFrom().getCaller());
-
-			/* Interpret the Component of the system. */
-			// final Set<DESEvent> appearedEvents = new HashSet<>(interpreter
-			// .doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext()));
-			
 			SimulatedStackHelper.createAndPushNewStackFrame(entity.getUser().getStack(),
 					entity.getInputVariableUsages());
-
-			return Result.of(new ExternalCallRequested(CallOverWireRequest.builder()
+			
+			final CallOverWireRequest request = CallOverWireRequest.builder()
 					.from(entity.getRequestFrom().getAssemblyContext())
 					.to(assemblyContext.get())
 					.signature(entity.getSignature())
 					.user(entity.getUser())
 					.entryRequest(entity)
-					.build()));
+					.build();
+			
+			
 
-			// return Result.of(appearedEvents);
+			return Result.of(new ExternalCallRequested(request));
 		}
 		return Result.of();
 	}
@@ -207,6 +198,19 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<?> onCallOverWireSucceeded(final CallOverWireSucceeded cowSucceeded) {
 		final GeneralEntryRequest entity = cowSucceeded.getRequest().getEntryRequest();
+
+		if (cowSucceeded.getRequest().getReplyTo().isPresent()) {
+			/*
+			 * This is a reply to an already made request from a caller, so we need to go
+			 * back to the caller
+			 */
+			final SEFFInterpretationContext seffInterpretationContext = entity.getRequestFrom().getCaller()
+					.orElseThrow(() -> new IllegalStateException(
+							"Since the call came from somewhere else, the context of the caller must be present, but it isn't."));
+			return Result.of(new SEFFInterpretationProgressed(seffInterpretationContext.update()
+									.withCallOverWireRequest(null)
+									.build()));
+		}
 
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
 				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
@@ -217,7 +221,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), providedRole.get(), entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller());
+					entity.getRequestFrom().getCaller(), cowSucceeded.getRequest());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
@@ -256,7 +260,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), null, entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller());
+					entity.getRequestFrom().getCaller(), null);
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter

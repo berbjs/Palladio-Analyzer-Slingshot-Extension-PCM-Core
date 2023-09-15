@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import javax.annotation.processing.Generated;
 
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
@@ -32,12 +33,15 @@ public final class SEFFInterpretationContext {
 
 	private final Optional<SEFFInterpretationContext> calledFrom;
 
+	private final Optional<CallOverWireRequest> callOverWireRequest;
+
 	@Generated("SparkTools")
 	private SEFFInterpretationContext(final Builder builder) {
 		this.calledFrom = builder.calledFrom;
 		this.behaviorContext = builder.behaviorContext;
 		this.requestProcessingContext = builder.requestProcessingContext;
 		this.assemblyContext = builder.assemblyContext;
+		this.callOverWireRequest = Optional.ofNullable(builder.callOverWireRequest);
 	}
 
 	/**
@@ -62,11 +66,17 @@ public final class SEFFInterpretationContext {
 		return this.calledFrom;
 	}
 
+	public Optional<CallOverWireRequest> getCallOverWireRequest() {
+		return this.callOverWireRequest;
+	}
+
 	public Builder update() {
 		return builder()
 				.withBehaviorContext(this.behaviorContext)
 				.withAssemblyContext(this.assemblyContext)
-				.withRequestProcessingContext(this.requestProcessingContext);
+				.withRequestProcessingContext(this.requestProcessingContext)
+				.withCaller(calledFrom)
+				.withCallOverWireRequest(this.callOverWireRequest.orElse(null));
 	}
 
 	/**
@@ -88,8 +98,14 @@ public final class SEFFInterpretationContext {
 		private RequestProcessingContext requestProcessingContext;
 		private AssemblyContext assemblyContext;
 		private Optional<SEFFInterpretationContext> calledFrom = Optional.empty();
+		private CallOverWireRequest callOverWireRequest;
 
 		private Builder() {
+		}
+
+		public Builder withCallOverWireRequest(final CallOverWireRequest callOverWireRequest) {
+			this.callOverWireRequest = callOverWireRequest;
+			return this;
 		}
 
 		public Builder withBehaviorContext(final SeffBehaviorContextHolder behaviorContext) {

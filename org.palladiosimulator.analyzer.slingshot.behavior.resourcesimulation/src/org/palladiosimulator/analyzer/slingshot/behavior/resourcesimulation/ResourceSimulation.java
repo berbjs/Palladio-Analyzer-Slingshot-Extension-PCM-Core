@@ -317,6 +317,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		return Result.empty();
 	}
 
+	@Subscribe
 	public Result<?> onJobAborted(final JobAborted aborted) {
 		if (aborted.getEntity() instanceof LinkingJob) {
 			final LinkingJob linkingJob = (LinkingJob) aborted.getEntity();

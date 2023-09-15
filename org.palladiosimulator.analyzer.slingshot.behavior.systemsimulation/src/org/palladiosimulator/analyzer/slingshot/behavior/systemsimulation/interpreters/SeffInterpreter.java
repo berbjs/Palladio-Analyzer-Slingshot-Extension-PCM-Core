@@ -189,7 +189,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 						.build())
 				.collect(Collectors.toList());
 
-		return childContexts.stream().map(childContext -> new SEFFChildInterpretationStarted(childContext))
+		return childContexts.stream().map(SEFFChildInterpretationStarted::new)
 				.collect(Collectors.toSet());
 	}
 
@@ -211,6 +211,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				.withInputVariableUsages(inputVariableUsages).withRequiredRole(requiredRole)
 				.withSignature(calledServiceSignature).withUser(this.context.getRequestProcessingContext().getUser())
 				.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
+
 
 		return Set.of(new SEFFExternalActionCalled(entryRequest));
 	}
@@ -300,10 +301,9 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 					.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
 
 			return Set.of(new SEFFInfrastructureCalled(request));
-		} else {
-			LOGGER.warn("Attention, no interpreation implemented for this specific CallAction, it is simply ignored!");
-			return Set.of();
 		}
+		LOGGER.warn("Attention, no interpreation implemented for this specific CallAction, it is simply ignored!");
+		return Set.of();
 	}
 
 	/**

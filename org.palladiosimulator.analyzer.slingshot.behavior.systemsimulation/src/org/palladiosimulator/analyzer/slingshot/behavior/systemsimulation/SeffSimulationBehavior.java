@@ -3,12 +3,13 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.AbstractSEFFInterpretationEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ExternalCallRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
@@ -149,12 +150,18 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	}
 
 	/**
-	 * @param entity
-	 * @return
+	 * If the caller was from another component, then we need to return over the
+	 * wire. Thus, we create a reply to a call over wire request and first simulate
+	 * the call.
 	 */
-	private AbstractSEFFInterpretationEvent continueInCaller(final SEFFInterpretationContext entity) {
-		final SEFFInterpretationContext seffInterpretationContext = entity.getCaller().get();
-		return new SEFFInterpretationProgressed(seffInterpretationContext);
+	private AbstractSimulationEvent continueInCaller(final SEFFInterpretationContext entity) {
+		return entity.getCallOverWireRequest().map(CallOverWireRequest::createReplyRequest)
+				.map(ExternalCallRequested::new)
+				.map(j -> (AbstractSimulationEvent) j)
+				.orElseGet(() -> {
+					LOGGER.info("The call was for some weird reason empty ?");
+					return new SEFFInterpretationProgressed(entity.getCaller().get());
+				});
 	}
 
 	private SEFFInterpretationProgressed repeat(final SEFFInterpretationContext entity) {

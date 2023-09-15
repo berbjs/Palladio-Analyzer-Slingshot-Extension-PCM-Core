@@ -93,7 +93,14 @@ public final class GeneralEntryRequest extends UserContextEntityHolder {
 		return this.requestFrom;
 	}
 
-
+	public Builder update() {
+		return builder()
+				.withInputVariableUsages(inputVariableUsages)
+				.withRequestFrom(requestFrom)
+				.withRequiredRole(requiredRole)
+				.withSignature(signature)
+				.withUser(getUser());
+	}
 
 	/**
 	 * Creates builder to build {@link GeneralEntryRequest}.
