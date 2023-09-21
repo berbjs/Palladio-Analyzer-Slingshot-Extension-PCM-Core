@@ -52,12 +52,11 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.AbstractResourceRequestEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireAborted;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireSucceeded;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ExternalCallRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
-import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractSimulationEvent;
 //import org.palladiosimulator.analyzer.slingshot.scalingpolicy.data.events.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
@@ -92,7 +91,7 @@ import de.uka.ipd.sdq.simucomframework.variables.converter.NumberConverter;
 @OnEvent(when = ResourceDemandRequested.class, then = { JobInitiated.class,
 		PassiveResourceAcquired.class }, cardinality = SINGLE)
 @OnEvent(when = ModelAdjusted.class, then = {})
-@OnEvent(when = ExternalCallRequested.class, then = { JobInitiated.class,
+@OnEvent(when = CallOverWireRequested.class, then = { JobInitiated.class,
 		CallOverWireSucceeded.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = JobAborted.class, then = CallOverWireAborted.class, cardinality = SINGLE)
 public class ResourceSimulation implements SimulationBehaviorExtension {
@@ -346,7 +345,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result<?> onSEFFExternalCallAction(final ExternalCallRequested externalCallRequested) {
+	public Result<?> onCallOverWireRequested(final CallOverWireRequested externalCallRequested) {
 		final AllocationContext fromAlC = this.resourceEnvironmentAccessor
 				.findResourceContainerOfComponent(externalCallRequested.getRequest().getFrom()).orElseThrow();
 		final AllocationContext toAlC = this.resourceEnvironmentAccessor
@@ -366,8 +365,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				.findAny()
 
 				/* For this one linking resource, create the job with the initial demand */
-				.map(lr -> createLinkingJobFromResource(lr.getLinkingResource(),
-						externalCallRequested.getRequest().getUser(), externalCallRequested.getRequest()))
+				.map(lr -> createLinkingJobFromResource(lr.getLinkingResource(), externalCallRequested.getRequest()))
 				
 				/* If a linking resource exists, create a job for that */
 				.map(job -> new JobInitiated(job, 0.0))
@@ -387,7 +385,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @param user            The user that is going to make the call.
 	 * @return A new linking job
 	 */
-	private LinkingJob createLinkingJobFromResource(final LinkingResource linkingResource, final User user,
+	private LinkingJob createLinkingJobFromResource(final LinkingResource linkingResource,
 			final CallOverWireRequest request) {
 		final double demand = request.getVariablesToConsider().getContents().stream()
 				.filter(entry -> entry.getKey().endsWith("BYTESIZE"))

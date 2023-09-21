@@ -10,9 +10,9 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
  * 
  * @author Julijan Katic
  */
-public final class ExternalCallRequested extends AbstractCallOverWireEvent {
+public final class CallOverWireRequested extends AbstractCallOverWireEvent {
 
-	public ExternalCallRequested(final CallOverWireRequest callOverWireRequest) {
+	public CallOverWireRequested(final CallOverWireRequest callOverWireRequest) {
 		super(callOverWireRequest);
 	}
 

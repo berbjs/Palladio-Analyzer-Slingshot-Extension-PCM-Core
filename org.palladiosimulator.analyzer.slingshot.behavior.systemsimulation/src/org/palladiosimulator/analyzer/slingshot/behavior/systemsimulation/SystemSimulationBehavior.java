@@ -20,7 +20,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireSucceeded;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ExternalCallRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.RepositoryInterpretationInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
@@ -59,9 +59,9 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  */
 @OnEvent(when = UserEntryRequested.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 @OnEvent(when = RepositoryInterpretationInitiated.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
-@OnEvent(when = SEFFExternalActionCalled.class, then = ExternalCallRequested.class, cardinality = MANY)
+@OnEvent(when = SEFFExternalActionCalled.class, then = CallOverWireRequested.class, cardinality = MANY)
 @OnEvent(when = CallOverWireSucceeded.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
-@OnEvent(when = CallOverWireAborted.class, then = ExternalCallRequested.class, cardinality = MANY)
+@OnEvent(when = CallOverWireAborted.class, then = CallOverWireRequested.class, cardinality = MANY)
 @OnEvent(when = ActiveResourceFinished.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFInfrastructureCalled.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 public class SystemSimulationBehavior implements SimulationBehaviorExtension {
@@ -201,7 +201,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			
 			
 
-			return Result.of(new ExternalCallRequested(request));
+			return Result.of(new CallOverWireRequested(request));
 		}
 		return Result.of();
 	}

@@ -7,7 +7,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ExternalCallRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
@@ -148,7 +148,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	private AbstractSimulationEvent continueInCaller(final SEFFInterpretationContext entity) {
 		return entity.getCallOverWireRequest()
 				.map(cowReq -> cowReq.createReplyRequest(entity.getCurrentResultStackframe()))
-				.map(ExternalCallRequested::new)
+				.map(CallOverWireRequested::new)
 				.map(AbstractSimulationEvent.class::cast) // Needed for the type check
 				.orElseGet(() -> {
 					LOGGER.info("It seems that the call was not over a wire, so proceed with normal progression");
