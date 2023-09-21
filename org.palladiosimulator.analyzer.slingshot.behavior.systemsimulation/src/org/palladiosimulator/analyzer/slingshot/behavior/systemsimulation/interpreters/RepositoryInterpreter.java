@@ -68,25 +68,38 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	/** The context of the calling seff */
 	private final Optional<SEFFInterpretationContext> callerContext;
 
+	/** Needed for creating the appropriate SEFF Interpretation Context */
 	private final CallOverWireRequest callOverWireRequest;
+
+	/**
+	 * The stackframe to set variables into. Needed for creating the appropriate
+	 * SEFF Interpretation Context
+	 */
+	private final SimulatedStackframe<Object> resultStackframe;
 
 	/**
 	 * Instantiates the interpreter with given information. Depending on the
 	 * interpretation, not every parameter must be set (every parameter CAN be
 	 * null!).
 	 *
-	 * @param context         The special assembly context to interpret.
-	 * @param signature       A signature to find the right RDSeff.
-	 * @param providedRole    The provided role from which the interpretation
-	 *                        started.
-	 * @param user            The context onto which to push stack frames for
-	 *                        RDSeffs.
-	 * @param modelRepository The model repository to get more information from the
-	 *                        system model.
+	 * @param context          The special assembly context to interpret.
+	 * @param signature        A signature to find the right RDSeff.
+	 * @param providedRole     The provided role from which the interpretation
+	 *                         started.
+	 * @param user             The context onto which to push stack frames for
+	 *                         RDSeffs.
+	 * @param modelRepository  The model repository to get more information from the
+	 *                         system model.
+	 * @param callerContext    The context of the caller.
+	 * @param request          The call over wire request needed for the next SEFF
+	 *                         interpretation.
+	 * @param resultStackframe The stackframe to put output variables into. Needed
+	 *                         for the next SEFF interpretation.
 	 */
 	public RepositoryInterpreter(final AssemblyContext context, final Signature signature,
 			final ProvidedRole providedRole, final User user, final SystemModelRepository modelRepository,
-			final Optional<SEFFInterpretationContext> callerContext, final CallOverWireRequest request) {
+			final Optional<SEFFInterpretationContext> callerContext, final CallOverWireRequest request,
+			final SimulatedStackframe<Object> resultStackframe) {
 		this.assemblyContext = context;
 		this.signature = signature;
 		this.providedRole = providedRole;
@@ -94,6 +107,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		this.modelRepository = modelRepository;
 		this.callerContext = callerContext;
 		this.callOverWireRequest = request;
+		this.resultStackframe = resultStackframe;
 	}
 
 	/**
@@ -128,6 +142,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 									RequestProcessingContext.builder().withAssemblyContext(this.assemblyContext)
 											.withProvidedRole(this.providedRole).withUser(this.user).build())
 							.withCallOverWireRequest(callOverWireRequest)
+							.withResultStackframe(this.resultStackframe)
 							.build();
 					return new SEFFInterpretationProgressed(context);
 				}).collect(Collectors.toSet());
@@ -205,7 +220,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		final RepositoryInterpreter repositoryInterpreter = new RepositoryInterpreter(
 				connectedProvidedDelegationConnector.getAssemblyContext_ProvidedDelegationConnector(), this.signature,
 				connectedProvidedDelegationConnector.getInnerProvidedRole_ProvidedDelegationConnector(), this.user,
-				this.modelRepository, Optional.empty(), this.callOverWireRequest);
+				this.modelRepository, Optional.empty(), this.callOverWireRequest, this.resultStackframe);
 		return repositoryInterpreter
 				.doSwitch(connectedProvidedDelegationConnector.getInnerProvidedRole_ProvidedDelegationConnector());
 	}

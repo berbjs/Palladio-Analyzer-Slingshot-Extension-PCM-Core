@@ -389,7 +389,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 */
 	private LinkingJob createLinkingJobFromResource(final LinkingResource linkingResource, final User user,
 			final CallOverWireRequest request) {
-		final double demand = user.getStack().currentStackFrame().getContents().stream()
+		final double demand = request.getVariablesToConsider().getContents().stream()
 				.filter(entry -> entry.getKey().endsWith("BYTESIZE"))
 				.mapToDouble(entry -> NumberConverter.toDouble(entry.getValue())).sum();
 

@@ -155,10 +155,11 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final LoopBehaviorContextHolder holder = new LoopBehaviorContextHolder(object.getBodyBehaviour_Loop(),
 				object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior(),
 				iterationCount);
-		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
+		final SEFFInterpretationContext childContext = this.context.createChildContext()
+				.withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
 				.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext()).build();
-
+		
 		return Set.of(new SEFFChildInterpretationStarted(childContext));
 	}
 
@@ -183,7 +184,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior());
 
 		final List<SEFFInterpretationContext> childContexts = rdBehaviors.stream()
-				.map(rdBehavior -> SEFFInterpretationContext.builder().withBehaviorContext(forkedBehaviorContext)
+				.map(rdBehavior -> this.context.createChildContext().withBehaviorContext(forkedBehaviorContext)
 						.withRequestProcessingContext(this.context.getRequestProcessingContext())
 						.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext())
 						.build())
@@ -208,9 +209,15 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final EList<VariableUsage> inputVariableUsages = externalCall.getInputVariableUsages__CallAction();
 
 		final GeneralEntryRequest entryRequest = GeneralEntryRequest.builder()
-				.withInputVariableUsages(inputVariableUsages).withRequiredRole(requiredRole)
-				.withSignature(calledServiceSignature).withUser(this.context.getRequestProcessingContext().getUser())
-				.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
+				.withInputVariableUsages(inputVariableUsages)
+				.withOutputVariableUsages(externalCall.getReturnVariableUsage__CallReturnAction())
+				.withRequiredRole(requiredRole)
+				.withSignature(calledServiceSignature)
+				.withUser(this.context.getRequestProcessingContext().getUser())
+				.withRequestFrom(this.context.update()
+						.withCaller(this.context)
+						.build())
+				.build();
 
 
 		return Set.of(new SEFFExternalActionCalled(entryRequest));
@@ -273,7 +280,9 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final LoopBehaviorContextHolder holder = new LoopBehaviorContextHolder(object.getBodyBehaviour_Loop(),
 				object.getSuccessor_AbstractAction(), this.context.getBehaviorContext().getCurrentProcessedBehavior(),
 				iterationCount);
-		final SEFFInterpretationContext newContext = this.context.update().withBehaviorContext(holder).build();
+		final SEFFInterpretationContext newContext = this.context.createChildContextPrefilled()
+				.withBehaviorContext(holder)
+				.build();
 
 		return Set.of(new SEFFChildInterpretationStarted(newContext));
 	}
@@ -282,8 +291,10 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 	public Set<SEFFInterpreted> caseSetVariableAction(final SetVariableAction object) {
 		final SimulatedStack<Object> stack = this.context.getRequestProcessingContext().getUser().getStack();
 		final SimulatedStackframe<Object> stackFrame = stack.currentStackFrame();
+		final SimulatedStackframe<Object> resultStackframe = this.context.getCurrentResultStackframe();
+
 		SimulatedStackHelper.addParameterToStackFrame(stackFrame, object.getLocalVariableUsages_SetVariableAction(),
-				stackFrame);
+				resultStackframe);
 		return Set.of(new SEFFInterpretationProgressed(this.context));
 	}
 

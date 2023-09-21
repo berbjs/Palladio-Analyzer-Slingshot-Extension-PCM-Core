@@ -11,6 +11,8 @@ import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 
 import com.google.common.base.Preconditions;
 
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
+
 /**
  * The SEFFInterpretationContext is used for keeping track of the RDSeff
  * interpertation.
@@ -33,7 +35,17 @@ public final class SEFFInterpretationContext {
 
 	private final Optional<SEFFInterpretationContext> calledFrom;
 
+	/** The parent context if this is a child context */
+	private final Optional<SEFFInterpretationContext> parent;
+
 	private final Optional<CallOverWireRequest> callOverWireRequest;
+
+	/**
+	 * The stackframe to hold the result variables of a call. This can be null,
+	 * signifying the the result stackframe is in the parent already or the users
+	 * current stackframe should be used.
+	 */
+	private final SimulatedStackframe<Object> resultStackframe;
 
 	@Generated("SparkTools")
 	private SEFFInterpretationContext(final Builder builder) {
@@ -42,6 +54,8 @@ public final class SEFFInterpretationContext {
 		this.requestProcessingContext = builder.requestProcessingContext;
 		this.assemblyContext = builder.assemblyContext;
 		this.callOverWireRequest = Optional.ofNullable(builder.callOverWireRequest);
+		this.parent = Optional.ofNullable(builder.parent);
+		this.resultStackframe = builder.resultStackframe;
 	}
 
 	/**
@@ -70,13 +84,64 @@ public final class SEFFInterpretationContext {
 		return this.callOverWireRequest;
 	}
 
+	/**
+	 * Returns the stack frame to which variables can be set. This can either be a
+	 * dedicated stack frame or the current stackframe from the user.
+	 * 
+	 * If the result stack frame was set when constructing this context, then this
+	 * dedicated stack frame will be returned. Otherwise, the parent's
+	 * {@link #getCurrentResultStackframe()} will be returned.
+	 * 
+	 * If the parent's stackframe are also {@code null}, the current user's stack
+	 * frame will be returned instead.
+	 * 
+	 * @return A non-{@code null} stackframe object, either dedicated or the current
+	 *         user's stack frame.
+	 */
+	public SimulatedStackframe<Object> getCurrentResultStackframe() {
+		if (this.resultStackframe != null) {
+			return this.resultStackframe;
+		}
+
+		return this.parent.map(pr -> pr.getCurrentResultStackframe())
+				.orElseGet(() -> this.requestProcessingContext.getUser().getStack().currentStackFrame());
+	}
+
+	public Optional<SEFFInterpretationContext> getParent() {
+		return this.parent;
+	}
+
+	/**
+	 * Creates a child context from this with empty fields, except that
+	 * {@link #getParent()} will point to this and
+	 * {@link #getRequestProcessingContext()} will stay the same.
+	 * 
+	 * @return A builder for the child context.
+	 */
+	public Builder createChildContext() {
+		return builder().withRequestProcessingContext(requestProcessingContext).withParent(this);
+	}
+
+	/**
+	 * Creates a child context from this with the same values as this, except that
+	 * the result stack frame will be {@code null} since the result stack frame is
+	 * already set in the parent.
+	 * 
+	 * @return A builder with pre-filled fields for the child context.
+	 */
+	public Builder createChildContextPrefilled() {
+		return update().withParent(this).withResultStackframe(null);
+	}
+
 	public Builder update() {
 		return builder()
 				.withBehaviorContext(this.behaviorContext)
 				.withAssemblyContext(this.assemblyContext)
 				.withRequestProcessingContext(this.requestProcessingContext)
 				.withCaller(calledFrom)
-				.withCallOverWireRequest(this.callOverWireRequest.orElse(null));
+				.withParent(this.parent.orElse(null))
+				.withCallOverWireRequest(this.callOverWireRequest.orElse(null))
+				.withResultStackframe(getCurrentResultStackframe());
 	}
 
 	/**
@@ -99,8 +164,15 @@ public final class SEFFInterpretationContext {
 		private AssemblyContext assemblyContext;
 		private Optional<SEFFInterpretationContext> calledFrom = Optional.empty();
 		private CallOverWireRequest callOverWireRequest;
+		private SEFFInterpretationContext parent;
+		private SimulatedStackframe<Object> resultStackframe;
 
 		private Builder() {
+		}
+
+		public Builder withParent(final SEFFInterpretationContext parent) {
+			this.parent = parent;
+			return this;
 		}
 
 		public Builder withCallOverWireRequest(final CallOverWireRequest callOverWireRequest) {
@@ -134,6 +206,11 @@ public final class SEFFInterpretationContext {
 
 		public Builder withCaller(final Optional<SEFFInterpretationContext> caller) {
 			this.calledFrom = builderNonNull(caller);
+			return this;
+		}
+
+		public Builder withResultStackframe(final SimulatedStackframe<Object> stackFrame) {
+			this.resultStackframe = stackFrame;
 			return this;
 		}
 

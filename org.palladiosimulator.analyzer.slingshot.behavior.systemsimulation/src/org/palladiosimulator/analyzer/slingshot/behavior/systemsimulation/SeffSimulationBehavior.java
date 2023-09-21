@@ -3,12 +3,10 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ExternalCallRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
@@ -136,15 +134,8 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * @return
 	 */
 	private SEFFInterpretationProgressed continueInParent(final SEFFInterpretationContext entity) {
-
-		final SeffBehaviorWrapper seffBehaviorHolder = entity.getBehaviorContext().getParent().get();
-
-		final SEFFInterpretationContext seffInterpretationContext = SEFFInterpretationContext.builder()
-				.withAssemblyContext(entity.getAssemblyContext())
-				.withBehaviorContext(seffBehaviorHolder.getContext())
-				.withCaller(entity.getCaller())
-				.withRequestProcessingContext(entity.getRequestProcessingContext())
-				.build();
+		final SEFFInterpretationContext seffInterpretationContext = entity.getParent()
+				.orElseThrow(() -> new IllegalStateException("Every child context must have a parent"));
 
 		return new SEFFInterpretationProgressed(seffInterpretationContext);
 	}
@@ -155,11 +146,12 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * the call.
 	 */
 	private AbstractSimulationEvent continueInCaller(final SEFFInterpretationContext entity) {
-		return entity.getCallOverWireRequest().map(CallOverWireRequest::createReplyRequest)
+		return entity.getCallOverWireRequest()
+				.map(cowReq -> cowReq.createReplyRequest(entity.getCurrentResultStackframe()))
 				.map(ExternalCallRequested::new)
-				.map(j -> (AbstractSimulationEvent) j)
+				.map(AbstractSimulationEvent.class::cast) // Needed for the type check
 				.orElseGet(() -> {
-					LOGGER.info("The call was for some weird reason empty ?");
+					LOGGER.info("It seems that the call was not over a wire, so proceed with normal progression");
 					return new SEFFInterpretationProgressed(entity.getCaller().get());
 				});
 	}

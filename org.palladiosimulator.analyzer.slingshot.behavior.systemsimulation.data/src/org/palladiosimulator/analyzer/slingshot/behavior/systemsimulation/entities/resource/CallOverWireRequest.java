@@ -8,6 +8,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.Use
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.Signature;
 
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
+
 /**
  * This request is used for calls over the wire and contains all the information
  * needed to make a call to the destination.
@@ -36,6 +38,9 @@ public final class CallOverWireRequest {
 	/** The request to enter another SEFF component */
 	private final GeneralEntryRequest entryRequest;
 
+	/** List of variables to consider for calculating the bytesize */
+	private final SimulatedStackframe<Object> variablesToConsider;
+
 	/** The origin request this is responding to */
 	private final Optional<CallOverWireRequest> replyTo;
 
@@ -47,10 +52,15 @@ public final class CallOverWireRequest {
 		this.id = UUID.randomUUID().toString();
 		this.entryRequest = builder.entryRequest;
 		this.replyTo = Optional.ofNullable(builder.replyTo);
+		this.variablesToConsider = builder.variablesToConsider;
 	}
 
 	public String getId() {
 		return id;
+	}
+
+	public SimulatedStackframe<Object> getVariablesToConsider() {
+		return this.variablesToConsider;
 	}
 
 	public AssemblyContext getFrom() {
@@ -79,11 +89,14 @@ public final class CallOverWireRequest {
 	
 	/**
 	 * This creates a new response request such that the returned instance's
-	 * {@link #getReplyTo()} is not empty.
+	 * {@link #getReplyTo()} is not empty, and switches the stackframe to consider
+	 * for the bytesize calculation.
 	 * 
+	 * @param returnStackframe The stackframe to consider for the new bytesize
+	 *                         calculation.
 	 * @return A response request to this one.
 	 */
-	public CallOverWireRequest createReplyRequest() {
+	public CallOverWireRequest createReplyRequest(final SimulatedStackframe<Object> returnStackframe) {
 		return builder()
 				.from(this.from)
 				.to(this.to)
@@ -91,6 +104,7 @@ public final class CallOverWireRequest {
 				.signature(this.signature)
 				.user(this.user)
 				.replyTo(this)
+				.variablesToConsider(returnStackframe)
 				.build();
 	}
 
@@ -105,6 +119,7 @@ public final class CallOverWireRequest {
 		private User user;
 		private GeneralEntryRequest entryRequest;
 		private CallOverWireRequest replyTo;
+		private SimulatedStackframe<Object> variablesToConsider;
 
 		private Builder() {
 		}
@@ -136,6 +151,11 @@ public final class CallOverWireRequest {
 
 		public Builder replyTo(final CallOverWireRequest replyTo) {
 			this.replyTo = replyTo;
+			return this;
+		}
+
+		public Builder variablesToConsider(final SimulatedStackframe<Object> variablesToConsider) {
+			this.variablesToConsider = variablesToConsider;
 			return this;
 		}
 

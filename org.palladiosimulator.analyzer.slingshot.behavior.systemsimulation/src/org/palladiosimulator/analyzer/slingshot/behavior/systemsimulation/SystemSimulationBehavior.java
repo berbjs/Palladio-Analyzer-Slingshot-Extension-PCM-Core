@@ -48,6 +48,8 @@ import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
 
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
+
 /**
  * The System simulation behavior is a extension that simulates the system
  * model. It listens to events requesting to interpret the repository and
@@ -152,7 +154,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		final RepositoryInterpreter interpreter = new RepositoryInterpreter(context.getAssemblyContext(),
 				context.getSignature(), context.getProvidedRole(), context.getUser(), this.systemRepository,
-				Optional.empty(), null);
+				Optional.empty(), null, null);
 		final Set<SEFFInterpretationProgressed> appearedEvents = interpreter.doSwitch(context.getProvidedRole());
 
 		return Result.of(appearedEvents);
@@ -169,6 +171,13 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		return requestCallOverWire(requestInitiated.getEntity());
 	}
 
+	/**
+	 * Helper method for creating an ExternalCallRequested with the right variable
+	 * usage to consider
+	 * 
+	 * @param entity
+	 * @return
+	 */
 	private Result<?> requestCallOverWire(final GeneralEntryRequest entity) {
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
 				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
@@ -177,7 +186,8 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 				.findProvidedRoleFromRequiredRole(entity.getRequiredRole());
 
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
-			SimulatedStackHelper.createAndPushNewStackFrame(entity.getUser().getStack(),
+			final SimulatedStackframe<Object> inputStackframe = SimulatedStackHelper.createAndPushNewStackFrame(
+					entity.getUser().getStack(),
 					entity.getInputVariableUsages());
 			
 			final CallOverWireRequest request = CallOverWireRequest.builder()
@@ -186,6 +196,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 					.signature(entity.getSignature())
 					.user(entity.getUser())
 					.entryRequest(entity)
+					.variablesToConsider(inputStackframe)
 					.build();
 			
 			
@@ -207,6 +218,12 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			final SEFFInterpretationContext seffInterpretationContext = entity.getRequestFrom().getCaller()
 					.orElseThrow(() -> new IllegalStateException(
 							"Since the call came from somewhere else, the context of the caller must be present, but it isn't."));
+
+			/* Put the output variables to the parent stack */
+			SimulatedStackHelper.addParameterToStackFrame(
+					entity.getRequestFrom().getCurrentResultStackframe(),
+					entity.getOutputVariableUsages(), entity.getUser().getStack().currentStackFrame());
+
 			return Result.of(new SEFFInterpretationProgressed(seffInterpretationContext.update()
 									.withCallOverWireRequest(null)
 									.build()));
@@ -221,7 +238,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), providedRole.get(), entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller(), cowSucceeded.getRequest());
+					entity.getRequestFrom().getCaller(), cowSucceeded.getRequest(), new SimulatedStackframe<Object>());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
@@ -260,7 +277,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), null, entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller(), null);
+					entity.getRequestFrom().getCaller(), null, null);
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
