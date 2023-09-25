@@ -210,10 +210,11 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final OperationRequiredRole requiredRole = externalCall.getRole_ExternalService();
 		final OperationSignature calledServiceSignature = externalCall.getCalledService_ExternalService();
 		final EList<VariableUsage> inputVariableUsages = externalCall.getInputVariableUsages__CallAction();
+		final EList<VariableUsage> outputVariableUsages = externalCall.getReturnVariableUsage__CallReturnAction();
 
 		final GeneralEntryRequest entryRequest = GeneralEntryRequest.builder()
 				.withInputVariableUsages(inputVariableUsages)
-				.withOutputVariableUsages(externalCall.getReturnVariableUsage__CallReturnAction())
+				.withOutputVariableUsages(outputVariableUsages)
 				.withRequiredRole(requiredRole)
 				.withSignature(calledServiceSignature)
 				.withUser(this.context.getRequestProcessingContext().getUser())
