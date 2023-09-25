@@ -123,9 +123,12 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final BranchBehaviorContextHolder holder = new BranchBehaviorContextHolder(
 				branchTransition.getBranchBehaviour_BranchTransition(), branchAction.getSuccessor_AbstractAction(),
 				this.context.getBehaviorContext().getCurrentProcessedBehavior());
-		final SEFFInterpretationContext childContext = SEFFInterpretationContext.builder().withBehaviorContext(holder)
+		final SEFFInterpretationContext childContext = this.context.createChildContext()
+				.withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext()).build();
+				.withCaller(this.context.getCaller())
+				.withAssemblyContext(this.context.getAssemblyContext())
+				.build();
 
 		final SEFFChildInterpretationStarted event = new SEFFChildInterpretationStarted(childContext);
 
