@@ -346,7 +346,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				final InfrastructureCallsContextHolder infraContext = new InfrastructureCallsContextHolder(this.context,
 						internalAction, this.context.getBehaviorContext().getCurrentProcessedBehavior());
 
-				final SEFFInterpretationContext infraChildContext = SEFFInterpretationContext.builder()
+				final SEFFInterpretationContext infraChildContext = this.context.createChildContext()
 						.withBehaviorContext(infraContext)
 						.withRequestProcessingContext(this.context.getRequestProcessingContext())
 						.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext())
