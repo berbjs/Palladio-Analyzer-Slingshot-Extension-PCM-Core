@@ -1,11 +1,12 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events;
 
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.ActiveJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractEntityChangedEvent;
 
 /**
  * This abstract class is designed for events that notify a change in the
- * {@link Job} entity.
+ * {@link ActiveJob} entity.
  * 
  * @author Julijan Katic
  */

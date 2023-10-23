@@ -17,6 +17,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.even
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ProcessorSharingJobProgressed;
+
 import de.uka.ipd.sdq.probfunction.math.util.MathTools;
 
 /**
@@ -121,6 +122,12 @@ public final class ProcessorSharingResource extends AbstractActiveResource {
 			return Set.of(new JobFinished(shortestJob), next.get());
 		}
 		return Set.of(new JobFinished(shortestJob));
+	}
+
+	@Override
+	public void abortJob(final Job job) {
+		this.runningJobs.remove(job);
+		this.reportCoreUsage();
 	}
 
 	@Override

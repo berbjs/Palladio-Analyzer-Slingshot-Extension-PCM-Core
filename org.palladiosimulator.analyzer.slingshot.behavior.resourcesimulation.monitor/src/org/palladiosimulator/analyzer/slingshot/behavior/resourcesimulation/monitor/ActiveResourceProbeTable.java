@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.ActiveJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ActiveResourceStateUpdated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.ResourceDemandCalculated;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes.ResourceDemandRequestedProbe;
@@ -36,22 +37,27 @@ public final class ActiveResourceProbeTable {
 	}
 
 	public Set<Probe> currentStateAndUtilizationOfActiveResource(final ActiveResourceStateUpdated event) {
-		final Probes probes = this.probes
-				.get(event.getEntity().getProcessingResourceSpecification());
-		if (probes != null) {
-			probes.stateOfActiveResourceProbe.takeMeasurement(event);
-			probes.utilizationOfActiveResourceProbe.takeMeasurement(event);
-			return Set.of(probes.stateOfActiveResourceProbe, probes.utilizationOfActiveResourceProbe);
+		if (event.getEntity() instanceof ActiveJob) {
+			final ActiveJob activeJob = (ActiveJob) event.getEntity();
+			final Probes probes = this.probes.get(activeJob.getProcessingResourceSpecification());
+			if (probes != null) {
+				probes.stateOfActiveResourceProbe.takeMeasurement(event);
+				probes.utilizationOfActiveResourceProbe.takeMeasurement(event);
+				return Set.of(probes.stateOfActiveResourceProbe, probes.utilizationOfActiveResourceProbe);
+			}
 		}
+
 		return Set.of();
 	}
 
 	public Optional<Probe> currentResourceDemand(final ResourceDemandCalculated event) {
-		final Probes probes = this.probes
-				.get(event.getEntity().getProcessingResourceSpecification());
-		if (probes != null) {
-			probes.resourceDemandProbe.takeMeasurement(event);
-			return Optional.of(probes.resourceDemandProbe);
+		if (event.getEntity() instanceof ActiveJob) {
+			final ActiveJob activeJob = (ActiveJob) event.getEntity();
+			final Probes probes = this.probes.get(activeJob.getProcessingResourceSpecification());
+			if (probes != null) {
+				probes.resourceDemandProbe.takeMeasurement(event);
+				return Optional.of(probes.resourceDemandProbe);
+			}
 		}
 		return Optional.empty();
 	}

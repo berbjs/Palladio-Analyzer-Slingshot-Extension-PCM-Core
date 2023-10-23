@@ -7,8 +7,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.ForkBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorContextHolder;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.SeffBehaviorWrapper;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.AbstractSEFFInterpretationEvent;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFChildInterpretationStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationFinished;
@@ -135,26 +134,26 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * @return
 	 */
 	private SEFFInterpretationProgressed continueInParent(final SEFFInterpretationContext entity) {
-
-		final SeffBehaviorWrapper seffBehaviorHolder = entity.getBehaviorContext().getParent().get();
-
-		final SEFFInterpretationContext seffInterpretationContext = SEFFInterpretationContext.builder()
-				.withAssemblyContext(entity.getAssemblyContext())
-				.withBehaviorContext(seffBehaviorHolder.getContext())
-				.withCaller(entity.getCaller())
-				.withRequestProcessingContext(entity.getRequestProcessingContext())
-				.build();
+		final SEFFInterpretationContext seffInterpretationContext = entity.getParent()
+				.orElseThrow(() -> new IllegalStateException("Every child context must have a parent"));
 
 		return new SEFFInterpretationProgressed(seffInterpretationContext);
 	}
 
 	/**
-	 * @param entity
-	 * @return
+	 * If the caller was from another component, then we need to return over the
+	 * wire. Thus, we create a reply to a call over wire request and first simulate
+	 * the call.
 	 */
-	private AbstractSEFFInterpretationEvent continueInCaller(final SEFFInterpretationContext entity) {
-		final SEFFInterpretationContext seffInterpretationContext = entity.getCaller().get();
-		return new SEFFInterpretationProgressed(seffInterpretationContext);
+	private AbstractSimulationEvent continueInCaller(final SEFFInterpretationContext entity) {
+		return entity.getCallOverWireRequest()
+				.map(cowReq -> cowReq.createReplyRequest(entity.getCurrentResultStackframe()))
+				.map(CallOverWireRequested::new)
+				.map(AbstractSimulationEvent.class::cast) // Needed for the type check
+				.orElseGet(() -> {
+					LOGGER.info("It seems that the call was not over a wire, so proceed with normal progression");
+					return new SEFFInterpretationProgressed(entity.getCaller().get());
+				});
 	}
 
 	private SEFFInterpretationProgressed repeat(final SEFFInterpretationContext entity) {

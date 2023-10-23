@@ -2,6 +2,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.res
 
 import java.util.Set;
 
+import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.IResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.AbstractJobEvent;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.events.JobFinished;
@@ -36,5 +37,7 @@ public interface ActiveResource extends IResource {
 	 * @return the appropriate events for the active resource.
 	 */
 	Set<AbstractJobEvent> onJobProgressed(final JobProgressed jobProgressed);
+
+	boolean jobBelongsToResource(final Job job);
 
 }

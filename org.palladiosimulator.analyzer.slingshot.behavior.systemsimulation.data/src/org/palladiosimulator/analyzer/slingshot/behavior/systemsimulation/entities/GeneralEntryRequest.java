@@ -29,6 +29,9 @@ public final class GeneralEntryRequest extends UserContextEntityHolder {
 	/** The input variables for the service call. */
 	private final EList<VariableUsage> inputVariableUsages;
 	
+	/** The output variables to calculate the return */
+	private final EList<VariableUsage> outputVariableUsages;
+
 	/** The interpreter from which the request originates. */
 	private final SEFFInterpretationContext requestFrom;
 
@@ -39,6 +42,7 @@ public final class GeneralEntryRequest extends UserContextEntityHolder {
 		this.signature = builder.signature;
 		this.inputVariableUsages = builder.inputVariableUsages;
 		this.requestFrom = builder.requestFrom;
+		this.outputVariableUsages = builder.outputVariableUsages;
 	}
 
 	/**
@@ -51,12 +55,14 @@ public final class GeneralEntryRequest extends UserContextEntityHolder {
 	 * @param inputVariableUsages The input variables for the call.
 	 */
 	public GeneralEntryRequest(final User user, final RequiredRole requiredRole, final Signature signature,
-	        final EList<VariableUsage> inputVariableUsages, final SEFFInterpretationContext requestFrom) {
+			final EList<VariableUsage> inputVariableUsages, final SEFFInterpretationContext requestFrom,
+			final EList<VariableUsage> outputVariableUsages) {
 		super(user);
 		this.requiredRole = requiredRole;
 		this.signature = signature;
 		this.inputVariableUsages = inputVariableUsages;
 		this.requestFrom = requestFrom;
+		this.outputVariableUsages = outputVariableUsages;
 	}
 	
 	
@@ -93,7 +99,18 @@ public final class GeneralEntryRequest extends UserContextEntityHolder {
 		return this.requestFrom;
 	}
 
+	public EList<VariableUsage> getOutputVariableUsages() {
+		return this.outputVariableUsages;
+	}
 
+	public Builder update() {
+		return builder()
+				.withInputVariableUsages(inputVariableUsages)
+				.withRequestFrom(requestFrom)
+				.withRequiredRole(requiredRole)
+				.withSignature(signature)
+				.withUser(getUser());
+	}
 
 	/**
 	 * Creates builder to build {@link GeneralEntryRequest}.
@@ -114,6 +131,7 @@ public final class GeneralEntryRequest extends UserContextEntityHolder {
 		private Signature signature;
 		private EList<VariableUsage> inputVariableUsages;
 		private SEFFInterpretationContext requestFrom;
+		private EList<VariableUsage> outputVariableUsages;
 
 		private Builder() {
 		}
@@ -135,6 +153,11 @@ public final class GeneralEntryRequest extends UserContextEntityHolder {
 
 		public Builder withInputVariableUsages(final EList<VariableUsage> inputVariableUsages) {
 			this.inputVariableUsages = inputVariableUsages;
+			return this;
+		}
+
+		public Builder withOutputVariableUsages(final EList<VariableUsage> outputVariableUsages) {
+			this.outputVariableUsages = outputVariableUsages;
 			return this;
 		}
 

@@ -12,11 +12,15 @@ import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.GeneralEntryRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.RepositoryInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireAborted;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireSucceeded;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.RepositoryInterpretationInitiated;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
@@ -44,6 +48,8 @@ import org.palladiosimulator.pcm.seff.InternalAction;
 import org.palladiosimulator.pcm.seff.ResourceDemandingBehaviour;
 import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
 
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
+
 /**
  * The System simulation behavior is a extension that simulates the system
  * model. It listens to events requesting to interpret the repository and
@@ -53,7 +59,9 @@ import org.palladiosimulator.pcm.seff.ServiceEffectSpecification;
  */
 @OnEvent(when = UserEntryRequested.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 @OnEvent(when = RepositoryInterpretationInitiated.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
-@OnEvent(when = SEFFExternalActionCalled.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
+@OnEvent(when = SEFFExternalActionCalled.class, then = CallOverWireRequested.class, cardinality = MANY)
+@OnEvent(when = CallOverWireSucceeded.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
+@OnEvent(when = CallOverWireAborted.class, then = CallOverWireRequested.class, cardinality = MANY)
 @OnEvent(when = ActiveResourceFinished.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFInfrastructureCalled.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 public class SystemSimulationBehavior implements SimulationBehaviorExtension {
@@ -127,9 +135,8 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 					.build();
 
 			return Result.of(new SEFFInterpretationProgressed(context));
-		} else {
-			LOGGER.info("Either seff or assembly context is not found => stop interpretation for this request.");
 		}
+		LOGGER.info("Either seff or assembly context is not found => stop interpretation for this request.");
 
 		return Result.of();
 	}
@@ -147,7 +154,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		final RepositoryInterpreter interpreter = new RepositoryInterpreter(context.getAssemblyContext(),
 				context.getSignature(), context.getProvidedRole(), context.getUser(), this.systemRepository,
-				Optional.empty());
+				Optional.empty(), null, null);
 		final Set<SEFFInterpretationProgressed> appearedEvents = interpreter.doSwitch(context.getProvidedRole());
 
 		return Result.of(appearedEvents);
@@ -158,9 +165,69 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	 * example, when an External Call action was performed.
 	 */
 	@Subscribe
-	public Result<SEFFInterpretationProgressed> onRequestInitiated(
+	public Result<?> onRequestInitiated(
 			final SEFFExternalActionCalled requestInitiated) {
-		final GeneralEntryRequest entity = requestInitiated.getEntity();
+		
+		return requestCallOverWire(requestInitiated.getEntity());
+	}
+
+	/**
+	 * Helper method for creating an ExternalCallRequested with the right variable
+	 * usage to consider
+	 * 
+	 * @param entity
+	 * @return
+	 */
+	private Result<?> requestCallOverWire(final GeneralEntryRequest entity) {
+		final Optional<AssemblyContext> assemblyContext = this.systemRepository
+				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
+
+		final Optional<OperationProvidedRole> providedRole = this.systemRepository
+				.findProvidedRoleFromRequiredRole(entity.getRequiredRole());
+
+		if (assemblyContext.isPresent() && providedRole.isPresent()) {
+			final SimulatedStackframe<Object> inputStackframe = SimulatedStackHelper.createAndPushNewStackFrame(
+					entity.getUser().getStack(),
+					entity.getInputVariableUsages());
+			
+			final CallOverWireRequest request = CallOverWireRequest.builder()
+					.from(entity.getRequestFrom().getAssemblyContext())
+					.to(assemblyContext.get())
+					.signature(entity.getSignature())
+					.user(entity.getUser())
+					.entryRequest(entity)
+					.variablesToConsider(inputStackframe)
+					.build();
+			
+			// TODO: Should we do the check whether resource containers are connected here?
+
+			return Result.of(new CallOverWireRequested(request));
+		}
+		return Result.of();
+	}
+
+	@Subscribe
+	public Result<?> onCallOverWireSucceeded(final CallOverWireSucceeded cowSucceeded) {
+		final GeneralEntryRequest entity = cowSucceeded.getRequest().getEntryRequest();
+
+		if (cowSucceeded.getRequest().getReplyTo().isPresent()) {
+			/*
+			 * This is a reply to an already made request from a caller, so we need to go
+			 * back to the caller
+			 */
+			final SEFFInterpretationContext seffInterpretationContext = entity.getRequestFrom().getCaller()
+					.orElseThrow(() -> new IllegalStateException(
+							"Since the call came from somewhere else, the context of the caller must be present, but it isn't."));
+
+			/* Put the output variables to the parent stack */
+			SimulatedStackHelper.addParameterToStackFrame(
+					entity.getRequestFrom().getCurrentResultStackframe(),
+					entity.getOutputVariableUsages(), entity.getUser().getStack().currentStackFrame());
+
+			return Result.of(new SEFFInterpretationProgressed(seffInterpretationContext.update()
+									.withCallOverWireRequest(null)
+									.build()));
+		}
 
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
 				.findAssemblyContextFromRequiredRole(entity.getRequiredRole());
@@ -170,17 +237,25 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
-					entity.getSignature(),
-					providedRole.get(), entity.getUser(), this.systemRepository, entity.getRequestFrom().getCaller());
+					entity.getSignature(), providedRole.get(), entity.getUser(), this.systemRepository,
+					entity.getRequestFrom().getCaller(), cowSucceeded.getRequest(), new SimulatedStackframe<Object>());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
 					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext());
 
-			return Result.from(appearedEvents);
-		} else {
-			return Result.of();
+			SimulatedStackHelper.createAndPushNewStackFrame(entity.getUser().getStack(),
+					entity.getInputVariableUsages());
+
+			return Result.of(appearedEvents);
 		}
+		return Result.of();
+	}
+
+	@Subscribe
+	public Result<?> onCallOverWireAborted(final CallOverWireAborted cowAborted) {
+		LOGGER.info("The call over wire was aborted, retry");
+		return requestCallOverWire(cowAborted.getRequest().getEntryRequest());
 	}
 
 	/**
@@ -202,16 +277,15 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), null, entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller());
+					entity.getRequestFrom().getCaller(), null, null);
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
 					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext());
 
 			return Result.of(appearedEvents);
-		} else {
-			return Result.of();
 		}
+		return Result.of();
 	}
 
 	@Subscribe

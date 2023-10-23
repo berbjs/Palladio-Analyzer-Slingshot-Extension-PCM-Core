@@ -65,6 +65,7 @@ public final class ActiveResourceTable extends AbstractResourceTable<ActiveResou
 		}
 	}
 
+
 	public void buildModel(final Allocation allocation) {
 		allocation.getAllocationContexts_Allocation().stream()
 				.map(AllocationContext::getResourceContainer_AllocationContext)

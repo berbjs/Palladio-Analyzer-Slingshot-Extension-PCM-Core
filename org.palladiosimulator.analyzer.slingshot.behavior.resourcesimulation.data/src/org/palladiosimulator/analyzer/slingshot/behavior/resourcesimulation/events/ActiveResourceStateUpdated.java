@@ -13,8 +13,8 @@ public final class ActiveResourceStateUpdated extends AbstractJobEvent {
 	private final long requestsAtResource;
 	private final double utilization;
 
-	public ActiveResourceStateUpdated(final Job entity, final long requestsAtResource, final double utilization) {
-		super(entity, 0.0);
+	public ActiveResourceStateUpdated(final Job job, final long requestsAtResource, final double utilization) {
+		super(job, 0.0);
 		this.requestsAtResource = requestsAtResource;
 		this.utilization = utilization;
 	}
