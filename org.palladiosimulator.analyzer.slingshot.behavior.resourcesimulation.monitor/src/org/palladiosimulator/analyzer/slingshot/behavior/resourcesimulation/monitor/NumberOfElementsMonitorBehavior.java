@@ -26,13 +26,12 @@ import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.resourceenvironment.ResourceContainer;
-import org.palladiosimulator.pcmmeasuringpoint.ResourceContainerMeasuringPoint;
-import org.palladiosimulator.pcmmeasuringpoint.ResourceEnvironmentMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSets;
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
 import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
+import org.palladiosimulator.spdmeasuringpoint.SPDResourceContainerMeasuringPoint;
 
 /**
  *
@@ -87,9 +86,9 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 		final MeasurementSpecification spec = m.getEntity();
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
 
-		if (measuringPoint instanceof ResourceContainerMeasuringPoint) {
+		if (measuringPoint instanceof SPDResourceContainerMeasuringPoint) {
 			// Container MP --> register probe for EI where container is unit
-			final ResourceContainerMeasuringPoint resourceContainerMeasuringPoint = (ResourceContainerMeasuringPoint) measuringPoint;
+			final SPDResourceContainerMeasuringPoint resourceContainerMeasuringPoint = (SPDResourceContainerMeasuringPoint) measuringPoint;
 
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) {
