@@ -38,18 +38,14 @@ import org.palladiosimulator.spdmeasuringpoint.SPDResourceContainerMeasuringPoin
  * Behavior to monitor the number of elements in a Elastic Infrastructure.
  *
  * The behavior creates Probes and Calculators for
- * {@link ResourceContainerMeasuringPoint}s. Beware it does *not* react to
- * {@link ResourceEnvironmentMeasuringPoint}s, as we cannot determine the target
- * group configuration from that measuring point.
+ * {@link SPDResourceContainerMeasuringPoint}s.
  *
- * For a {@link ResourceContainerMeasuringPoint}, the behavior creates a probe
- * and a calculator for the given resource container, iff the resource container
- * is {@code unit} in any of the given target configurations.
+ * For a {@link SPDResourceContainerMeasuringPoint}, the behavior creates a
+ * probe and a calculator for the given resource container, iff the resource
+ * container is {@code unit} in any of the given target configurations.
  *
  * The metric specification must be the base metric "number of resource
  * containers".
- *
- *
  *
  * @author Sarah Stieß
  *
