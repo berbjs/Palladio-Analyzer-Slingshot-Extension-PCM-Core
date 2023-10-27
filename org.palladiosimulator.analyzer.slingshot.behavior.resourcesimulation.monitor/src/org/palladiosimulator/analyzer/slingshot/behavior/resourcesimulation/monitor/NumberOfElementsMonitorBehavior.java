@@ -49,12 +49,6 @@ import org.palladiosimulator.spdmeasuringpoint.SPDResourceContainerMeasuringPoin
  * The metric specification must be the base metric "number of resource
  * containers".
  *
- * Beware : this behaviour is only a temporary workaround. In the future there
- * should be a afor a target group. In that way the modeller knows that the
- * measuring point is bound to the concepts that SPD contributes. In the current
- * way the modeller is unaware that the combination MP on the Resource Container
- * and the metric Number of Resource Container is valid only when the SPD
- * extension is active in Slingshot.
  *
  *
  * @author Sarah Stieß
