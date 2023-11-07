@@ -33,7 +33,8 @@ import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory
 import org.palladiosimulator.semanticspd.CompetingConsumersGroupCfg;
 import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ServiceGroupCfg;
-import org.palladiosimulator.spdmeasuringpoint.SPDAssemblyContextMeasuringPoint;
+import org.palladiosimulator.spdmeasuringpoint.CompetingConsumerGroupMeasuringPoint;
+import org.palladiosimulator.spdmeasuringpoint.ServiceGroupMeasuringPoint;
 
 /**
  *
@@ -41,15 +42,13 @@ import org.palladiosimulator.spdmeasuringpoint.SPDAssemblyContextMeasuringPoint;
  * Consumer Group.
  *
  * The behavior creates Probes and Calculators for
- * {@link SPDAssemblyContextMeasuringPoint}s.
- *
- * For an {@link SPDAssemblyContextMeasuringPoint}, the behavior creates a probe
- * and a calculator for the given assembly context, iff the resource container
- * is {@code unit} in any of the given target configurations.
+ * {@link CompetingConsumerGroupMeasuringPoint}s and
+ * {@link ServiceGroupMeasuringPoint}s, if semantic SPD configurations for the
+ * target groups exist.
  *
  * TODO fixme : Currently, the metric specification must be the base metric
- * "number of resource containers" which is semantically completly wron but
- * still works, becasuse its pain numbers.
+ * "number of resource containers" which is semantically completely wrong but
+ * still works, because its plain numbers.
  *
  *
  * @author Sarah Stieß
@@ -82,22 +81,27 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 		final MeasurementSpecification spec = m.getEntity();
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
 
-		if (measuringPoint instanceof SPDAssemblyContextMeasuringPoint) {
-			// Assmebly MP --> register probe for Target groups where assembly is unit
-			final SPDAssemblyContextMeasuringPoint assemblyContextMeasuringPoint = (SPDAssemblyContextMeasuringPoint) measuringPoint;
+		if (measuringPoint instanceof final ServiceGroupMeasuringPoint mp
+				&& MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
+						MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) { // TODO Fix Metric description
 
-			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
-					MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) { // TODO Fix Metric description
+			final Optional<Calculator> sgCalculator = regsterSGCalculator(mp);
 
-				final Set<CalculatorRegistered> calculatorRegisteredEvents = new HashSet<>();
+			if (sgCalculator.isPresent()) {
+				return Result.of(new CalculatorRegistered(sgCalculator.get()));
 
-				final Optional<Calculator> sgCalculator = regsterSGCalculator(assemblyContextMeasuringPoint);
-				final Optional<Calculator> ccgCalculator = registerCCGCalculator(assemblyContextMeasuringPoint);
+			}
+		}
 
-				sgCalculator.ifPresent((calc) -> calculatorRegisteredEvents.add(new CalculatorRegistered(calc)));
-				ccgCalculator.ifPresent((calc) -> calculatorRegisteredEvents.add(new CalculatorRegistered(calc)));
+		if (measuringPoint instanceof final CompetingConsumerGroupMeasuringPoint mp
+				&& MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
+						MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) { // TODO Fix Metric description
 
-				return Result.of(calculatorRegisteredEvents);
+			final Optional<Calculator> ccgCalculator = registerCCGCalculator(mp);
+
+			if (ccgCalculator.isPresent()) {
+				return Result.of(new CalculatorRegistered(ccgCalculator.get()));
+
 			}
 		}
 
@@ -112,11 +116,12 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	 * @return the calculator, iff it got registered
 	 */
 	private Optional<Calculator> registerCCGCalculator(
-			final SPDAssemblyContextMeasuringPoint assemblyContextMeasuringPoint) {
+			final CompetingConsumerGroupMeasuringPoint assemblyContextMeasuringPoint) {
 		final Optional<CompetingConsumersGroupCfg> competingConsumerGroupCfg = this.semanticConfiguration
 				.getTargetCfgs().stream().filter(cfg -> (cfg instanceof CompetingConsumersGroupCfg))
 				.map(eicfg -> ((CompetingConsumersGroupCfg) eicfg))
-				.filter(eicfg -> eicfg.getUnit().getId().equals(assemblyContextMeasuringPoint.getAssembly().getId()))
+				.filter(eicfg -> eicfg.getUnit().getId()
+						.equals(assemblyContextMeasuringPoint.getCompetingConsumerGroup().getUnitAssembly().getId()))
 				.findAny();
 
 		if (competingConsumerGroupCfg.isPresent()) {
@@ -134,11 +139,11 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	 * @param assemblyContextMeasuringPoint MP to register a calculator for
 	 * @return the calculator, iff it got registered
 	 */
-	private Optional<Calculator> regsterSGCalculator(
-			final SPDAssemblyContextMeasuringPoint assemblyContextMeasuringPoint) {
+	private Optional<Calculator> regsterSGCalculator(final ServiceGroupMeasuringPoint assemblyContextMeasuringPoint) {
 		final Optional<ServiceGroupCfg> serviceGroupCfg = this.semanticConfiguration.getTargetCfgs().stream()
 				.filter(cfg -> (cfg instanceof ServiceGroupCfg)).map(eicfg -> ((ServiceGroupCfg) eicfg))
-				.filter(eicfg -> eicfg.getUnit().getId().equals(assemblyContextMeasuringPoint.getAssembly().getId()))
+				.filter(eicfg -> eicfg.getUnit().getId()
+						.equals(assemblyContextMeasuringPoint.getServiceGroup().getUnitAssembly().getId()))
 				.findAny();
 
 		if (serviceGroupCfg.isPresent()) {

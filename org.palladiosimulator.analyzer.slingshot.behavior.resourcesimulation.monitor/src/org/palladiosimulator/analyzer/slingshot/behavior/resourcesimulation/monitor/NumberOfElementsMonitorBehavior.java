@@ -3,7 +3,6 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.mon
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -31,7 +30,7 @@ import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSet
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
 import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
-import org.palladiosimulator.spdmeasuringpoint.SPDResourceContainerMeasuringPoint;
+import org.palladiosimulator.spdmeasuringpoint.ElasticInfrastructureMeasuringPoint;
 
 /**
  *
@@ -76,24 +75,16 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 		final MeasurementSpecification spec = m.getEntity();
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
 
-		if (measuringPoint instanceof SPDResourceContainerMeasuringPoint) {
+		if (measuringPoint instanceof ElasticInfrastructureMeasuringPoint) {
 			// Container MP --> register probe for EI where container is unit
-			final SPDResourceContainerMeasuringPoint resourceContainerMeasuringPoint = (SPDResourceContainerMeasuringPoint) measuringPoint;
+			final ElasticInfrastructureMeasuringPoint resourceContainerMeasuringPoint = (ElasticInfrastructureMeasuringPoint) measuringPoint;
 
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) {
 
-				final Optional<ElasticInfrastructureCfg> elasticInfrastructureCfg = this.semanticConfiguration
-						.getTargetCfgs().stream().filter(cfg -> (cfg instanceof ElasticInfrastructureCfg))
-						.map(eicfg -> ((ElasticInfrastructureCfg) eicfg)).filter(eicfg -> eicfg.getUnit().getId()
-								.equals(resourceContainerMeasuringPoint.getResourceContainer().getId()))
-						.findAny();
-
-				if (elasticInfrastructureCfg.isPresent()) {
-					final Calculator calculator = this.setupNumberOfElementsCalculator(resourceContainerMeasuringPoint,
-							this.calculatorFactory, elasticInfrastructureCfg.get());
-					return Result.of(new CalculatorRegistered(calculator));
-				}
+				final Calculator calculator = this.setupNumberOfElementsCalculator(resourceContainerMeasuringPoint,
+						this.calculatorFactory, resourceContainerMeasuringPoint.getElasticInfrastructureCfg());
+				return Result.of(new CalculatorRegistered(calculator));
 			}
 		}
 
