@@ -5,7 +5,6 @@ import java.util.Map;
 
 import javax.inject.Inject;
 
-import org.eclipse.emf.ecore.EObject;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior.RootScenarioContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UsageModelPassedElement;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
@@ -20,7 +19,6 @@ import org.palladiosimulator.analyzer.slingshot.monitor.data.events.ProbeTaken;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited.MeasurementSpecificationVisited;
 import org.palladiosimulator.analyzer.slingshot.monitor.data.events.modelvisited.MonitorModelVisited;
 import org.palladiosimulator.analyzer.slingshot.monitor.utils.probes.EventCurrentSimulationTimeProbe;
-import org.palladiosimulator.commons.emfutils.EMFLoadHelper;
 import org.palladiosimulator.edp2.models.measuringpoint.MeasuringPoint;
 import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
@@ -28,6 +26,7 @@ import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.usagemodel.Start;
 import org.palladiosimulator.pcm.usagemodel.Stop;
 import org.palladiosimulator.pcm.usagemodel.UsageScenario;
+import org.palladiosimulator.pcmmeasuringpoint.UsageScenarioReference;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSets;
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
@@ -61,11 +60,11 @@ public class UsageScenarioResponseTimeMonitoringBehavior implements SimulationBe
 	public Result<CalculatorRegistered> onMeasurementSpecificationVisited(final MeasurementSpecificationVisited event) {
 		final MeasurementSpecification measurementSpecification = event.getEntity();
 		final MeasuringPoint measuringPoint = measurementSpecification.getMonitor().getMeasuringPoint();
-		final EObject eObject = EMFLoadHelper.loadAndResolveEObject(measuringPoint.getResourceURIRepresentation());
 
-		if (eObject instanceof UsageScenario && MetricDescriptionUtility.metricDescriptionIdsEqual(measurementSpecification.getMetricDescription(),
+		if (measuringPoint instanceof UsageScenarioReference
+				&& MetricDescriptionUtility.metricDescriptionIdsEqual(measurementSpecification.getMetricDescription(),
 				MetricDescriptionConstants.RESPONSE_TIME_METRIC)) {
-			final UsageScenario scenario = (UsageScenario) eObject;
+			final UsageScenario scenario = ((UsageScenarioReference) measuringPoint).getUsageScenario();
 			final UserProbes userProbes = new UserProbes();
 			this.userProbesMap.put(scenario.getId(), userProbes);
 
