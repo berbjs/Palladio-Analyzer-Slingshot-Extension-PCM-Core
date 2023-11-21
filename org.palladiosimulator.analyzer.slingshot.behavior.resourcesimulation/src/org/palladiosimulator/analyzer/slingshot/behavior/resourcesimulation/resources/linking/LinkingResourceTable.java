@@ -12,7 +12,7 @@ import org.palladiosimulator.pcm.resourceenvironment.ResourceContainer;
  * This table holds all the references to the linking resources, as well as the
  * ability to find the linking resource between two resource containers.
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku
  */
 public class LinkingResourceTable extends AbstractResourceTable<String, SimulatedLinkingResource> {
 
@@ -25,13 +25,35 @@ public class LinkingResourceTable extends AbstractResourceTable<String, Simulate
 		this.resources.put(linkingResource.getId(), new SimulatedLinkingResource(linkingResource));
 	}
 
-	public List<SimulatedLinkingResource> findLinkingResourceBetweenContainers(final ResourceContainer from, final ResourceContainer to) {
-		return this.resources.values().stream()
-				.filter(lk -> isConnectedBy(from, to, lk.getLinkingResource()))
+	public List<SimulatedLinkingResource> findLinkingResourceBetweenContainers(final ResourceContainer from,
+			final ResourceContainer to) {
+		return this.resources.values().stream().filter(lk -> isConnectedBy(from, to, lk.getLinkingResource()))
 				.collect(Collectors.toList());
 	}
 
-	private boolean isConnectedBy(final ResourceContainer from, final ResourceContainer to, final LinkingResource linkingResource) {
+	/**
+	 * Yields a SimulatedLinkingResource when at least one the ResourceContainers is
+	 * part of the linking resource. This allows to match a linking resource in some
+	 * use cases such as scaling in when one of the resource containers may have
+	 * been deleted.
+	 * 
+	 * @param from
+	 * @param to
+	 * @return true when one of the resource containers is contained.
+	 */
+	public List<SimulatedLinkingResource> findLinkingResourceWithAtLeastOneContainer(final ResourceContainer from,
+			final ResourceContainer to) {
+		return this.resources.values().stream().filter(lk -> isConnectedByEitherOne(from, to, lk.getLinkingResource()))
+				.collect(Collectors.toList());
+	}
+
+	private boolean isConnectedByEitherOne(final ResourceContainer from, final ResourceContainer to,
+			final LinkingResource linkingResource) {
+		return containerInLinkingResource(from, linkingResource) || containerInLinkingResource(to, linkingResource);
+	}
+
+	private boolean isConnectedBy(final ResourceContainer from, final ResourceContainer to,
+			final LinkingResource linkingResource) {
 		return containerInLinkingResource(from, linkingResource) && containerInLinkingResource(to, linkingResource);
 	}
 

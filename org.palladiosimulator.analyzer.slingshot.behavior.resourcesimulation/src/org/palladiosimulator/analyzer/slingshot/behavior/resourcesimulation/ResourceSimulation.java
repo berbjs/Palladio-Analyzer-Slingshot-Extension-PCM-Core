@@ -78,13 +78,13 @@ import de.uka.ipd.sdq.simucomframework.variables.converter.NumberConverter;
  * The resource simulation behavior initializes all the available resources on
  * start and will listen to requests for the simulation.
  *
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku
  */
 @OnEvent(when = SimulationFinished.class, then = {})
-@OnEvent(when = JobInitiated.class, then = { JobProgressed.class,
-		ActiveResourceStateUpdated.class, ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
-@OnEvent(when = JobProgressed.class, then = { AbstractJobEvent.class,
-		ActiveResourceStateUpdated.class, ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
+@OnEvent(when = JobInitiated.class, then = { JobProgressed.class, ActiveResourceStateUpdated.class,
+		ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
+@OnEvent(when = JobProgressed.class, then = { AbstractJobEvent.class, ActiveResourceStateUpdated.class,
+		ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
 @OnEvent(when = JobFinished.class, then = { ActiveResourceFinished.class,
 		CallOverWireSucceeded.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = PassiveResourceReleased.class, then = PassiveResourceAcquired.class, cardinality = EventCardinality.MANY)
@@ -122,7 +122,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	}
 
 	@Subscribe
-	public Result<AbstractSimulationEvent> onResourceDemandRequested(final ResourceDemandRequested resourceDemandRequested) {
+	public Result<AbstractSimulationEvent> onResourceDemandRequested(
+			final ResourceDemandRequested resourceDemandRequested) {
 		final ResourceDemandRequest request = resourceDemandRequested.getEntity();
 
 		if (request.getResourceType() == ResourceType.ACTIVE) {
@@ -157,23 +158,20 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 */
 	private JobInitiated initiateActiveResource(final ResourceDemandRequest request) {
 		final double demand = StackContext.evaluateStatic(
-				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand()
-						.getSpecification(),
+				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand().getSpecification(),
 				Double.class, request.getUser().getStack().currentStackFrame());
 
-		final AllocationContext context = this.allocation.getAllocationContexts_Allocation().stream()
-				.filter(c -> c.getAssemblyContext_AllocationContext().getId().equals(request.getAssemblyContext().getId()))
+		final AllocationContext context = this.allocation.getAllocationContexts_Allocation().stream().filter(
+				c -> c.getAssemblyContext_AllocationContext().getId().equals(request.getAssemblyContext().getId()))
 				.findFirst()
-				.orElseThrow(() -> new NoSuchElementException("No allocation context found which contains an assembly context with id #" + request.getAssemblyContext().getId()));
+				.orElseThrow(() -> new NoSuchElementException(
+						"No allocation context found which contains an assembly context with id #"
+								+ request.getAssemblyContext().getId()));
 
-		final Job job = ActiveJob.builder()
-				.withDemand(demand)
-				.withId(UUID.randomUUID().toString())
+		final Job job = ActiveJob.builder().withDemand(demand).withId(UUID.randomUUID().toString())
 				.withProcessingResourceType(
 						request.getParametricResourceDemand().getRequiredResource_ParametricResourceDemand())
-				.withRequest(request)
-				.withAllocationContext(context)
-				.build();
+				.withRequest(request).withAllocationContext(context).build();
 
 		return new JobInitiated(job, 0);
 	}
@@ -184,17 +182,13 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @return
 	 */
 	private WaitingJob createWaitingJob(final ResourceDemandRequest request, final PassiveResource passiveResource) {
-		//TODO::FIX ME!
+		// TODO::FIX ME!
 		final long demand = StackContext.evaluateStatic(
-				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand()
-						.getSpecification(),
+				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand().getSpecification(),
 				Long.class, request.getUser().getStack().currentStackFrame());
 
-		final WaitingJob waitingJob = WaitingJob.builder()
-				.withPassiveResource(passiveResource)
-				.withRequest(request)
-				.withDemand(demand)
-				.build();
+		final WaitingJob waitingJob = WaitingJob.builder().withPassiveResource(passiveResource).withRequest(request)
+				.withDemand(demand).build();
 		return waitingJob;
 	}
 
@@ -279,8 +273,9 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		}
 		if (job instanceof LinkingJob) {
 			final LinkingJob linkingJob = (LinkingJob) job;
-			final Optional<SimulatedLinkingResource> linkingResource = this.linkingResourceTable.getResourceById(linkingJob.getLinkingResource().getId());
-			
+			final Optional<SimulatedLinkingResource> linkingResource = this.linkingResourceTable
+					.getResourceById(linkingJob.getLinkingResource().getId());
+
 			if (linkingResource.isEmpty()) {
 				LOGGER.error("No such resource found!");
 				return Result.of();
@@ -328,51 +323,74 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 	@Subscribe
 	public Result<?> onModelAdjusted(final ModelAdjusted modelChanged) {
-		modelChanged.getChanges().stream()
-								 .filter(change -> change instanceof ResourceEnvironmentChange)
-								 .map(ResourceEnvironmentChange.class::cast)
-								 .forEach(this::changeActiveResourceTableFromModelChange);
+		modelChanged.getChanges().stream().filter(change -> change instanceof ResourceEnvironmentChange)
+				.map(ResourceEnvironmentChange.class::cast).forEach(this::changeActiveResourceTableFromModelChange);
 
 		return Result.empty();
 	}
 
 	private void changeActiveResourceTableFromModelChange(final ResourceEnvironmentChange change) {
-		change.getNewResourceContainers().forEach(newContainer ->
-			this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));
+		change.getNewResourceContainers()
+				.forEach(newContainer -> this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));
 
-		change.getDeletedResourceContainers().forEach(deletedContainer ->
-			this.resourceTable.removeActiveResources(deletedContainer));
+		change.getDeletedResourceContainers()
+				.forEach(deletedContainer -> this.resourceTable.removeActiveResources(deletedContainer));
 	}
 
 	@Subscribe
 	public Result<?> onCallOverWireRequested(final CallOverWireRequested externalCallRequested) {
-		final AllocationContext fromAlC = this.resourceEnvironmentAccessor
-				.findResourceContainerOfComponent(externalCallRequested.getRequest().getFrom()).orElseThrow();
-		final AllocationContext toAlC = this.resourceEnvironmentAccessor
-				.findResourceContainerOfComponent(externalCallRequested.getRequest().getTo()).orElseThrow();
+		final Optional<AllocationContext> fromAlC = this.resourceEnvironmentAccessor
+				.findResourceContainerOfComponent(externalCallRequested.getRequest().getFrom());
+		final Optional<AllocationContext> toAlC = this.resourceEnvironmentAccessor
+				.findResourceContainerOfComponent(externalCallRequested.getRequest().getTo());
 
-		/* Check if they are on the same resource; if so, no call over wire required */
-		if (fromAlC.getResourceContainer_AllocationContext().getId()
-				.equals(toAlC.getResourceContainer_AllocationContext().getId())) {
-			LOGGER.info("Both components lie on the same resource container -> no call over wire required.");
+		if (fromAlC.isPresent() && toAlC.isPresent()) {
+
+			/* Check if they are on the same resource; if so, no call over wire required */
+			if (fromAlC.get().getResourceContainer_AllocationContext().getId()
+					.equals(toAlC.get().getResourceContainer_AllocationContext().getId())) {
+				LOGGER.info("Both components lie on the same resource container -> no call over wire required.");
+				return Result.of(new CallOverWireSucceeded(externalCallRequested.getRequest()));
+			}
+
+			List<SimulatedLinkingResource> linkingResources = this.linkingResourceTable
+					.findLinkingResourceBetweenContainers(fromAlC.get().getResourceContainer_AllocationContext(),
+							toAlC.get().getResourceContainer_AllocationContext());
+
+			if (linkingResources.isEmpty()) {
+				/*
+				 * this allows to retrieve a linking resource that at least references one of
+				 * the RCs, assuming that the other one got deleted during scaling in
+				 */
+				linkingResources = this.linkingResourceTable.findLinkingResourceWithAtLeastOneContainer(
+						fromAlC.get().getResourceContainer_AllocationContext(),
+						toAlC.get().getResourceContainer_AllocationContext());
+			}
+
+			return Result.of(linkingResources.stream()
+
+					/* For now, it doesn't matter which linking resource we use */
+					.findAny()
+
+					/* For this one linking resource, create the job with the initial demand */
+					.map(lr -> createLinkingJobFromResource(lr.getLinkingResource(),
+							externalCallRequested.getRequest()))
+
+					/* If a linking resource exists, create a job for that */
+					.map(job -> new JobInitiated(job, 0.0))
+
+					/* Otherwise, the list is empty if they are not connected */
+					.orElseThrow(() -> new IllegalArgumentException(
+							"The resource containers of the assembly contexts are not directly connected by a linking resource")));
+
+		} else {
+			/*
+			 * Information loss: either the callee or caller does not exist anymore. -> lets
+			 * not simulate linking resource.
+			 */
 			return Result.of(new CallOverWireSucceeded(externalCallRequested.getRequest()));
 		}
 
-		final List<SimulatedLinkingResource> linkingResources = this.linkingResourceTable.findLinkingResourceBetweenContainers(fromAlC.getResourceContainer_AllocationContext(), toAlC.getResourceContainer_AllocationContext());
-		return Result.of(linkingResources.stream()
-
-				/* For now, it doesn't matter which linking resource we use */
-				.findAny()
-
-				/* For this one linking resource, create the job with the initial demand */
-				.map(lr -> createLinkingJobFromResource(lr.getLinkingResource(), externalCallRequested.getRequest()))
-				
-				/* If a linking resource exists, create a job for that */
-				.map(job -> new JobInitiated(job, 0.0))
-				
-				/* Otherwise, the list is empty if they are not connected */
-				.orElseThrow(() -> new IllegalArgumentException(
-						"The resource containers of the assembly contexts are not directly connected by a linking resource")));
 	}
 
 	/**
@@ -413,13 +431,15 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 */
 	private void setupAndSaveResourceModel() {
 		final ResourceSet rs = new ResourceSetImpl();
-		final Resource reResource = createResource("platform:/resource/RemoteMeasuringMosaic/rm_output.resourceenvironment", rs);
+		final Resource reResource = createResource(
+				"platform:/resource/RemoteMeasuringMosaic/rm_output.resourceenvironment", rs);
 		reResource.getContents().add(allocation.getTargetResourceEnvironment_Allocation());
 		saveResource(reResource);
 	}
 
 	private Resource createResource(final String outputFile, final ResourceSet rs) {
-		rs.getResourceFactoryRegistry().getExtensionToFactoryMap().put("resourceenvironment", new XMLResourceFactoryImpl());
+		rs.getResourceFactoryRegistry().getExtensionToFactoryMap().put("resourceenvironment",
+				new XMLResourceFactoryImpl());
 		final URI uri = URI.createURI(outputFile);
 		final Resource resource = rs.createResource(uri);
 		((ResourceImpl) resource).setIntrinsicIDToEObjectMap(new HashMap<>());
