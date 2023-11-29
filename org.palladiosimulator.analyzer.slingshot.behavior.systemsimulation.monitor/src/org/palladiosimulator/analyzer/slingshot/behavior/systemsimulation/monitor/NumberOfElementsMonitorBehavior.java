@@ -73,7 +73,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 
 	@Override
 	public boolean isActive() {
-		return this.semanticConfiguration != null;
+		return this.semanticConfiguration != null && !this.semanticConfiguration.getTargetCfgs().isEmpty();
 	}
 
 	@Subscribe

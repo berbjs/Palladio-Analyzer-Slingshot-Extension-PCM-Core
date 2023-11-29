@@ -3,6 +3,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.mon
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.inject.Inject;
@@ -67,7 +68,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 
 	@Override
 	public boolean isActive() {
-		return this.semanticConfiguration != null;
+		return this.semanticConfiguration != null && !this.semanticConfiguration.getTargetCfgs().isEmpty();
 	}
 
 	@Subscribe
@@ -82,9 +83,19 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) {
 
-				final Calculator calculator = this.setupNumberOfElementsCalculator(resourceContainerMeasuringPoint,
-						this.calculatorFactory, resourceContainerMeasuringPoint.getElasticInfrastructureCfg());
-				return Result.of(new CalculatorRegistered(calculator));
+				final Optional<ElasticInfrastructureCfg> serviceGroupCfg = this.semanticConfiguration.getTargetCfgs()
+						.stream()
+						.filter(cfg -> (cfg instanceof ElasticInfrastructureCfg))
+						.map(eicfg -> ((ElasticInfrastructureCfg) eicfg))
+						.filter(eicfg -> eicfg.getUnit().getId()
+								.equals(resourceContainerMeasuringPoint.getElasticInfrastructure().getUnit().getId()))
+						.findAny();
+
+				if (serviceGroupCfg.isPresent()) {
+					final Calculator calculator = this.setupNumberOfElementsCalculator(resourceContainerMeasuringPoint,
+							this.calculatorFactory, serviceGroupCfg.get());
+					return Result.of(new CalculatorRegistered(calculator));
+				}
 			}
 		}
 
@@ -111,6 +122,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	 */
 	public Calculator setupNumberOfElementsCalculator(final MeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory, final ElasticInfrastructureCfg eiCfg) {
+
 		this.probes.putIfAbsent(eiCfg.getUnit(), new NumberOfElementsInElasitcInfrastuctureProbe(eiCfg));
 		final NumberOfElementsInElasitcInfrastuctureProbe probe = this.probes.get(eiCfg.getUnit());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS_OVER_TIME,
