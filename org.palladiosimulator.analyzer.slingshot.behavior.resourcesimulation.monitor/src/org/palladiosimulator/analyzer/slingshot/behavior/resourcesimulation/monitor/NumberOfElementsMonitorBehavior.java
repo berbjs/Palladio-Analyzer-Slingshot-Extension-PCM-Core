@@ -26,37 +26,26 @@ import org.palladiosimulator.edp2.util.MetricDescriptionUtility;
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.resourceenvironment.ResourceContainer;
-import org.palladiosimulator.pcmmeasuringpoint.ResourceContainerMeasuringPoint;
-import org.palladiosimulator.pcmmeasuringpoint.ResourceEnvironmentMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSets;
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
 import org.palladiosimulator.semanticspd.Configuration;
 import org.palladiosimulator.semanticspd.ElasticInfrastructureCfg;
+import org.palladiosimulator.spdmeasuringpoint.ElasticInfrastructureMeasuringPoint;
 
 /**
  *
  * Behavior to monitor the number of elements in a Elastic Infrastructure.
  *
  * The behavior creates Probes and Calculators for
- * {@link ResourceContainerMeasuringPoint}s. Beware it does *not* react to
- * {@link ResourceEnvironmentMeasuringPoint}s, as we cannot determine the target
- * group configuration from that measuring point.
+ * {@link SPDResourceContainerMeasuringPoint}s.
  *
- * For a {@link ResourceContainerMeasuringPoint}, the behavior creates a probe
- * and a calculator for the given resource container, iff the resource container
- * is {@code unit} in any of the given target configurations.
+ * For a {@link SPDResourceContainerMeasuringPoint}, the behavior creates a
+ * probe and a calculator for the given resource container, iff the resource
+ * container is {@code unit} in any of the given target configurations.
  *
  * The metric specification must be the base metric "number of resource
  * containers".
- *
- * Beware : this behaviour is only a temporary workaround. In the future there
- * should be a afor a target group. In that way the modeller knows that the
- * measuring point is bound to the concepts that SPD contributes. In the current
- * way the modeller is unaware that the combination MP on the Resource Container
- * and the metric Number of Resource Container is valid only when the SPD
- * extension is active in Slingshot.
- *
  *
  * @author Sarah Stieß
  *
@@ -79,7 +68,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 
 	@Override
 	public boolean isActive() {
-		return this.semanticConfiguration != null;
+		return this.semanticConfiguration != null && !this.semanticConfiguration.getTargetCfgs().isEmpty();
 	}
 
 	@Subscribe
@@ -87,22 +76,24 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 		final MeasurementSpecification spec = m.getEntity();
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
 
-		if (measuringPoint instanceof ResourceContainerMeasuringPoint) {
+		if (measuringPoint instanceof ElasticInfrastructureMeasuringPoint) {
 			// Container MP --> register probe for EI where container is unit
-			final ResourceContainerMeasuringPoint resourceContainerMeasuringPoint = (ResourceContainerMeasuringPoint) measuringPoint;
+			final ElasticInfrastructureMeasuringPoint resourceContainerMeasuringPoint = (ElasticInfrastructureMeasuringPoint) measuringPoint;
 
 			if (MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
 					MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS)) {
 
-				final Optional<ElasticInfrastructureCfg> elasticInfrastructureCfg = this.semanticConfiguration
-						.getTargetCfgs().stream().filter(cfg -> (cfg instanceof ElasticInfrastructureCfg))
-						.map(eicfg -> ((ElasticInfrastructureCfg) eicfg)).filter(eicfg -> eicfg.getUnit().getId()
-								.equals(resourceContainerMeasuringPoint.getResourceContainer().getId()))
+				final Optional<ElasticInfrastructureCfg> serviceGroupCfg = this.semanticConfiguration.getTargetCfgs()
+						.stream()
+						.filter(cfg -> (cfg instanceof ElasticInfrastructureCfg))
+						.map(eicfg -> ((ElasticInfrastructureCfg) eicfg))
+						.filter(eicfg -> eicfg.getUnit().getId()
+								.equals(resourceContainerMeasuringPoint.getElasticInfrastructure().getUnit().getId()))
 						.findAny();
 
-				if (elasticInfrastructureCfg.isPresent()) {
+				if (serviceGroupCfg.isPresent()) {
 					final Calculator calculator = this.setupNumberOfElementsCalculator(resourceContainerMeasuringPoint,
-							this.calculatorFactory, elasticInfrastructureCfg.get());
+							this.calculatorFactory, serviceGroupCfg.get());
 					return Result.of(new CalculatorRegistered(calculator));
 				}
 			}
@@ -131,6 +122,7 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	 */
 	public Calculator setupNumberOfElementsCalculator(final MeasuringPoint measuringPoint,
 			final IGenericCalculatorFactory calculatorFactory, final ElasticInfrastructureCfg eiCfg) {
+
 		this.probes.putIfAbsent(eiCfg.getUnit(), new NumberOfElementsInElasitcInfrastuctureProbe(eiCfg));
 		final NumberOfElementsInElasitcInfrastuctureProbe probe = this.probes.get(eiCfg.getUnit());
 		return calculatorFactory.buildCalculator(MetricDescriptionConstants.NUMBER_OF_RESOURCE_CONTAINERS_OVER_TIME,

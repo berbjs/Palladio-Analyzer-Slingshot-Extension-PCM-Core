@@ -7,6 +7,6 @@ public class SystemModelMonitorModule extends AbstractSlingshotExtension {
 	@Override
 	protected void configure() {
 		install(OperationCallActionResponseTimeMonitoringBehavior.class);
+		install(NumberOfElementsMonitorBehavior.class);
 	}
-
 }
