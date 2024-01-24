@@ -34,6 +34,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.reso
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.PassiveResourceTable;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.SimplePassiveResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.AllocationChange;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.ResourceEnvironmentChange;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
@@ -322,9 +323,18 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 								 .map(ResourceEnvironmentChange.class::cast)
 								 .forEach(this::changeActiveResourceTableFromModelChange);
 
+		
+		modelChanged.getChanges().stream().filter(change -> change instanceof AllocationChange)
+								.map(AllocationChange.class::cast)
+								.forEach(this::changePassiveResources);
+		
 		return Result.empty();
 	}
 
+	private void changePassiveResources(AllocationChange allocationchange1) {
+		this.passiveResourceTable.buildPassiveResources(allocationchange1.getNewAllocationContexts());
+	}
+	
 	private void changeActiveResourceTableFromModelChange(final ResourceEnvironmentChange change) {
 		change.getNewResourceContainers().forEach(newContainer ->
 			this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));

@@ -1,5 +1,6 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.resources.IPassiveResource;
@@ -7,6 +8,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.enti
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.AbstractResourceTable;
 import org.palladiosimulator.pcm.allocation.Allocation;
 import org.palladiosimulator.pcm.allocation.AllocationContext;
+import org.palladiosimulator.pcm.allocation.util.AllocationSwitch;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.BasicComponent;
 import org.palladiosimulator.pcm.repository.PassiveResource;
@@ -92,5 +94,18 @@ public final class PassiveResourceTable
 			final PassiveResource passiveResource, final AssemblyContext assemblyContext) {
 		final PassiveResourceCompoundKey key = PassiveResourceCompoundKey.of(passiveResource, assemblyContext);
 		return this.getPassiveResource(key);
+	}
+
+	/**
+	 * Helper method to build PassiveResources for newly created allocation contexts.
+	 * 
+	 * @param newAllocations
+	 */
+	public void buildPassiveResources(List<AllocationContext> newAllocations) {
+		newAllocations.stream().map(AllocationContext::getAssemblyContext_AllocationContext)
+		.filter(allocationContext -> allocationContext
+				.getEncapsulatedComponent__AssemblyContext() instanceof BasicComponent)
+		.forEach(this::createPassiveResources);
+		
 	}
 }
