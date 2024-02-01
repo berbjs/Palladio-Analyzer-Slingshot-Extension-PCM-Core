@@ -157,7 +157,13 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 		private static RequestContext passedElement(final DESEvent desEvent) {
 			if (desEvent instanceof SEFFModelPassedElement<?>) {
 				final SEFFModelPassedElement<?> el = (SEFFModelPassedElement<?>) desEvent;
-				return new RequestContext(el.getContext().getRequestProcessingContext().getUser().getId());
+				
+				if(el.getContext().getCaller().isPresent()) {
+					return new RequestContext(el.getContext().getRequestProcessingContext().getUser().getId()+el.getContext().getCaller().get().hashCode());
+				} else {
+					return new RequestContext(el.getContext().getRequestProcessingContext().getUser().getId());	
+				}
+				
 			}
 			return RequestContext.EMPTY_REQUEST_CONTEXT;
 		}
