@@ -6,10 +6,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.emf.ecore.resource.ResourceSet;
 import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
+import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
 import org.eclipse.emf.ecore.xmi.XMLResource;
 import org.eclipse.emf.ecore.xmi.impl.XMLResourceFactoryImpl;
 import org.palladiosimulator.pcm.allocation.Allocation;
@@ -25,6 +27,8 @@ import org.palladiosimulator.pcm.resourceenvironment.ResourceEnvironment;
  */
 public final class ResourceUtils {
 
+	private static final Logger LOGGER = Logger.getLogger(ResourceUtils.class);
+
 	public static Resource createAndAddResource(final String outputFile, final String[] fileExtensions,
 			final ResourceSet rs) {
 		for (final String fileExt : fileExtensions) {
@@ -36,14 +40,15 @@ public final class ResourceUtils {
 		return resource;
 	}
 
-	public static void saveResource(final Resource resource) {
-		final Map<Object, Object> saveOptions = ((XMLResource) resource).getDefaultSaveOptions();
+	private static void saveResource(final Resource resource) {
+		final Map saveOptions = ((XMLResource) resource).getDefaultSaveOptions();
 		saveOptions.put(XMLResource.OPTION_CONFIGURATION_CACHE, Boolean.TRUE);
 		saveOptions.put(XMLResource.OPTION_USE_CACHED_LOOKUP_TABLE, new ArrayList<>());
+
 		try {
 			resource.save(saveOptions);
 		} catch (final IOException e) {
-			throw new RuntimeException(e);
+			LOGGER.error(e);
 		}
 	}
 
@@ -54,7 +59,8 @@ public final class ResourceUtils {
 
 		final List<String> seg = new ArrayList<String>(uri.segmentsList());
 		seg.add(position, fragment);
-		final URI newUri = URI.createHierarchicalURI(uri.scheme(), uri.authority(), uri.device(), seg.toArray(new String[0]), uri.query(), uri.fragment());
+		final URI newUri = URI.createHierarchicalURI(uri.scheme(), uri.authority(), uri.device(),
+				seg.toArray(new String[0]), uri.query(), uri.fragment());
 		return newUri;
 	}
 
@@ -95,4 +101,32 @@ public final class ResourceUtils {
 		repo.eResource().setURI(oldRepoUri);
 	}
 
+	/**
+	 *
+	 * Save a resource model to the given path. Beware this operation moves the
+	 * model to another resource, i.e. changes it!
+	 *
+	 * The path could be e.g.
+	 * "platform:/resource/RemoteMeasuringMosaic/rm_output.resourceenvironment"
+	 *
+	 * @param resEnv model to be saved.
+	 * @param path   location to safe the model at.
+	 */
+	public static void setupAndSaveResourceModel(final ResourceEnvironment resEnv, final String path) {
+
+		final ResourceSet rs = new ResourceSetImpl();
+		final Resource reResource = createResource(path, rs);
+		reResource.getContents().add(resEnv);
+		saveResource(reResource);
+
+	}
+
+	private static Resource createResource(final String outputFile, final ResourceSet rs) {
+		rs.getResourceFactoryRegistry().getExtensionToFactoryMap().put("resourceenvironment",
+				new XMLResourceFactoryImpl());
+		final URI uri = URI.createURI(outputFile);
+		final Resource resource = rs.createResource(uri);
+		((ResourceImpl) resource).setIntrinsicIDToEObjectMap(new HashMap<>());
+		return resource;
+	}
 }

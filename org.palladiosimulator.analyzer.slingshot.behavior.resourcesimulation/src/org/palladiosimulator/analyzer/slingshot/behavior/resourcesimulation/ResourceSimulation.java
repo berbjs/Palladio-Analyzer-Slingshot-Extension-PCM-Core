@@ -2,12 +2,8 @@ package org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation;
 
 import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.SINGLE;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
@@ -16,13 +12,6 @@ import java.util.UUID;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
-import org.eclipse.emf.common.util.URI;
-import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.resource.ResourceSet;
-import org.eclipse.emf.ecore.resource.impl.ResourceImpl;
-import org.eclipse.emf.ecore.resource.impl.ResourceSetImpl;
-import org.eclipse.emf.ecore.xmi.XMLResource;
-import org.eclipse.emf.ecore.xmi.impl.XMLResourceFactoryImpl;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.ActiveJob;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.Job;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.entities.jobs.LinkingJob;
@@ -45,6 +34,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.reso
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.PassiveResourceTable;
 import org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.resources.passive.SimplePassiveResource;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.ModelAdjusted;
+import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.AllocationChange;
 import org.palladiosimulator.analyzer.slingshot.behavior.spd.data.adjustment.ResourceEnvironmentChange;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.ResourceDemandRequest;
@@ -326,9 +316,18 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		modelChanged.getChanges().stream().filter(change -> change instanceof ResourceEnvironmentChange)
 				.map(ResourceEnvironmentChange.class::cast).forEach(this::changeActiveResourceTableFromModelChange);
 
+		
+		modelChanged.getChanges().stream().filter(change -> change instanceof AllocationChange)
+								.map(AllocationChange.class::cast)
+								.forEach(this::changePassiveResources);
+		
 		return Result.empty();
 	}
 
+	private void changePassiveResources(AllocationChange allocationchange1) {
+		this.passiveResourceTable.buildPassiveResources(allocationchange1.getNewAllocationContexts());
+	}
+	
 	private void changeActiveResourceTableFromModelChange(final ResourceEnvironmentChange change) {
 		change.getNewResourceContainers()
 				.forEach(newContainer -> this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));
@@ -419,42 +418,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 */
 	@Subscribe
 	public void onSimulationFinished(final SimulationFinished simulationFinished) {
-		setupAndSaveResourceModel();
-
 		this.resourceTable.clearResourcesFromJobs();
 		this.passiveResourceTable.clearResourcesFromJobs();
 		this.linkingResourceTable.clearResourcesFromJobs();
-	}
-
-	/*
-	 * Only for debugging!
-	 */
-	private void setupAndSaveResourceModel() {
-		final ResourceSet rs = new ResourceSetImpl();
-		final Resource reResource = createResource(
-				"platform:/resource/RemoteMeasuringMosaic/rm_output.resourceenvironment", rs);
-		reResource.getContents().add(allocation.getTargetResourceEnvironment_Allocation());
-		saveResource(reResource);
-	}
-
-	private Resource createResource(final String outputFile, final ResourceSet rs) {
-		rs.getResourceFactoryRegistry().getExtensionToFactoryMap().put("resourceenvironment",
-				new XMLResourceFactoryImpl());
-		final URI uri = URI.createURI(outputFile);
-		final Resource resource = rs.createResource(uri);
-		((ResourceImpl) resource).setIntrinsicIDToEObjectMap(new HashMap<>());
-		return resource;
-	}
-
-	private void saveResource(final Resource resource) {
-		final Map saveOptions = ((XMLResource) resource).getDefaultSaveOptions();
-		saveOptions.put(XMLResource.OPTION_CONFIGURATION_CACHE, Boolean.TRUE);
-		saveOptions.put(XMLResource.OPTION_USE_CACHED_LOOKUP_TABLE, new ArrayList<>());
-
-		try {
-			resource.save(saveOptions);
-		} catch (final IOException e) {
-			LOGGER.error(e);
-		}
 	}
 }
