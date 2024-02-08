@@ -3,6 +3,7 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation;
 import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.MANY;
 import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality.SINGLE;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,6 +23,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireSucceeded;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.RepositoryInterpretationInitiated;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequestAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFExternalActionCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
@@ -30,6 +32,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadba
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadbalancer.SystemLevelLoadBalancer;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.repository.SystemModelRepository;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserEntryRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserFinished;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
@@ -56,15 +60,16 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * model. It listens to events requesting to interpret the repository and
  * sometimes will result in a SEFF Interpretation request if there is a RDSeff.
  *
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku
  */
 @OnEvent(when = UserEntryRequested.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
 @OnEvent(when = RepositoryInterpretationInitiated.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFExternalActionCalled.class, then = CallOverWireRequested.class, cardinality = MANY)
-@OnEvent(when = CallOverWireSucceeded.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
+@OnEvent(when = CallOverWireSucceeded.class, then = {SEFFInterpretationProgressed.class, UserAborted.class}, cardinality = MANY)
 @OnEvent(when = CallOverWireAborted.class, then = CallOverWireRequested.class, cardinality = MANY)
 @OnEvent(when = ActiveResourceFinished.class, then = SEFFInterpretationProgressed.class, cardinality = MANY)
 @OnEvent(when = SEFFInfrastructureCalled.class, then = SEFFInterpretationProgressed.class, cardinality = SINGLE)
+@OnEvent(when = ResourceDemandRequestAborted.class, then = UserAborted.class, cardinality = SINGLE)
 public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(SystemSimulationBehavior.class);
@@ -264,7 +269,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		LOGGER.debug(String.format("Could not continue after %s to %s. BEWARE : untested edge case!!!",
 				CallOverWireSucceeded.class.getSimpleName(), entity.getRequiredRole().toString()));
 
-		return Result.of(new UserFinished(cowSucceeded.getRequest().getEntryRequest().getRequestFrom()
+		return Result.of(new UserAborted(cowSucceeded.getRequest().getEntryRequest().getRequestFrom()
 				.getRequestProcessingContext().getUserInterpretationContext()));
 	}
 
@@ -272,6 +277,44 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	public Result<?> onCallOverWireAborted(final CallOverWireAborted cowAborted) {
 		LOGGER.info("The call over wire was aborted, retry");
 		return requestCallOverWire(cowAborted.getRequest().getEntryRequest());
+	}
+
+	/**
+	 * The subscribe method handles the case when for any reason the resource demand
+	 * requested could not be handled. The main use case is: resources/assemblies
+	 * that previously existed, do not exist anymore, causing null-pointers when
+	 * accessing state.
+	 * 
+	 * @param demandRequestAborted
+	 * @return UserAborted event.
+	 */
+	@Subscribe
+	public Result<UserAborted> onResourceDemandRequestAborted(final ResourceDemandRequestAborted demandRequestAborted) {
+
+		return Result.of(new UserAborted(
+				findUserInterpretationContext(demandRequestAborted.getEntity().getSeffInterpretationContext())));
+
+	}
+
+	/**
+	 * Helper method to traverse the SeffInterpretationContext and find the
+	 * UserInterpretationContext.
+	 * 
+	 * @param seffContext
+	 * @return
+	 * @throws NoSuchElementException
+	 */
+	private UserInterpretationContext findUserInterpretationContext(final SEFFInterpretationContext seffContext)
+			throws NoSuchElementException {
+		if (seffContext.getRequestProcessingContext().getUserInterpretationContext() != null) {
+			return seffContext.getRequestProcessingContext().getUserInterpretationContext();
+		}
+		if (seffContext.getCaller().isPresent()) {
+			return findUserInterpretationContext(seffContext.getCaller().get());
+		} else if (seffContext.getParent().isPresent()) {
+			return findUserInterpretationContext(seffContext.getParent().get());
+		}
+		throw new NoSuchElementException("User Interpretation Context not found!");
 	}
 
 	/**

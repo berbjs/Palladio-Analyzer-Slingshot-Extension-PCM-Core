@@ -47,8 +47,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceAcquired;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.PassiveResourceReleased;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequested;
+import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ResourceDemandRequestAborted;
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractSimulationEvent;
-//import org.palladiosimulator.analyzer.slingshot.scalingpolicy.data.events.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationFinished;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
@@ -63,6 +63,7 @@ import org.palladiosimulator.pcm.resourceenvironment.LinkingResource;
 
 import de.uka.ipd.sdq.simucomframework.variables.StackContext;
 import de.uka.ipd.sdq.simucomframework.variables.converter.NumberConverter;
+import org.palladiosimulator.analyzer.slingshot.common.utils.*;
 
 /**
  * The resource simulation behavior initializes all the available resources on
@@ -72,18 +73,19 @@ import de.uka.ipd.sdq.simucomframework.variables.converter.NumberConverter;
  */
 @OnEvent(when = SimulationFinished.class, then = {})
 @OnEvent(when = JobInitiated.class, then = { JobProgressed.class, ActiveResourceStateUpdated.class,
-		ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
+		ResourceDemandCalculated.class, JobAborted.class }, cardinality = EventCardinality.MANY)
 @OnEvent(when = JobProgressed.class, then = { AbstractJobEvent.class, ActiveResourceStateUpdated.class,
-		ResourceDemandCalculated.class }, cardinality = EventCardinality.MANY)
+		ResourceDemandCalculated.class, JobAborted.class }, cardinality = EventCardinality.MANY)
 @OnEvent(when = JobFinished.class, then = { ActiveResourceFinished.class,
 		CallOverWireSucceeded.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = PassiveResourceReleased.class, then = PassiveResourceAcquired.class, cardinality = EventCardinality.MANY)
-@OnEvent(when = ResourceDemandRequested.class, then = { JobInitiated.class,
-		PassiveResourceAcquired.class }, cardinality = SINGLE)
+@OnEvent(when = ResourceDemandRequested.class, then = { JobInitiated.class, PassiveResourceAcquired.class,
+		JobAborted.class }, cardinality = SINGLE)
 @OnEvent(when = ModelAdjusted.class, then = {})
 @OnEvent(when = CallOverWireRequested.class, then = { JobInitiated.class,
 		CallOverWireSucceeded.class }, cardinality = EventCardinality.SINGLE)
-@OnEvent(when = JobAborted.class, then = CallOverWireAborted.class, cardinality = SINGLE)
+@OnEvent(when = JobAborted.class, then = { CallOverWireAborted.class,
+		ResourceDemandRequestAborted.class }, cardinality = SINGLE)
 public class ResourceSimulation implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(ResourceSimulation.class);
@@ -117,7 +119,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		final ResourceDemandRequest request = resourceDemandRequested.getEntity();
 
 		if (request.getResourceType() == ResourceType.ACTIVE) {
-			return Result.of(this.initiateActiveResource(request));
+			return this.initiateActiveResource(request);
 		}
 		return Result.of(this.initiatePassiveResource(request));
 	}
@@ -146,24 +148,29 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @param request
 	 * @return
 	 */
-	private JobInitiated initiateActiveResource(final ResourceDemandRequest request) {
+	private Result<AbstractSimulationEvent> initiateActiveResource(final ResourceDemandRequest request) {
 		final double demand = StackContext.evaluateStatic(
 				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand().getSpecification(),
 				Double.class, request.getUser().getStack().currentStackFrame());
 
-		final AllocationContext context = this.allocation.getAllocationContexts_Allocation().stream().filter(
+		final Optional<AllocationContext> context = this.allocation.getAllocationContexts_Allocation().stream().filter(
 				c -> c.getAssemblyContext_AllocationContext().getId().equals(request.getAssemblyContext().getId()))
-				.findFirst()
-				.orElseThrow(() -> new NoSuchElementException(
-						"No allocation context found which contains an assembly context with id #"
-								+ request.getAssemblyContext().getId()));
+				.findFirst();
+
+		if (context.isEmpty()) {
+			final Job job = ActiveJob.builder().withDemand(demand).withId(UUID.randomUUID().toString())
+					.withProcessingResourceType(
+							request.getParametricResourceDemand().getRequiredResource_ParametricResourceDemand())
+					.withRequest(request).build();
+			return Result.of(new JobAborted(job, 0));
+		}
 
 		final Job job = ActiveJob.builder().withDemand(demand).withId(UUID.randomUUID().toString())
 				.withProcessingResourceType(
 						request.getParametricResourceDemand().getRequiredResource_ParametricResourceDemand())
-				.withRequest(request).withAllocationContext(context).build();
+				.withRequest(request).withAllocationContext(context.get()).build();
 
-		return new JobInitiated(job, 0);
+		return Result.of(new JobInitiated(job, 0));
 	}
 
 	/**
@@ -194,8 +201,9 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 			final Optional<ActiveResource> activeResource = this.resourceTable.getActiveResource(id);
 
 			if (activeResource.isEmpty()) {
-				LOGGER.error("No such active resource found! " + id.toString());
-				return Result.of();
+				LOGGER.warn(
+						"No such resource found! Job cannot be initiated, instead abort. Resource Id:" + id.toString());
+				return Result.of(new JobAborted(activeJob, 0, "active resource is not found, may have been deleted"));
 			}
 
 			return Result.of(activeResource.get().onJobInitiated(jobInitiated));
@@ -206,8 +214,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 					.getResourceById(linkingJob.getLinkingResource().getId());
 
 			if (linkingResource.isEmpty()) {
-				LOGGER.error("No such resource found!");
-				return Result.of();
+				LOGGER.warn("No such resource found! Job cannot be initiated, instead abort.");
+				return Result.of(new JobAborted(linkingJob, 0, "linking resource is not found"));
 			}
 
 			LOGGER.info("A linking job has started with id " + linkingJob.getId() + " and demand (without latency) "
@@ -218,6 +226,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 			return Result.of(jobs);
 		}
 
+		// TODO:: Erroneous Behavior: Wrapper Event that nests the event that can't be
+		// handled as Entity.
 		return Result.empty();
 	}
 
@@ -255,8 +265,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 			final Optional<ActiveResource> activeResource = this.resourceTable.getActiveResource(id);
 
 			if (activeResource.isEmpty()) {
-				LOGGER.error("No such resource found!");
-				return Result.of();
+				LOGGER.warn("No such resource found!, Job cannot progress, instead must be aborted.");
+				return Result.of(new JobAborted(activeJob, 0, "active resource is not found, may have been deleted"));
 			}
 
 			return Result.of(activeResource.get().onJobProgressed(jobProgressed));
@@ -267,8 +277,8 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 					.getResourceById(linkingJob.getLinkingResource().getId());
 
 			if (linkingResource.isEmpty()) {
-				LOGGER.error("No such resource found!");
-				return Result.of();
+				LOGGER.warn("No such resource found!, Job cannot progress, instead must be aborted!");
+				return Result.of(new JobAborted(linkingJob, 0, "linking resource is not found"));
 			}
 
 			LOGGER.info("A linking job has been progressed: " + linkingJob.getId() + " with demand "
@@ -303,6 +313,12 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 	@Subscribe
 	public Result<?> onJobAborted(final JobAborted aborted) {
+		if (aborted.getEntity() instanceof ActiveJob) {
+
+			final ActiveJob activeJob = (ActiveJob) aborted.getEntity();
+			return Result.of(new ResourceDemandRequestAborted(activeJob.getRequest()));
+
+		}
 		if (aborted.getEntity() instanceof LinkingJob) {
 			final LinkingJob linkingJob = (LinkingJob) aborted.getEntity();
 			return Result.of(new CallOverWireAborted(linkingJob.getRequest()));
@@ -316,18 +332,16 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		modelChanged.getChanges().stream().filter(change -> change instanceof ResourceEnvironmentChange)
 				.map(ResourceEnvironmentChange.class::cast).forEach(this::changeActiveResourceTableFromModelChange);
 
-		
 		modelChanged.getChanges().stream().filter(change -> change instanceof AllocationChange)
-								.map(AllocationChange.class::cast)
-								.forEach(this::changePassiveResources);
-		
+				.map(AllocationChange.class::cast).forEach(this::changePassiveResources);
+
 		return Result.empty();
 	}
 
 	private void changePassiveResources(AllocationChange allocationchange1) {
 		this.passiveResourceTable.buildPassiveResources(allocationchange1.getNewAllocationContexts());
 	}
-	
+
 	private void changeActiveResourceTableFromModelChange(final ResourceEnvironmentChange change) {
 		change.getNewResourceContainers()
 				.forEach(newContainer -> this.resourceTable.createActiveResourcesFromResourceContainer(newContainer));
@@ -346,6 +360,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		if (fromAlC.isPresent() && toAlC.isPresent()) {
 
 			/* Check if they are on the same resource; if so, no call over wire required */
+
 			if (fromAlC.get().getResourceContainer_AllocationContext().getId()
 					.equals(toAlC.get().getResourceContainer_AllocationContext().getId())) {
 				LOGGER.info("Both components lie on the same resource container -> no call over wire required.");
