@@ -386,13 +386,12 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 		context.getUser().getStack().removeStackFrame();
 //		this.startUsageSimulation(resultSet);
 		/*
-		 * Error in Semantics before with the above statement: - For OpenWorkloads,
-		 * another user will be spawned which is already done by the
-		 * InterArrivalUserInitiated event. - For ClosedWorkloads, old users will be
-		 * replaced with new users, which is not exactly "re-entering" and it is harder
-		 * to let them only spawn after a ThinkTime. Instead, only for
-		 * ClosedWorkloadUsers, let them re-enter the system after the ThinkTime. For
-		 * OpenWorkloadUsers, this is already handled in the other event.
+		 * Error in Semantics before with the above statement:
+		 *  - For OpenWorkloads, another user will be spawned which is already done by the InterArrivalUserInitiated event.
+		 *  - For ClosedWorkloads, old users will be replaced with new users, which is not exactly "re-entering" and it is
+		 *    harder to let them only spawn after a ThinkTime.
+		 * Instead, only for ClosedWorkloadUsers, let them re-enter the system after the ThinkTime.
+		 * For OpenWorkloadUsers, this is already handled in the other event.
 		 */
 		if (context instanceof ClosedWorkloadUserInterpretationContext) {
 			final ClosedWorkloadUserInterpretationContext closedContext = (ClosedWorkloadUserInterpretationContext) context;

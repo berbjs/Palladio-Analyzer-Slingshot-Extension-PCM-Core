@@ -4,7 +4,6 @@ import static org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.e
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -119,7 +118,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		final ResourceDemandRequest request = resourceDemandRequested.getEntity();
 
 		if (request.getResourceType() == ResourceType.ACTIVE) {
-			return this.initiateActiveResource(request);
+			return Result.of(initiateActiveResource(request));
 		}
 		return Result.of(this.initiatePassiveResource(request));
 	}
@@ -148,7 +147,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 	 * @param request
 	 * @return
 	 */
-	private Result<AbstractSimulationEvent> initiateActiveResource(final ResourceDemandRequest request) {
+	private Set<AbstractSimulationEvent> initiateActiveResource(final ResourceDemandRequest request) {
 		final double demand = StackContext.evaluateStatic(
 				request.getParametricResourceDemand().getSpecification_ParametericResourceDemand().getSpecification(),
 				Double.class, request.getUser().getStack().currentStackFrame());
@@ -162,7 +161,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 					.withProcessingResourceType(
 							request.getParametricResourceDemand().getRequiredResource_ParametricResourceDemand())
 					.withRequest(request).build();
-			return Result.of(new JobAborted(job, 0));
+			return Set.of(new JobAborted(job, 0));
 		}
 
 		final Job job = ActiveJob.builder().withDemand(demand).withId(UUID.randomUUID().toString())
@@ -170,7 +169,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 						request.getParametricResourceDemand().getRequiredResource_ParametricResourceDemand())
 				.withRequest(request).withAllocationContext(context.get()).build();
 
-		return Result.of(new JobInitiated(job, 0));
+		return Set.of(new JobInitiated(job, 0));
 	}
 
 	/**
