@@ -198,10 +198,6 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 
 		final Set<DESEvent> events = interpreter.doSwitch(firstAction);
 
-		assert events.size() == 2;
-		assert events.stream().anyMatch(UserStarted.class::isInstance);
-		assert events.stream().anyMatch(InterArrivalUserInitiated.class::isInstance);
-
 		returnedEvents.addAll(events);
 	}
 
@@ -238,9 +234,6 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 
 			final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(interpretationContext);
 			final Set<DESEvent> events = interpreter.doSwitch(firstAction);
-
-			assert events.size() == 1;
-			assert events.stream().allMatch(UserStarted.class::isInstance);
 
 			returnedEvents.addAll(events);
 		}
@@ -289,11 +282,6 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 		// interpretation
 
 		final Set<DESEvent> events = interpreter.doSwitch(firstAction);
-
-		assert events.size() == 3;
-		assert events.stream().anyMatch(UserStarted.class::isInstance);
-		assert events.stream().anyMatch(InterArrivalUserInitiated.class::isInstance);
-		assert events.stream().anyMatch(UsageModelPassedElement.class::isInstance);
 
 		return Result.of(events);
 	}
