@@ -26,8 +26,6 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInfrastructureCalled;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.interpreters.RepositoryInterpreter;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadbalancer.EquallyDistributedSystemLevelLoadBalancer;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.loadbalancer.SystemLevelLoadBalancer;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.repository.SystemModelRepository;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserEntryRequested;
@@ -71,13 +69,11 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 	private final Allocation allocationModel;
 	private final SystemModelRepository systemRepository;
-	private final SystemLevelLoadBalancer loadBalancer;
 
 	@Inject
 	public SystemSimulationBehavior(final Allocation allocationModel, final SystemModelRepository repository) {
 		this.allocationModel = allocationModel;
 		this.systemRepository = repository;
-		this.loadBalancer = new EquallyDistributedSystemLevelLoadBalancer(allocationModel);
 		this.init();
 	}
 
@@ -106,11 +102,9 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		final Optional<ServiceEffectSpecification> seffFromProvidedRole = this.systemRepository
 				.getDelegatedComponentSeff(connectedProvidedDelegationConnector.get(), operationSignature);
-//		final Optional<AssemblyContext> assemblyContextByProvidedRole = this.systemRepository
-//				.findAssemblyContextByProvidedRole(
-//						connectedProvidedDelegationConnector.get().getInnerProvidedRole_ProvidedDelegationConnector());
-		final Optional<AssemblyContext> assemblyContextByProvidedRole = this.loadBalancer.getAssemblyContext(
-				connectedProvidedDelegationConnector.get().getInnerProvidedRole_ProvidedDelegationConnector());
+		final Optional<AssemblyContext> assemblyContextByProvidedRole = this.systemRepository
+				.findAssemblyContextByProvidedRole(
+						connectedProvidedDelegationConnector.get().getInnerProvidedRole_ProvidedDelegationConnector());
 
 		LOGGER.debug("SEFF? " + seffFromProvidedRole.isPresent() + " | AssemblyContext? "
 				+ assemblyContextByProvidedRole.isPresent());
