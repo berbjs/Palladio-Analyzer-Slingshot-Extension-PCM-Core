@@ -2,32 +2,36 @@ package org.palladiosimulator.analyzer.slingshot.behavior.usageevolution.evolver
 
 import java.util.Optional;
 
-import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 import org.scaledl.usageevolution.Usage;
 
 import tools.descartes.dlim.generator.ModelEvaluator;
 
+/**
+ *
+ * Usage evolver that stretches the DLIM to the entire Simulation time.
+ *
+ * Based on
+ * {@code org.palladiosimulator.simulizar.usagemodel.StretchedUsageEvolver}
+ *
+ * @author Sarah Stieß
+ *
+ */
 public class StretchedUsageEvolver extends AbstractUsageEvolver {
 
-	// Stretching factor.
+	/** Stretching factor. */
 	private final double timeFactor;
 
-	// Value subtracted for evaluation of last interval
+	/** Value subtracted for evaluation of last interval */
 	private final static double DELTA = 0.000001;
 
 	/**
-	 * Creates the stretching usage evolver.
+	 * Creates a stretching usage evolver.
 	 *
-	 * @param rtState         The SimuLizar runtime state.
-	 * @param firstOccurrence The first point in time at which the usage evolution
-	 *                        should be executed.
-	 * @param delay           The repeating interval in which usage evolution should
-	 *                        be executed.
-	 * @param evolvedScenario The scenario evolved by <code>this</code>.
+	 * @param usage      the usage to be evolved.
+	 * @param maxSimTime duration to stretch up to. Must not be empty.
 	 */
-	public StretchedUsageEvolver(final UsageScenario evolvedScenario, final Usage usage,
-			final Optional<Double> maxSimTime) {
-		super(evolvedScenario, usage);
+	public StretchedUsageEvolver(final Usage usage, final Optional<Double> maxSimTime) {
+		super(usage);
 		if (maxSimTime.isEmpty()) {
 			throw new IllegalArgumentException(
 					"Initializing a streched usage evolver requires a specified maximum simulation time");

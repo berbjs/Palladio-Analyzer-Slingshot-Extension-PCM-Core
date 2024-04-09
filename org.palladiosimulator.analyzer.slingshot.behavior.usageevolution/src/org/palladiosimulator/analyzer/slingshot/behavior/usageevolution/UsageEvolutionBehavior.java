@@ -22,7 +22,6 @@ import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehavio
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
-import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 import org.scaledl.usageevolution.Usage;
 import org.scaledl.usageevolution.UsageEvolution;
 
@@ -44,7 +43,7 @@ public class UsageEvolutionBehavior implements SimulationBehaviorExtension {
 
 	private final UsageEvolution usageEvolutionModel;
 
-	private final Map<UsageScenario, AbstractUsageEvolver> usage2evolver;
+	private final Map<Usage, AbstractUsageEvolver> usage2evolver;
 
 	private final Optional<Double> maxDuration;
 
@@ -68,20 +67,18 @@ public class UsageEvolutionBehavior implements SimulationBehaviorExtension {
 		final Set<IntervalPassed> events = new HashSet<>();
 
 		for (final Usage usage : this.usageEvolutionModel.getUsages()) {
-			final UsageScenario scenario = usage.getScenario();
 			AbstractUsageEvolver evolver;
 			if (usage.isRepeatingPattern()) {
-				evolver = new LoopingUsageEvolver(scenario, usage);
+				evolver = new LoopingUsageEvolver(usage);
 			} else {
-				evolver = new StretchedUsageEvolver(scenario, usage, maxDuration);
-				// SimuLizar also stretched the update interval, but i think that moot
+				evolver = new StretchedUsageEvolver(usage, maxDuration);
+				// SimuLizar also stretched the update interval, but i think thats moot
 			}
 
-			usage2evolver.put(scenario, evolver);
+			usage2evolver.put(usage, evolver);
 
-			events.add(new IntervalPassed(usage.getEvolutionStepWidth(), scenario)); // TODO do i need to strech the
-																						// intervall in
-																			// case of a streched evolver?
+			// schedule at 0 to evolve load right away.
+			events.add(new IntervalPassed(0, usage));
 		}
 
 		return Result.of(events);
@@ -90,13 +87,12 @@ public class UsageEvolutionBehavior implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<?> onIntervalPassed(final IntervalPassed intervalPassed) {
 
-		// get scenario and/or Workload
-		final UsageScenario scenario = intervalPassed.getScenario();
+		final Usage usage = intervalPassed.getUsage();
 
-		final AbstractUsageEvolver evolver = usage2evolver.get(scenario);
+		final AbstractUsageEvolver evolver = usage2evolver.get(usage);
 		evolver.triggerInternal(intervalPassed.time());
 
-		return Result.of(intervalPassed);
+		return Result.of(new IntervalPassed(usage.getEvolutionStepWidth(), usage));
 	}
 
 }

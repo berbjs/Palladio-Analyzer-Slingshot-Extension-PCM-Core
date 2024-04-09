@@ -1,19 +1,19 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.usageevolution.events;
 
 import org.palladiosimulator.analyzer.slingshot.common.events.AbstractSimulationEvent;
-import org.palladiosimulator.pcm.usagemodel.UsageScenario;
+import org.scaledl.usageevolution.Usage;
 
 public class IntervalPassed extends AbstractSimulationEvent {
 
-	private final UsageScenario scenario;
+	private final Usage usage;
 
-	public IntervalPassed(final double interval, final UsageScenario scenario) {
+	public IntervalPassed(final double interval, final Usage usage) {
 		super(interval);
-		this.scenario = scenario;
+		this.usage = usage;
 	}
 
-	public UsageScenario getScenario() {
-		return scenario;
+	public Usage getUsage() {
+		return usage;
 	}
 
 }

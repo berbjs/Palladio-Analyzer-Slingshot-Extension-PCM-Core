@@ -1,15 +1,14 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.usageevolution.evolver;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.palladiosimulator.pcm.core.PCMRandomVariable;
 import org.palladiosimulator.pcm.parameter.VariableCharacterisation;
 import org.palladiosimulator.pcm.usagemodel.ClosedWorkload;
 import org.palladiosimulator.pcm.usagemodel.OpenWorkload;
-import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 import org.palladiosimulator.pcm.usagemodel.Workload;
 import org.scaledl.usageevolution.Usage;
 import org.scaledl.usageevolution.WorkParameterEvolution;
@@ -21,86 +20,52 @@ import tools.descartes.dlim.generator.ModelEvaluator;
  * Usage evolver which updates the workload according to a Usage Evolution
  * model.
  *
- * @author Sarah Stieß, based on {@code PeriodicallyTriggeredUsageEvolver}
+ * Based on
+ * {@code org.palladiosimulator.simulizar.usagemodel.PeriodicallyTriggeredUsageEvolver}
+ *
+ * @author Sarah Stieß
  *
  */
 public abstract class AbstractUsageEvolver {
 
 	static final Logger LOGGER = Logger.getLogger(AbstractUsageEvolver.class);
 
-	protected final UsageScenario evolvedScenario;
-
-	private final Map<Usage, ModelEvaluator> cachedLoadEvaluators = new HashMap<Usage, ModelEvaluator>();
-
-	private final Map<Usage, Map<VariableCharacterisation, ModelEvaluator>> cachedWorkEvaluators = new HashMap<Usage, Map<VariableCharacterisation, ModelEvaluator>>();
+	private final Optional<ModelEvaluator> loadEvaluator;
+	private final Map<VariableCharacterisation, ModelEvaluator> workEvaluators = new HashMap<VariableCharacterisation, ModelEvaluator>();
 
 	private final Usage usage;
 
 
 	/**
-	 * Constructs the looping usage evolver.
+	 * Constructs a usage evolver.
 	 *
-	 * @param rtState         SimuLizar runtime state.
-	 * @param firstOccurrence First point in time at which the evolver should evolve
-	 *                        the load.
-	 * @param delay           The interval in which the evolver should evolve the
-	 *                        load. -- TODO not needed?
-	 * @param evolvedScenario The evolved scenario.
+	 * @param usage the usage to be evolved. Must not be null.
 	 */
-	public AbstractUsageEvolver(final UsageScenario evolvedScenario, final Usage usage) {
-		this.usage = usage;
-		this.evolvedScenario = evolvedScenario;
-	}
-
-	/**
-	 * Get the load evaluator for <code>this</code>.
-	 *
-	 * @return The load evaluator.
-	 */
-	protected ModelEvaluator getLoadEvaluator() {
-		final Usage usage = this.getCorrespondingUsage();
-		ModelEvaluator evaluator = this.cachedLoadEvaluators.get(usage);
-		if (evaluator == null) {
-			final Sequence loadEvolutionSequence = usage.getLoadEvolution();
-			if (loadEvolutionSequence != null) {
-				evaluator = new ModelEvaluator(loadEvolutionSequence);
-				this.cachedLoadEvaluators.put(usage, evaluator);
-			}
+	public AbstractUsageEvolver(final Usage usage) {
+		if (usage == null) {
+			throw new IllegalArgumentException("Usage is null, but must not be.");
 		}
-		return evaluator;
+
+		this.usage = usage;
+
+		final Sequence loadEvolutionSequence = usage.getLoadEvolution();
+		if (loadEvolutionSequence != null) {
+			this.loadEvaluator = Optional.of(new ModelEvaluator(loadEvolutionSequence));
+		} else {
+			this.loadEvaluator = Optional.empty();
+		}
+
+		initWorkEvaluators();
+
 	}
 
 	/**
-	 * Get the Usage updated by <code>this</code>.
-	 *
-	 * @return the Usage updated by <code>this</code>.
+	 * Creates {@code ModelEvaluator}s
 	 */
-	protected Usage getCorrespondingUsage() {
-		return this.usage;
-	}
+	protected void initWorkEvaluators() {
 
-	/**
-	 * Gets all the Work Evaluators for the Work Parameter evolutions of
-	 * <code>this</code>.
-	 *
-	 * @return The Work Evaluators for the Work Parameter evolutions of
-	 *         <code>this</code>.
-	 */
-	protected Map<VariableCharacterisation, ModelEvaluator> getWorkEvaluators() {
-		// TODO: consider optimizing this by changing workEvaluators to be an instance
-		// variable that
-		// is lazily initialized by this call. Must first determine whether this has
-		// side
-		// effects on the simulation.
+		if (usage.getWorkEvolutions() != null) {
 
-		// Build the hashmap from work parameters of the first usage in the usage
-		// evolution
-		// and to their corresponding model evaluators
-		final Usage usage = this.getCorrespondingUsage();
-		Map<VariableCharacterisation, ModelEvaluator> workEvaluators = this.cachedWorkEvaluators.get(usage);
-		if (workEvaluators == null) {
-			if (usage != null && usage.getWorkEvolutions() != null && usage.getWorkEvolutions().size() > 0) {
-				workEvaluators = new HashMap<VariableCharacterisation, ModelEvaluator>();
 				for (final WorkParameterEvolution workParam : usage.getWorkEvolutions()) {
 					final VariableCharacterisation varChar = workParam.getVariableCharacterisation();
 					final Sequence paramSequence = workParam.getEvolution();
@@ -116,49 +81,22 @@ public abstract class AbstractUsageEvolver {
 					// Add parameter and model evaluator for the work parameter
 					workEvaluators.put(varChar, new ModelEvaluator(paramSequence));
 				}
-				this.cachedWorkEvaluators.put(usage, workEvaluators);
-			} else {
-				workEvaluators = Collections.emptyMap();
 			}
-		}
 
-		return workEvaluators;
 	}
 
 	/**
-	 *
 	 * Actually evolves the load.
-	 *
-	 *
 	 */
 	public void triggerInternal(final double time) {
 
-		// First, evolve load if load evaluator exists
-		final ModelEvaluator loadEvaluator = this.getLoadEvaluator();
-
-		if (loadEvaluator != null) {
-			this.evolveLoad(loadEvaluator, time);
-		}
+		loadEvaluator.ifPresent(evaluator -> this.evolveLoad(evaluator, time));
 
 		// Then, iterate through work parameters to evolve
-		final Map<VariableCharacterisation, ModelEvaluator> workEvaluators = this.getWorkEvaluators();
-		for (final VariableCharacterisation workParam : workEvaluators.keySet()) {
+		for (final VariableCharacterisation workParam : this.workEvaluators.keySet()) {
 			this.evolveWork(workParam, workEvaluators.get(workParam), time);
 		}
 	}
-
-	/**
-	 * Asssumption : in SimuLizar this was necessary, because each user got their
-	 * private copy of the PCM models. Thus, it's not needed anymore with Slingshot.
-	 *
-	 * @param workParam
-	 * @return
-	 */
-//	private VariableCharacterisation getGlobalWorkParameter(final VariableCharacterisation workParam) {
-//		final VariableCharacterisation globalWorkParam = (VariableCharacterisation) pcmPartition.getResourceSet()
-//				.getEObject(EcoreUtil.getURI(workParam), false);
-//		return globalWorkParam;
-//	}
 
 	/**
 	 * The length of <code>this</code>' DLIM sequence.
@@ -166,7 +104,7 @@ public abstract class AbstractUsageEvolver {
 	 * @return The length of <code>this</code>' DLIM sequence.
 	 */
 	protected double getDLIMFinalDuration() {
-		return this.getCorrespondingUsage().getLoadEvolution().getFinalDuration();
+		return this.usage.getLoadEvolution().getFinalDuration();
 	}
 
 	/**
@@ -178,7 +116,7 @@ public abstract class AbstractUsageEvolver {
 	protected void evolveLoad(final ModelEvaluator loadEvaluator, final double time) {
 
 		double newRate = this.getNewRate(loadEvaluator, time);
-		final Workload wl = this.getCorrespondingUsage().getScenario().getWorkload_UsageScenario();
+		final Workload wl = this.usage.getScenario().getWorkload_UsageScenario();
 		if (wl != null) {
 			if (wl instanceof OpenWorkload) {
 				final PCMRandomVariable openwl = ((OpenWorkload) wl).getInterArrivalTime_OpenWorkload();
@@ -194,9 +132,9 @@ public abstract class AbstractUsageEvolver {
 
 				final String newRateStr = Double.toString(newRate);
 				if (newRateStr.equals(openwl.getSpecification())) {
-					LOGGER.warn("Inter arrival time is still: " + newRateStr);
+					LOGGER.debug("Inter arrival time is still: " + newRateStr);
 				} else {
-					LOGGER.warn(
+					LOGGER.debug(
 							"Changing inter arrival time from: " + openwl.getSpecification() + " to :" + newRateStr);
 					openwl.setSpecification(newRateStr);
 				}

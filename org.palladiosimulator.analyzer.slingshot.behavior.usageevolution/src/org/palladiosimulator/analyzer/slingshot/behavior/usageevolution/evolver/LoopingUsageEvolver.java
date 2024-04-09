@@ -1,41 +1,34 @@
 package org.palladiosimulator.analyzer.slingshot.behavior.usageevolution.evolver;
 
 import org.apache.log4j.Logger;
-import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 import org.scaledl.usageevolution.Usage;
 
 import tools.descartes.dlim.generator.ModelEvaluator;
 
 /**
- * Looping usage evolver. Assumes that the time unit of the DLIM sequence and
+ *
+ * Usage evolver that assumes that the time unit of the DLIM sequence and
  * simulation are equivalent. Repeats the DLIM sequence once its end has been
  * reached.
  *
- * @author stier
+ * Based on
+ * {@code org.palladiosimulator.simulizar.usagemodel.LoopingUsageEvolver}
+ *
+ * @author Sarah Stieß
  *
  */
 public class LoopingUsageEvolver extends AbstractUsageEvolver {
 
 	static final Logger LOGGER = Logger.getLogger(LoopingUsageEvolver.class);
 
-	// Assumed this is an offset from previous iteration, but that makes no sense
-	// because that is already covered with the floor mod. */
-	// private double simulationTimeOffset;
-
 	/**
-	 * Constructs the looping usage evolver.
+	 * Constructs a looping usage evolver.
 	 *
-	 * @param rtState         SimuLizar runtime state.
-	 * @param firstOccurrence First point in time at which the evolver should evolve
-	 *                        the load.
-	 * @param delay           The interval in which the evolver should evolve the
-	 *                        load.
-	 * @param evolvedScenario The evolved scenario.
-	 *
+	 * @param usage the usage to be evolved.
 	 */
-	public LoopingUsageEvolver(final UsageScenario evolvedScenario, final Usage usage) {
-		super(evolvedScenario, usage);
-		if (!this.getCorrespondingUsage().isRepeatingPattern()) {
+	public LoopingUsageEvolver(final Usage usage) {
+		super(usage);
+		if (!usage.isRepeatingPattern()) {
 			throw new IllegalArgumentException("The corresponding usage model must contain a repeating pattern.");
 		}
 	}
