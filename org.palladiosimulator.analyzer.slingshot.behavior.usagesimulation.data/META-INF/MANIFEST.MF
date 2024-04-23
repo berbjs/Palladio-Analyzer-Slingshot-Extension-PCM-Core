@@ -7,10 +7,8 @@ Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviour.usages
 Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0",
  org.palladiosimulator.pcm,
- org.apache.log4j,
- de.uka.ipd.sdq.simucomframework,
  de.uka.ipd.sdq.simucomframework.variables;bundle-version="4.3.0",
- org.palladiosimulator.analyzer.slingshot.common.utils
+ org.palladiosimulator.analyzer.slingshot.common.utils;visibility:=reexport
 Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities,
  org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext,
  org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior,

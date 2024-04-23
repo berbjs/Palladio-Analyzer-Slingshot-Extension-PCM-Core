@@ -9,4 +9,4 @@ Bundle-RequiredExecutionEnvironment: JavaSE-11
 Require-Bundle: de.uka.ipd.sdq.probfunction.math,
  de.uka.ipd.sdq.simucomframework.variables,
  org.apache.log4j;bundle-version="1.2.15",
- org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0"
+ org.palladiosimulator.analyzer.slingshot.core
