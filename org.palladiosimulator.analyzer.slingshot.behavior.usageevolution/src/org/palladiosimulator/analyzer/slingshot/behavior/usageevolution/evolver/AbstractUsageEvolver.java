@@ -119,24 +119,21 @@ public abstract class AbstractUsageEvolver {
 		final Workload wl = this.usage.getScenario().getWorkload_UsageScenario();
 		if (wl != null) {
 			if (wl instanceof OpenWorkload) {
+			    	double interArrivalTime = Integer.MAX_VALUE;
 				final PCMRandomVariable openwl = ((OpenWorkload) wl).getInterArrivalTime_OpenWorkload();
 				if (newRate != 0) {
 					// Using inverse value to convert from arrival rate to inter arrival
 					// time
-					newRate = 1 / newRate;
-				} else {
-					// If the arrival rate is 0, the inter arrival time should be
-					// infinite. We use the max integer value as an approximation
-					newRate = Integer.MAX_VALUE;
+					interArrivalTime = 1 / newRate;
 				}
 
-				final String newRateStr = Double.toString(newRate);
-				if (newRateStr.equals(openwl.getSpecification())) {
-					LOGGER.debug("Inter arrival time is still: " + newRateStr);
+				final String interArrivalTimeNewSpec = Double.toString(interArrivalTime);
+				if (interArrivalTimeNewSpec.equals(openwl.getSpecification())) {
+					LOGGER.debug("Inter arrival time is still: " + interArrivalTimeNewSpec);
 				} else {
 					LOGGER.debug(
-							"Changing inter arrival time from: " + openwl.getSpecification() + " to :" + newRateStr);
-					openwl.setSpecification(newRateStr);
+							"Changing inter arrival time from: " + openwl.getSpecification() + " to :" + interArrivalTimeNewSpec);
+					openwl.setSpecification(interArrivalTimeNewSpec);
 				}
 			} else if (wl instanceof ClosedWorkload) {
 				final int newRateInt = (int) Math.round(newRate);
