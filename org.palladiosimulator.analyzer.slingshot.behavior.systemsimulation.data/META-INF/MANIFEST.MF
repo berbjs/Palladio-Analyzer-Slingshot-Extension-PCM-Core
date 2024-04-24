@@ -4,7 +4,7 @@ Bundle-Name: SystemSimulationData
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviour.systemsimulation.data
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities;version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff,

@@ -4,7 +4,7 @@ Bundle-Name: ResourceSimulationData
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.data
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviour.resourcesimulation.data
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.palladiosimulator.analyzer.slingshot.core,
  de.uka.ipd.sdq.probfunction.math,
  org.palladiosimulator.pcm,

@@ -4,7 +4,7 @@ Bundle-Name: Resourcesimulation
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviour.resourcesimulation
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0",
  org.apache.log4j;bundle-version="1.2.15",
  de.uka.ipd.sdq.probfunction.math,
