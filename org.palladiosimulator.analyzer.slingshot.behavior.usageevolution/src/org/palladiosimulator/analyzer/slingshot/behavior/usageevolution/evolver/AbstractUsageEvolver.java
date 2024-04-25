@@ -115,11 +115,11 @@ public abstract class AbstractUsageEvolver {
 	 */
 	protected void evolveLoad(final ModelEvaluator loadEvaluator, final double time) {
 
-		double newRate = this.getNewRate(loadEvaluator, time);
+		final double newRate = this.getNewRate(loadEvaluator, time);
 		final Workload wl = this.usage.getScenario().getWorkload_UsageScenario();
 		if (wl != null) {
 			if (wl instanceof OpenWorkload) {
-			    	double interArrivalTime = Integer.MAX_VALUE;
+				double interArrivalTime = Integer.MAX_VALUE;
 				final PCMRandomVariable openwl = ((OpenWorkload) wl).getInterArrivalTime_OpenWorkload();
 				if (newRate != 0) {
 					// Using inverse value to convert from arrival rate to inter arrival
@@ -129,19 +129,23 @@ public abstract class AbstractUsageEvolver {
 
 				final String interArrivalTimeNewSpec = Double.toString(interArrivalTime);
 				if (interArrivalTimeNewSpec.equals(openwl.getSpecification())) {
-					LOGGER.debug("Inter arrival time is still: " + interArrivalTimeNewSpec);
+					LOGGER.debug(String.format("Inter arrival time in %s is still: %s", this.usage.getEntityName(),
+							interArrivalTimeNewSpec));
 				} else {
-					LOGGER.debug(
-							"Changing inter arrival time from: " + openwl.getSpecification() + " to :" + interArrivalTimeNewSpec);
+					LOGGER.debug(String.format(
+							"Changing inter arrival time in %s from: %s to : %s", this.usage.getEntityName(),
+							openwl.getSpecification(), interArrivalTimeNewSpec));
 					openwl.setSpecification(interArrivalTimeNewSpec);
 				}
 			} else if (wl instanceof ClosedWorkload) {
 				final int newRateInt = (int) Math.round(newRate);
 				final int oldRate = ((ClosedWorkload) wl).getPopulation();
 				if (newRateInt == oldRate) {
-					LOGGER.debug("Closed workload population is still: " + newRateInt);
+					LOGGER.debug(String.format("Closed workload population in %s is still: %d ",
+							this.usage.getEntityName(), newRateInt));
 				} else {
-					LOGGER.debug("Changing closed workload population from: " + oldRate + " to " + newRateInt);
+					LOGGER.debug(String.format("Changing closed workload population in %s from: %d to %d.",
+							this.usage.getEntityName(), oldRate, newRateInt));
 					((ClosedWorkload) wl).setPopulation(newRateInt);
 				}
 			}

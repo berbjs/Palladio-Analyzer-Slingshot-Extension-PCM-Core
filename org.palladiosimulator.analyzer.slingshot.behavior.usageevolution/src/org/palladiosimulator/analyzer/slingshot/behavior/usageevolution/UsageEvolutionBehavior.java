@@ -22,24 +22,27 @@ import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehavio
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.pcm.usagemodel.UsageModel;
 import org.scaledl.usageevolution.Usage;
 import org.scaledl.usageevolution.UsageEvolution;
 
 import de.uka.ipd.sdq.simucomframework.SimuComConfig;
 
 /**
- * The System simulation behavior is a extension that simulates the system
- * model. It listens to events requesting to interpret the repository and
- * sometimes will result in a SEFF Interpretation request if there is a RDSeff.
+ * The usage evolution behavior is a extension that interprets an
+ * {@link UsageEvolution} model and updates the workloads in the
+ * {@link UsageModel} accordingly.
  *
- * @author Julijan Katic
+ * The updates occur on a fix interval as prescribed by the provided
+ * {@link UsageEvolution} model.
+ *
+ * @author Sarah Stieß
  */
 @OnEvent(when = IntervalPassed.class, then = IntervalPassed.class, cardinality = SINGLE)
 @OnEvent(when = PreSimulationConfigurationStarted.class, then = IntervalPassed.class, cardinality = MANY)
 public class UsageEvolutionBehavior implements SimulationBehaviorExtension {
 
 	private static final Logger LOGGER = Logger.getLogger(UsageEvolutionBehavior.class);
-
 
 	private final UsageEvolution usageEvolutionModel;
 
@@ -57,7 +60,7 @@ public class UsageEvolutionBehavior implements SimulationBehaviorExtension {
 
 	@Override
 	public boolean isActive() {
-		return usageEvolutionModel != null;
+		return usageEvolutionModel != null && !this.usageEvolutionModel.getUsages().isEmpty();
 	}
 
 	@Subscribe
