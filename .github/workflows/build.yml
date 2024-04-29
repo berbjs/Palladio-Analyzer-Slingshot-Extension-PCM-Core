@@ -1,0 +1,15 @@
+name: Trigger E2E Test Build
+
+on: [push, pull_request, workflow_dispatch]
+
+jobs:
+  notify-e2e-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch to E2E Repo
+        uses: peter-evans/repository-dispatch@v1
+        with:
+          token: ${{ secrets.E2E_PTA }}
+          repository: 'PalladioSimulator/Palladio-Analyzer-Slingshot-E2E-Tests'
+          event-type: 'build-trigger'
+          client-payload: '{}'
