@@ -218,9 +218,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				.withRequiredRole(requiredRole)
 				.withSignature(calledServiceSignature)
 				.withUser(this.context.getRequestProcessingContext().getUser())
-				.withRequestFrom(this.context.update()
-						.withCaller(this.context.getCaller())// fixxing
-						.build())
+				.withRequestFrom(this.context.update().build())
 				.build();
 
 
@@ -313,7 +311,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
 					.withSignature(call.getSignature__InfrastructureCall())
 					.withUser(this.context.getRequestProcessingContext().getUser())
-					.withRequestFrom(this.context.update().withCaller(this.context.getCaller()).build()).build();
+					.withRequestFrom(this.context.update().build()).build();
 
 			return Set.of(new SEFFInfrastructureCalled(request));
 		}

@@ -33,7 +33,6 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.Use
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserEntryRequested;
-import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserFinished;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.common.utils.SimulatedStackHelper;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
@@ -205,11 +204,11 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	 * If either the {@code AssemblyContext} or {@code OperationProvidedRole} are
 	 * missing, e.g. due to a scale while the call was processed in the linking
 	 * resource, the Request cannot be completed. Thus this operation published a
-	 * {@link UserFinished} event for the user of the request, such that the request
+	 * {@link UserAborted} event for the user of the request, such that the request
 	 * finishes gracefully.
 	 *
 	 * This is especially important for closed workloads, where no new users enter
-	 * the system, i.e. if the {@link UserFinished} is not published the simulation
+	 * the system, i.e. if the {@link UserAborted} is not published the simulation
 	 * "looses" the user entirely.
 	 *
 	 * It is probably less important for open workloads, as new users keep entering
@@ -238,8 +237,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 					entity.getOutputVariableUsages(), entity.getUser().getStack().currentStackFrame());
 
 			return Result.of(new SEFFInterpretationProgressed(
-					seffInterpretationContext.update().withCallOverWireRequest(null).build())); // COW ist schon
-																								// empty???
+					seffInterpretationContext.update().withCallOverWireRequest(null).build()));
 		}
 
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository

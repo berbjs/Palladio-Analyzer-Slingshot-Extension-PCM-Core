@@ -119,8 +119,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * @param entity
 	 * @return
 	 */
-	private UserRequestFinished finishUserRequest(final SEFFInterpretationContext entity) { // entitiy ist der erste
-																							// erzeugte SEFF IC
+	private UserRequestFinished finishUserRequest(final SEFFInterpretationContext entity) {
 		final UserRequest userRequest = entity.getRequestProcessingContext().getUserRequest();
 		final UserInterpretationContext userInterpretationContext = entity.getRequestProcessingContext()
 				.getUserInterpretationContext();
