@@ -87,14 +87,14 @@ public final class SEFFInterpretationContext {
 	/**
 	 * Returns the stack frame to which variables can be set. This can either be a
 	 * dedicated stack frame or the current stackframe from the user.
-	 * 
+	 *
 	 * If the result stack frame was set when constructing this context, then this
 	 * dedicated stack frame will be returned. Otherwise, the parent's
 	 * {@link #getCurrentResultStackframe()} will be returned.
-	 * 
+	 *
 	 * If the parent's stackframe are also {@code null}, the current user's stack
 	 * frame will be returned instead.
-	 * 
+	 *
 	 * @return A non-{@code null} stackframe object, either dedicated or the current
 	 *         user's stack frame.
 	 */
@@ -115,7 +115,7 @@ public final class SEFFInterpretationContext {
 	 * Creates a child context from this with empty fields, except that
 	 * {@link #getParent()} will point to this and
 	 * {@link #getRequestProcessingContext()} will stay the same.
-	 * 
+	 *
 	 * @return A builder for the child context.
 	 */
 	public Builder createChildContext() {
@@ -126,7 +126,7 @@ public final class SEFFInterpretationContext {
 	 * Creates a child context from this with the same values as this, except that
 	 * the result stack frame will be {@code null} since the result stack frame is
 	 * already set in the parent.
-	 * 
+	 *
 	 * @return A builder with pre-filled fields for the child context.
 	 */
 	public Builder createChildContextPrefilled() {
@@ -138,7 +138,7 @@ public final class SEFFInterpretationContext {
 				.withBehaviorContext(this.behaviorContext)
 				.withAssemblyContext(this.assemblyContext)
 				.withRequestProcessingContext(this.requestProcessingContext)
-				.withCaller(calledFrom)
+				.withCaller(this.calledFrom)
 				.withParent(this.parent.orElse(null))
 				.withCallOverWireRequest(this.callOverWireRequest.orElse(null))
 				.withResultStackframe(getCurrentResultStackframe());

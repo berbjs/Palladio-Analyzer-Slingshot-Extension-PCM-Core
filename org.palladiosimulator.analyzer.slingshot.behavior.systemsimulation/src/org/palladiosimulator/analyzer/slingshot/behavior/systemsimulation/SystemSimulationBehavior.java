@@ -228,16 +228,18 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			 * This is a reply to an already made request from a caller, so we need to go
 			 * back to the caller
 			 */
-			final SEFFInterpretationContext seffInterpretationContext = entity.getRequestFrom().getCaller()
-					.orElseThrow(() -> new IllegalStateException(
-							"Since the call came from somewhere else, the context of the caller must be present, but it isn't."));
+			final SEFFInterpretationContext seffInterpretationContext = entity.getRequestFrom();
+			// .orElseThrow(() -> new IllegalStateException(
+			// "Since the call came from somewhere else, the context of the caller must be
+			// present, but it isn't."));
 
 			/* Put the output variables to the parent stack */
 			SimulatedStackHelper.addParameterToStackFrame(entity.getRequestFrom().getCurrentResultStackframe(),
 					entity.getOutputVariableUsages(), entity.getUser().getStack().currentStackFrame());
 
 			return Result.of(new SEFFInterpretationProgressed(
-					seffInterpretationContext.update().withCallOverWireRequest(null).build()));
+					seffInterpretationContext.update().withCallOverWireRequest(null).build())); // COW ist schon
+																								// empty???
 		}
 
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
@@ -249,7 +251,13 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), providedRole.get(), entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller(), cowSucceeded.getRequest(), new SimulatedStackframe<Object>());
+					Optional.of(entity.getRequestFrom()), cowSucceeded.getRequest(), new SimulatedStackframe<Object>()); // TODO
+																														// hier
+																														// nicht
+																														// getCaller
+																														// sondern
+																														// direct
+																														// RequestFrom.
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
@@ -278,7 +286,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	 * requested could not be handled. The main use case is: resources/assemblies
 	 * that previously existed, do not exist anymore, causing null-pointers when
 	 * accessing state.
-	 * 
+	 *
 	 * @param demandRequestAborted
 	 * @return UserAborted event.
 	 */
@@ -293,7 +301,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	/**
 	 * Helper method to traverse the SeffInterpretationContext and find the
 	 * UserInterpretationContext.
-	 * 
+	 *
 	 * @param seffContext
 	 * @return
 	 * @throws NoSuchElementException

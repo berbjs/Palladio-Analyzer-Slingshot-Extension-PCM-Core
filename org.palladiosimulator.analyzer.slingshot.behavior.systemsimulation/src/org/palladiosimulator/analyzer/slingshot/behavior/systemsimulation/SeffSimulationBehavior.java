@@ -46,7 +46,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 
 		if (contextHolder instanceof InfrastructureCallsContextHolder) {
 			if (contextHolder.hasFinished()) {
-				// continue in parent -> a follow up SEFFInterpretationProgressed in the parent 
+				// continue in parent -> a follow up SEFFInterpretationProgressed in the parent
 				LOGGER.info("progression to parent of infra");
 				return Result.of(continueInParent(progressed.getEntity()));
 			}
@@ -119,7 +119,8 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * @param entity
 	 * @return
 	 */
-	private UserRequestFinished finishUserRequest(final SEFFInterpretationContext entity) {
+	private UserRequestFinished finishUserRequest(final SEFFInterpretationContext entity) { // entitiy ist der erste
+																							// erzeugte SEFF IC
 		final UserRequest userRequest = entity.getRequestProcessingContext().getUserRequest();
 		final UserInterpretationContext userInterpretationContext = entity.getRequestProcessingContext()
 				.getUserInterpretationContext();

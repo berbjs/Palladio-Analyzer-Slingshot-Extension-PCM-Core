@@ -162,7 +162,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				.withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
 				.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext()).build();
-		
+
 		return Set.of(new SEFFChildInterpretationStarted(childContext));
 	}
 
@@ -219,7 +219,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				.withSignature(calledServiceSignature)
 				.withUser(this.context.getRequestProcessingContext().getUser())
 				.withRequestFrom(this.context.update()
-						.withCaller(this.context)
+						.withCaller(this.context.getCaller())// fixxing
 						.build())
 				.build();
 
@@ -313,7 +313,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
 					.withSignature(call.getSignature__InfrastructureCall())
 					.withUser(this.context.getRequestProcessingContext().getUser())
-					.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
+					.withRequestFrom(this.context.update().withCaller(this.context.getCaller()).build()).build();
 
 			return Set.of(new SEFFInfrastructureCalled(request));
 		}
