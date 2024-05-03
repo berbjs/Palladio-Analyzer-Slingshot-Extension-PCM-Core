@@ -329,7 +329,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), null, entity.getUser(), this.systemRepository,
-					entity.getRequestFrom().getCaller(), null, null);
+					Optional.of(entity.getRequestFrom()), null, null);
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter

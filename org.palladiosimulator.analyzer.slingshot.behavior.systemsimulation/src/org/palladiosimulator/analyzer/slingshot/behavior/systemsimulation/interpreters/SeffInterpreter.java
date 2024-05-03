@@ -162,7 +162,9 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final SEFFInterpretationContext childContext = this.context.createChildContext()
 				.withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext()).build();
+				.withCaller(this.context.getCaller())
+				.withAssemblyContext(this.context.getAssemblyContext())
+				.build();
 
 		return Set.of(new SEFFChildInterpretationStarted(childContext));
 	}
@@ -221,7 +223,6 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				.withUser(this.context.getRequestProcessingContext().getUser())
 				.withRequestFrom(this.context.update().build())
 				.build();
-
 
 		return Set.of(new SEFFExternalActionCalled(entryRequest));
 	}
