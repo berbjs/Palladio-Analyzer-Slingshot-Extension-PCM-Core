@@ -126,7 +126,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final SEFFInterpretationContext childContext = this.context.createChildContext()
 				.withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withCaller(this.context.getCaller())
+				// .withCaller(this.context.getCaller()) // imho, children should not have
+				// callers, only parents.
 				.withAssemblyContext(this.context.getAssemblyContext())
 				.build();
 

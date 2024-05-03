@@ -236,8 +236,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			SimulatedStackHelper.addParameterToStackFrame(entity.getRequestFrom().getCurrentResultStackframe(),
 					entity.getOutputVariableUsages(), entity.getUser().getStack().currentStackFrame());
 
-			return Result.of(new SEFFInterpretationProgressed(
-					seffInterpretationContext.update().withCallOverWireRequest(null).build()));
+			return Result.of(new SEFFInterpretationProgressed(seffInterpretationContext));
 		}
 
 		final Optional<AssemblyContext> assemblyContext = this.systemRepository
@@ -249,13 +248,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
 			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContext.get(),
 					entity.getSignature(), providedRole.get(), entity.getUser(), this.systemRepository,
-					Optional.of(entity.getRequestFrom()), cowSucceeded.getRequest(), new SimulatedStackframe<Object>()); // TODO
-																														// hier
-																														// nicht
-																														// getCaller
-																														// sondern
-																														// direct
-																														// RequestFrom.
+					Optional.of(entity.getRequestFrom()), cowSucceeded.getRequest(), new SimulatedStackframe<Object>());
 
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter

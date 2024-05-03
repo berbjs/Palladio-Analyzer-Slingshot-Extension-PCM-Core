@@ -21,6 +21,17 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * ({@code calledFrom}) of their parent context. However, only Root behaviours
  * should return to their callers. Others should return to their parent.
  *
+ * Contexts have a non empty {@code callOverWireRequest} if they were called
+ * from another context.
+ *
+ * A context's {@code callOverWireRequest} must <b>never</b> have their
+ * {@code replyTo} set. If {@code replyTo} is set, it is a return to a caller,
+ * and a return cannot be the calling request.
+ *
+ * TODO Children carry the {@code calledFrom} of their parents, but not their
+ * {@code callOverWireRequest}. However i think, they should only appear
+ * together. [S3]
+ *
  * @author Julijan Katic, Sarah Stieß
  * @version 1.0
  */
@@ -49,6 +60,11 @@ public final class SEFFInterpretationContext {
 
 	@Generated("SparkTools")
 	private SEFFInterpretationContext(final Builder builder) {
+		assert builder.callOverWireRequest == null
+				|| (builder.callOverWireRequest != null && builder.calledFrom.isPresent())
+				: String.format("Missing caller in %s", this.getClass().getSimpleName());
+		// || (builder.callOverWireRequest == null && builder.calledFrom.isEmpty()):
+
 		this.calledFrom = builder.calledFrom;
 		this.behaviorContext = builder.behaviorContext;
 		this.requestProcessingContext = builder.requestProcessingContext;
@@ -134,13 +150,9 @@ public final class SEFFInterpretationContext {
 	}
 
 	public Builder update() {
-		return builder()
-				.withBehaviorContext(this.behaviorContext)
-				.withAssemblyContext(this.assemblyContext)
-				.withRequestProcessingContext(this.requestProcessingContext)
-				.withCaller(this.calledFrom)
-				.withParent(this.parent.orElse(null))
-				.withCallOverWireRequest(this.callOverWireRequest.orElse(null))
+		return builder().withBehaviorContext(this.behaviorContext).withAssemblyContext(this.assemblyContext)
+				.withRequestProcessingContext(this.requestProcessingContext).withCaller(this.calledFrom)
+				.withParent(this.parent.orElse(null)).withCallOverWireRequest(this.callOverWireRequest.orElse(null))
 				.withResultStackframe(getCurrentResultStackframe());
 	}
 
@@ -176,7 +188,13 @@ public final class SEFFInterpretationContext {
 		}
 
 		public Builder withCallOverWireRequest(final CallOverWireRequest callOverWireRequest) {
+			assert callOverWireRequest == null || callOverWireRequest.getReplyTo().isEmpty();
 			this.callOverWireRequest = callOverWireRequest;
+			return this;
+		}
+
+		public Builder withCaller(final SEFFInterpretationContext calledFrom) {
+			Optional.ofNullable(calledFrom);
 			return this;
 		}
 
@@ -185,14 +203,6 @@ public final class SEFFInterpretationContext {
 			return this;
 		}
 
-		public Builder withCaller(final SEFFInterpretationContext calledFrom) {
-			if (calledFrom != null) {
-				this.calledFrom = Optional.of(calledFrom);
-			} else {
-				this.calledFrom = Optional.empty();
-			}
-			return this;
-		}
 
 		public Builder withRequestProcessingContext(final RequestProcessingContext requestProcessingContext) {
 			this.requestProcessingContext = builderNonNull(requestProcessingContext);
