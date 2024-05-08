@@ -193,11 +193,6 @@ public final class SEFFInterpretationContext {
 			return this;
 		}
 
-		public Builder withCaller(final SEFFInterpretationContext calledFrom) {
-			Optional.ofNullable(calledFrom);
-			return this;
-		}
-
 		public Builder withBehaviorContext(final SeffBehaviorContextHolder behaviorContext) {
 			this.behaviorContext = builderNonNull(behaviorContext);
 			return this;
