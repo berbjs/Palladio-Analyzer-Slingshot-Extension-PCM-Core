@@ -6,10 +6,14 @@ jobs:
   notify-e2e-repo:
     runs-on: ubuntu-latest
     steps:
+      - name: Set up branch name
+        id: set_branch
+        run: echo "BRANCH_NAME=${GITHUB_REF#refs/heads/}" >> $GITHUB_ENV
+
       - name: Repository Dispatch to E2E Repo
         uses: peter-evans/repository-dispatch@v1
         with:
           token: ${{ secrets.E2E_PTA }}
           repository: 'PalladioSimulator/Palladio-Analyzer-Slingshot-E2E-Tests'
           event-type: 'build-trigger'
-          client-payload: '{}'
+          client-payload: '{"slingshot_extension_pcm_core_branch": "${{ env.BRANCH_NAME }}"}'
