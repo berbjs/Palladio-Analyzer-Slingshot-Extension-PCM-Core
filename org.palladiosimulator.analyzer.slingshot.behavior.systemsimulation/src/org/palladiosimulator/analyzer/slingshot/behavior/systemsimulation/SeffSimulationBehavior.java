@@ -128,7 +128,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final UserInterpretationContext userInterpretationContext = entity.getRequestProcessingContext()
 				.getUserInterpretationContext().update().withResultFrame(entity.getCurrentResultStackframe()).build();
 
-		this.cleanUpStackAfterCall(entity.getRequestProcessingContext().getUser());
+		this.cleanUpComponentParameterStackFrames(entity.getRequestProcessingContext().getUser());
 
 		return new UserRequestFinished(userRequest, userInterpretationContext);
 	}
@@ -151,8 +151,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 */
 	private AbstractSimulationEvent continueInCaller(final SEFFInterpretationContext entity) {
 
-		this.cleanUpStackAfterCall(entity.getRequestProcessingContext().getUser()); // TODO probably breaks the
-																					// InfraCall
+		this.cleanUpComponentParameterStackFrames(entity.getRequestProcessingContext().getUser());
 
 		return entity.getCallOverWireRequest()
 				.map(cowReq -> cowReq.createReplyRequest(entity.getCurrentResultStackframe()))
@@ -165,23 +164,23 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	}
 
 	/**
-	 * Pops the 3 (4) topmost frames from the given user's stack.
+	 * Pops the 2 (3) topmost frames from the given user's stack.
 	 *
-	 * Upon entering a new Component with an {@link ExternalCallAction} or a
-	 * {@link EntryLevelSystemCall}, 3 (4) new frames are pushed onto the stack.
-	 * Upon leaving (i.e. now) they must be popped from the stack.
+	 * These frames are the component parameter frames. They are pushed onto the
+	 * stack when entering a new Component with an {@link ExternalCallAction} or a
+	 * {@link EntryLevelSystemCall}. Upon leaving (i.e. now) they must be popped
+	 * from the stack.
 	 *
 	 * C.f. Section 4.4.5 Composite Structures of Steffen Becker's PhD Thesis for
 	 * more details.
 	 *
 	 * @param user user whose stack will be cleaned up.
 	 */
-	private void cleanUpStackAfterCall(final User user) {
+	private void cleanUpComponentParameterStackFrames(final User user) {
 		final SimulatedStack<Object> stack = user.getStack();
 		// stack.removeStackFrame(); // pop domain expert
 		stack.removeStackFrame(); // pop software architect
 		stack.removeStackFrame(); // pop component dev
-		stack.removeStackFrame(); // pop input variables
 	}
 
 	private SEFFInterpretationProgressed repeat(final SEFFInterpretationContext entity) {

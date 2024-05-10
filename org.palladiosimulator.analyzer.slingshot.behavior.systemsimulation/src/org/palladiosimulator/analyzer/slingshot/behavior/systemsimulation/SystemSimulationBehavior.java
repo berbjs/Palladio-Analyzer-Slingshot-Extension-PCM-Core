@@ -231,7 +231,10 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			// "Since the call came from somewhere else, the context of the caller must be
 			// present, but it isn't."));
 
-			/* Put the output variables to the parent stack */
+			/* Pop input variable Usages */
+			entity.getUser().getStack().removeStackFrame();
+
+			/* Push the output variables to the parent stack */
 			SimulatedStackHelper.addParameterToStackFrame(cowSucceeded.getRequest().getVariablesToConsider(),
 					entity.getOutputVariableUsages(), entity.getUser().getStack().currentStackFrame());
 
@@ -265,6 +268,9 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<?> onCallOverWireAborted(final CallOverWireAborted cowAborted) {
 		LOGGER.info("The call over wire was aborted, retry");
+		/* Pop input variable Usages */
+		cowAborted.getRequest().getUser().getStack().removeStackFrame();
+
 		return requestCallOverWire(cowAborted.getRequest().getEntryRequest());
 	}
 

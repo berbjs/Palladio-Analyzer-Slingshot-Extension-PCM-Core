@@ -304,6 +304,9 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	@Subscribe
 	public Result<DESEvent> onUserRequestFinished(final UserRequestFinished evt) {
 
+		/* Pop input variable Usages */
+		evt.getEntity().getUser().getStack().removeStackFrame();
+
 		final SimulatedStackframe<Object> resultFrame = evt.getUserContext().getResultFrame();
 		final SimulatedStackframe<Object> topMostFrame = evt.getEntity().getUser().getStack().currentStackFrame();
 		final EList<VariableUsage> outVariables = evt.getEntity().getOutVariableUsages();

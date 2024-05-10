@@ -192,7 +192,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final List<SEFFInterpretationContext> childContexts = rdBehaviors.stream()
 				.map(rdBehavior -> this.context.createChildContext().withBehaviorContext(forkedBehaviorContext)
 						.withRequestProcessingContext(this.context.getRequestProcessingContext())
-						.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext())
+						.withCaller(this.context.getCaller())
+						.withAssemblyContext(this.context.getAssemblyContext())
 						.build())
 				.collect(Collectors.toList());
 
@@ -235,8 +236,11 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 		final ResourceDemandRequest request = ResourceDemandRequest.builder()
 				.withAssemblyContext(this.context.getAssemblyContext())
-				.withPassiveResource(object.getPassiveresource_AcquireAction()).withResourceType(ResourceType.PASSIVE)
-				.withSeffInterpretationContext(this.context).withParametricResourceDemand(demand).build();
+				.withPassiveResource(object.getPassiveresource_AcquireAction())
+				.withResourceType(ResourceType.PASSIVE)
+				.withSeffInterpretationContext(this.context)
+				.withParametricResourceDemand(demand)
+				.build();
 
 		return Set.of(new ResourceDemandRequested(request));
 	}
@@ -247,9 +251,12 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final ParametricResourceDemand demand = object.getResourceDemand_Action().stream().findFirst().orElseThrow(
 				() -> new NoSuchElementException("No parametric resource demand specified for ReleaseAction!"));
 
-		final ResourceDemandRequest request = ResourceDemandRequest.builder().withResourceType(ResourceType.PASSIVE)
-				.withSeffInterpretationContext(this.context).withAssemblyContext(this.context.getAssemblyContext())
-				.withPassiveResource(object.getPassiveResource_ReleaseAction()).withParametricResourceDemand(demand)
+		final ResourceDemandRequest request = ResourceDemandRequest.builder()
+				.withResourceType(ResourceType.PASSIVE)
+				.withSeffInterpretationContext(this.context)
+				.withAssemblyContext(this.context.getAssemblyContext())
+				.withPassiveResource(object.getPassiveResource_ReleaseAction())
+				.withParametricResourceDemand(demand)
 				.build();
 
 		return Set.of(new PassiveResourceReleased(request, 0), new SEFFInterpretationProgressed(context));
@@ -334,7 +341,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			LOGGER.debug("Demand found with: " + demand);
 
 			final ResourceDemandRequest request = ResourceDemandRequest.builder()
-					.withAssemblyContext(this.context.getAssemblyContext()).withSeffInterpretationContext(this.context)
+					.withAssemblyContext(this.context.getAssemblyContext())
+					.withSeffInterpretationContext(this.context)
 					.withResourceType(ResourceType.ACTIVE).withParametricResourceDemand(demand).build();
 
 			final ResourceDemandRequested requestEvent = new ResourceDemandRequested(request);
@@ -349,7 +357,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				final SEFFInterpretationContext infraChildContext = this.context.createChildContext()
 						.withBehaviorContext(infraContext)
 						.withRequestProcessingContext(this.context.getRequestProcessingContext())
-						.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext())
+						.withCaller(this.context.getCaller())
+						.withAssemblyContext(this.context.getAssemblyContext())
 						.build();
 
 				events.add(new SEFFInterpretationProgressed(infraChildContext));
