@@ -1,9 +1,12 @@
 name: Trigger E2E Test Build
 
-on: [push, pull_request, workflow_dispatch]
+on:
+  issue_comment:
+    types: [created]
 
 jobs:
   notify-e2e-repo:
+    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/ready_to_test')
     runs-on: ubuntu-latest
     steps:
       - name: Set up branch name
