@@ -46,6 +46,7 @@ import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 import org.palladiosimulator.pcm.usagemodel.util.UsagemodelSwitch;
 
 import de.uka.ipd.sdq.simucomframework.variables.StackContext;
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
 
 /**
  * The usage scenario interpreter interprets a single usage scenario. In order
@@ -121,13 +122,18 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 		final OperationProvidedRole opProvidedRole = object.getProvidedRole_EntryLevelSystemCall();
 		final OperationSignature signature = object.getOperationSignature__EntryLevelSystemCall();
 		final EList<VariableUsage> inputParameterUsages = object.getInputParameterUsages_EntryLevelSystemCall();
+		final EList<VariableUsage> outpuParameterUsages = object.getOutputParameterUsages_EntryLevelSystemCall();
 
 		final UserRequest userRequest = UserRequest.builder().withUser(this.userContext.getUser())
-				.withOperationProvidedRole(opProvidedRole).withOperationSignature(signature)
-				.withVariableUsages(inputParameterUsages).build();
+				.withOperationProvidedRole(opProvidedRole)
+				.withOperationSignature(signature)
+				.withVariableUsages(inputParameterUsages)
+				.withOutVariableUsages(outpuParameterUsages).build();
 
 		final UserEntryRequested userEntryRequest = new UserEntryRequested(userRequest,
-				this.userContext.update().withCurrentAction(object.getSuccessor()).build(), 0);
+				this.userContext.update().withCurrentAction(object.getSuccessor())
+						.withResultFrame(new SimulatedStackframe<>()).build(),
+				0);
 
 		return Set.of(userEntryRequest);
 	}

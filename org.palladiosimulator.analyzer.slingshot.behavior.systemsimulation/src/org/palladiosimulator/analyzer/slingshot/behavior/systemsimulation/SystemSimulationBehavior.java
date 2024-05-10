@@ -16,8 +16,6 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.resource.CallOverWireRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.InfrastructureCallsContextHolder;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.behaviorcontext.RootBehaviorContextHolder;
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.user.RequestProcessingContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.ActiveResourceFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireAborted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.CallOverWireRequested;
@@ -115,22 +113,23 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 
 		if (seffFromProvidedRole.isPresent() && assemblyContextByProvidedRole.isPresent()) {
 			SimulatedStackHelper.createAndPushNewStackFrame(request.getUser().getStack(), variableUsages);
+			// further stack frames are pushed inside the RepositoryInterpreter.
+
+
 			final ServiceEffectSpecification seff = seffFromProvidedRole.get();
 
 			assert seff instanceof ResourceDemandingBehaviour;
 
-			final RequestProcessingContext requestProcessingContext = RequestProcessingContext.builder()
-					.withUser(request.getUser()).withUserRequest(request)
-					.withUserInterpretationContext(userEntryRequested.getUserInterpretationContext())
-					.withProvidedRole(operationProvidedRole).withAssemblyContext(assemblyContextByProvidedRole.get())
-					.build();
+			final RepositoryInterpreter interpreter = new RepositoryInterpreter(assemblyContextByProvidedRole.get(),
+					operationSignature, operationProvidedRole, request.getUser(), systemRepository, Optional.empty(),
+					null, new SimulatedStackframe<Object>(), userEntryRequested.getUserInterpretationContext(),
+					request);
 
-			final SEFFInterpretationContext context = SEFFInterpretationContext.builder()
-					.withRequestProcessingContext(requestProcessingContext)
-					.withAssemblyContext(assemblyContextByProvidedRole.get())
-					.withBehaviorContext(new RootBehaviorContextHolder((ResourceDemandingBehaviour) seff)).build();
+			final Set<SEFFInterpretationProgressed> res = interpreter
+					.doSwitch(assemblyContextByProvidedRole.get().getEncapsulatedComponent__AssemblyContext());
 
-			return Result.of(new SEFFInterpretationProgressed(context));
+			return Result.of(res);
+
 		}
 		LOGGER.info("Either seff or assembly context is not found => stop interpretation for this request.");
 
@@ -233,7 +232,7 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			// present, but it isn't."));
 
 			/* Put the output variables to the parent stack */
-			SimulatedStackHelper.addParameterToStackFrame(entity.getRequestFrom().getCurrentResultStackframe(),
+			SimulatedStackHelper.addParameterToStackFrame(cowSucceeded.getRequest().getVariablesToConsider(),
 					entity.getOutputVariableUsages(), entity.getUser().getStack().currentStackFrame());
 
 			return Result.of(new SEFFInterpretationProgressed(seffInterpretationContext));
@@ -253,9 +252,6 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			/* Interpret the Component of the system. */
 			final Set<SEFFInterpretationProgressed> appearedEvents = interpreter
 					.doSwitch(assemblyContext.get().getEncapsulatedComponent__AssemblyContext());
-
-			SimulatedStackHelper.createAndPushNewStackFrame(entity.getUser().getStack(),
-					entity.getInputVariableUsages());
 
 			return Result.of(appearedEvents);
 		}

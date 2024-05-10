@@ -49,12 +49,13 @@ public final class SEFFInterpretationContext {
 	/** The parent context if this is a child context */
 	private final Optional<SEFFInterpretationContext> parent;
 
+	/** Request calling this context */
 	private final Optional<CallOverWireRequest> callOverWireRequest;
 
 	/**
-	 * The stackframe to hold the result variables of a call. This can be null,
-	 * signifying the the result stackframe is in the parent already or the users
-	 * current stackframe should be used.
+	 * The stackframe to hold the result variables set by this context. This can be
+	 * null, signifying the the result stackframe is in the parent already or the
+	 * users current stackframe should be used.
 	 */
 	private final SimulatedStackframe<Object> resultStackframe;
 

@@ -14,6 +14,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpreted;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.interpreters.SeffInterpreter;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserRequestFinished;
@@ -23,6 +24,10 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscrib
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.EventCardinality;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
+import org.palladiosimulator.pcm.seff.ExternalCallAction;
+import org.palladiosimulator.pcm.usagemodel.EntryLevelSystemCall;
+
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStack;
 
 /**
  * This behavior module both interprets and generates events specifically for
@@ -55,7 +60,6 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 		final Set<SEFFInterpreted> events = interpreter.doSwitch(contextHolder.getNextAction());
 		return Result.of(events);
 	}
-
 
 	@Subscribe
 	public Result<SEFFInterpreted> onPassiveResourceAcquired(final PassiveResourceAcquired passiveResourceAcquired) {
@@ -122,9 +126,9 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	private UserRequestFinished finishUserRequest(final SEFFInterpretationContext entity) {
 		final UserRequest userRequest = entity.getRequestProcessingContext().getUserRequest();
 		final UserInterpretationContext userInterpretationContext = entity.getRequestProcessingContext()
-				.getUserInterpretationContext();
+				.getUserInterpretationContext().update().withResultFrame(entity.getCurrentResultStackframe()).build();
 
-		entity.getRequestProcessingContext().getUser().getStack().removeStackFrame();
+		this.cleanUpStackAfterCall(entity.getRequestProcessingContext().getUser());
 
 		return new UserRequestFinished(userRequest, userInterpretationContext);
 	}
@@ -146,6 +150,10 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 	 * the call.
 	 */
 	private AbstractSimulationEvent continueInCaller(final SEFFInterpretationContext entity) {
+
+		this.cleanUpStackAfterCall(entity.getRequestProcessingContext().getUser()); // TODO probably breaks the
+																					// InfraCall
+
 		return entity.getCallOverWireRequest()
 				.map(cowReq -> cowReq.createReplyRequest(entity.getCurrentResultStackframe()))
 				.map(CallOverWireRequested::new)
@@ -154,6 +162,26 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 					LOGGER.info("It seems that the call was not over a wire, so proceed with normal progression");
 					return new SEFFInterpretationProgressed(entity.getCaller().get());
 				});
+	}
+
+	/**
+	 * Pops the 3 (4) topmost frames from the given user's stack.
+	 *
+	 * Upon entering a new Component with an {@link ExternalCallAction} or a
+	 * {@link EntryLevelSystemCall}, 3 (4) new frames are pushed onto the stack.
+	 * Upon leaving (i.e. now) they must be popped from the stack.
+	 *
+	 * C.f. Section 4.4.5 Composite Structures of Steffen Becker's PhD Thesis for
+	 * more details.
+	 *
+	 * @param user user whose stack will be cleaned up.
+	 */
+	private void cleanUpStackAfterCall(final User user) {
+		final SimulatedStack<Object> stack = user.getStack();
+		// stack.removeStackFrame(); // pop domain expert
+		stack.removeStackFrame(); // pop software architect
+		stack.removeStackFrame(); // pop component dev
+		stack.removeStackFrame(); // pop input variables
 	}
 
 	private SEFFInterpretationProgressed repeat(final SEFFInterpretationContext entity) {
