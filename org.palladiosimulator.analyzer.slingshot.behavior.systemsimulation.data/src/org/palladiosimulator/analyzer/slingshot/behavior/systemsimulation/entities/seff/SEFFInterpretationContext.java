@@ -17,21 +17,6 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * The SEFFInterpretationContext is used for keeping track of the RDSeff
  * interpertation.
  *
- * Child contexts (i.e. nested SEFFs) always hold the caller
- * ({@code calledFrom}) of their parent context. However, only Root behaviours
- * should return to their callers. Others should return to their parent.
- *
- * Contexts have a non empty {@code callOverWireRequest} if they were called
- * from another context.
- *
- * A context's {@code callOverWireRequest} must <b>never</b> have their
- * {@code replyTo} set. If {@code replyTo} is set, it is a return to a caller,
- * and a return cannot be the calling request.
- *
- * TODO Children carry the {@code calledFrom} of their parents, but not their
- * {@code callOverWireRequest}. However i think, they should only appear
- * together. [S3]
- *
  * @author Julijan Katic, Sarah Stieß
  * @version 1.0
  */
@@ -44,12 +29,21 @@ public final class SEFFInterpretationContext {
 
 	private final AssemblyContext assemblyContext;
 
+	/**
+	 * Caller of this context. For a nested SEFF the caller is always equal to the
+	 * parent's caller.
+	 */
 	private final Optional<SEFFInterpretationContext> calledFrom;
+
+	/**
+	 * Request by which this SEFF was called. The requests must not be a
+	 * reply-request, as a reply-request cannot be used for calling anther SEFF.
+	 */
+	private final Optional<CallOverWireRequest> callOverWireRequest;
 
 	/** The parent context if this is a child context */
 	private final Optional<SEFFInterpretationContext> parent;
 
-	private final Optional<CallOverWireRequest> callOverWireRequest;
 
 	/**
 	 * The stackframe to hold the result variables of a call. This can be null,
@@ -63,7 +57,6 @@ public final class SEFFInterpretationContext {
 		assert builder.callOverWireRequest == null
 				|| (builder.callOverWireRequest != null && builder.calledFrom.isPresent())
 				: String.format("Missing caller in %s", this.getClass().getSimpleName());
-		// || (builder.callOverWireRequest == null && builder.calledFrom.isEmpty()):
 
 		this.calledFrom = builder.calledFrom;
 		this.behaviorContext = builder.behaviorContext;

@@ -228,9 +228,6 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 			 * back to the caller
 			 */
 			final SEFFInterpretationContext seffInterpretationContext = entity.getRequestFrom();
-			// .orElseThrow(() -> new IllegalStateException(
-			// "Since the call came from somewhere else, the context of the caller must be
-			// present, but it isn't."));
 
 			/* Put the output variables to the parent stack */
 			SimulatedStackHelper.addParameterToStackFrame(entity.getRequestFrom().getCurrentResultStackframe(),
