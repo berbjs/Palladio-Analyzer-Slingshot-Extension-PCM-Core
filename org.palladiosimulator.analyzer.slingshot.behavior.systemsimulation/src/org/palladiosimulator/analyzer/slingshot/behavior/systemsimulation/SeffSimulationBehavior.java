@@ -46,7 +46,7 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 
 		if (contextHolder instanceof InfrastructureCallsContextHolder) {
 			if (contextHolder.hasFinished()) {
-				// continue in parent -> a follow up SEFFInterpretationProgressed in the parent 
+				// continue in parent -> a follow up SEFFInterpretationProgressed in the parent
 				LOGGER.info("progression to parent of infra");
 				return Result.of(continueInParent(progressed.getEntity()));
 			}

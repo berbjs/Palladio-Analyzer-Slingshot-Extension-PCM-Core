@@ -126,7 +126,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final SEFFInterpretationContext childContext = this.context.createChildContext()
 				.withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withCaller(this.context.getCaller())
+				// .withCaller(this.context.getCaller()) // imho, children should not have
+				// callers, only parents.
 				.withAssemblyContext(this.context.getAssemblyContext())
 				.build();
 
@@ -161,8 +162,10 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 		final SEFFInterpretationContext childContext = this.context.createChildContext()
 				.withBehaviorContext(holder)
 				.withRequestProcessingContext(this.context.getRequestProcessingContext())
-				.withCaller(this.context.getCaller()).withAssemblyContext(this.context.getAssemblyContext()).build();
-		
+				.withCaller(this.context.getCaller())
+				.withAssemblyContext(this.context.getAssemblyContext())
+				.build();
+
 		return Set.of(new SEFFChildInterpretationStarted(childContext));
 	}
 
@@ -218,11 +221,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 				.withRequiredRole(requiredRole)
 				.withSignature(calledServiceSignature)
 				.withUser(this.context.getRequestProcessingContext().getUser())
-				.withRequestFrom(this.context.update()
-						.withCaller(this.context)
-						.build())
+				.withRequestFrom(this.context.update().build())
 				.build();
-
 
 		return Set.of(new SEFFExternalActionCalled(entryRequest));
 	}
@@ -313,7 +313,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 					.withRequiredRole(call.getRequiredRole__InfrastructureCall())
 					.withSignature(call.getSignature__InfrastructureCall())
 					.withUser(this.context.getRequestProcessingContext().getUser())
-					.withRequestFrom(this.context.update().withCaller(this.context).build()).build();
+					.withRequestFrom(this.context.update().build()).build();
 
 			return Set.of(new SEFFInfrastructureCalled(request));
 		}

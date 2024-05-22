@@ -17,10 +17,6 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * The SEFFInterpretationContext is used for keeping track of the RDSeff
  * interpertation.
  *
- * Child contexts (i.e. nested SEFFs) always hold the caller
- * ({@code calledFrom}) of their parent context. However, only Root behaviours
- * should return to their callers. Others should return to their parent.
- *
  * @author Julijan Katic, Sarah Stieß
  * @version 1.0
  */
@@ -33,12 +29,21 @@ public final class SEFFInterpretationContext {
 
 	private final AssemblyContext assemblyContext;
 
+	/**
+	 * Caller of this context. For a nested SEFF the caller is always equal to the
+	 * parent's caller.
+	 */
 	private final Optional<SEFFInterpretationContext> calledFrom;
+
+	/**
+	 * Request by which this SEFF was called. The requests must not be a
+	 * reply-request, as a reply-request cannot be used for calling anther SEFF.
+	 */
+	private final Optional<CallOverWireRequest> callOverWireRequest;
 
 	/** The parent context if this is a child context */
 	private final Optional<SEFFInterpretationContext> parent;
 
-	private final Optional<CallOverWireRequest> callOverWireRequest;
 
 	/**
 	 * The stackframe to hold the result variables of a call. This can be null,
@@ -49,6 +54,10 @@ public final class SEFFInterpretationContext {
 
 	@Generated("SparkTools")
 	private SEFFInterpretationContext(final Builder builder) {
+		assert builder.callOverWireRequest == null
+				|| (builder.callOverWireRequest != null && builder.calledFrom.isPresent())
+				: String.format("Missing caller in %s", this.getClass().getSimpleName());
+
 		this.calledFrom = builder.calledFrom;
 		this.behaviorContext = builder.behaviorContext;
 		this.requestProcessingContext = builder.requestProcessingContext;
@@ -87,14 +96,14 @@ public final class SEFFInterpretationContext {
 	/**
 	 * Returns the stack frame to which variables can be set. This can either be a
 	 * dedicated stack frame or the current stackframe from the user.
-	 * 
+	 *
 	 * If the result stack frame was set when constructing this context, then this
 	 * dedicated stack frame will be returned. Otherwise, the parent's
 	 * {@link #getCurrentResultStackframe()} will be returned.
-	 * 
+	 *
 	 * If the parent's stackframe are also {@code null}, the current user's stack
 	 * frame will be returned instead.
-	 * 
+	 *
 	 * @return A non-{@code null} stackframe object, either dedicated or the current
 	 *         user's stack frame.
 	 */
@@ -115,7 +124,7 @@ public final class SEFFInterpretationContext {
 	 * Creates a child context from this with empty fields, except that
 	 * {@link #getParent()} will point to this and
 	 * {@link #getRequestProcessingContext()} will stay the same.
-	 * 
+	 *
 	 * @return A builder for the child context.
 	 */
 	public Builder createChildContext() {
@@ -126,7 +135,7 @@ public final class SEFFInterpretationContext {
 	 * Creates a child context from this with the same values as this, except that
 	 * the result stack frame will be {@code null} since the result stack frame is
 	 * already set in the parent.
-	 * 
+	 *
 	 * @return A builder with pre-filled fields for the child context.
 	 */
 	public Builder createChildContextPrefilled() {
@@ -134,13 +143,9 @@ public final class SEFFInterpretationContext {
 	}
 
 	public Builder update() {
-		return builder()
-				.withBehaviorContext(this.behaviorContext)
-				.withAssemblyContext(this.assemblyContext)
-				.withRequestProcessingContext(this.requestProcessingContext)
-				.withCaller(calledFrom)
-				.withParent(this.parent.orElse(null))
-				.withCallOverWireRequest(this.callOverWireRequest.orElse(null))
+		return builder().withBehaviorContext(this.behaviorContext).withAssemblyContext(this.assemblyContext)
+				.withRequestProcessingContext(this.requestProcessingContext).withCaller(this.calledFrom)
+				.withParent(this.parent.orElse(null)).withCallOverWireRequest(this.callOverWireRequest.orElse(null))
 				.withResultStackframe(getCurrentResultStackframe());
 	}
 
@@ -176,6 +181,7 @@ public final class SEFFInterpretationContext {
 		}
 
 		public Builder withCallOverWireRequest(final CallOverWireRequest callOverWireRequest) {
+			assert callOverWireRequest == null || callOverWireRequest.getReplyTo().isEmpty();
 			this.callOverWireRequest = callOverWireRequest;
 			return this;
 		}
@@ -185,14 +191,6 @@ public final class SEFFInterpretationContext {
 			return this;
 		}
 
-		public Builder withCaller(final SEFFInterpretationContext calledFrom) {
-			if (calledFrom != null) {
-				this.calledFrom = Optional.of(calledFrom);
-			} else {
-				this.calledFrom = Optional.empty();
-			}
-			return this;
-		}
 
 		public Builder withRequestProcessingContext(final RequestProcessingContext requestProcessingContext) {
 			this.requestProcessingContext = builderNonNull(requestProcessingContext);
