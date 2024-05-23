@@ -31,9 +31,6 @@ public abstract class UserInterpretationContext {
 	/** The current Run of the usage */
 	private final int currentUsageRun;
 
-	/** The parent context */
-	private final Optional<UserInterpretationContext> parentContext;
-
 	/** The behavior context indicating in which scenario we are. */
 	private final UsageScenarioBehaviorContext behaviorContext;
 
@@ -45,7 +42,6 @@ public abstract class UserInterpretationContext {
 		this.currentAction = builder.currentAction;
 		this.user = builder.user;
 		this.currentUsageRun = builder.currentUsageRun;
-		this.parentContext = builder.parentContext;
 		this.behaviorContext = builder.usageScenarioBehaviorContext;
 		this.resultFrame = builder.resultFrame;
 	}
@@ -68,10 +64,6 @@ public abstract class UserInterpretationContext {
 
 	public int getCurrentUsageRun() {
 		return this.currentUsageRun;
-	}
-
-	public Optional<UserInterpretationContext> getParentContext() {
-		return this.parentContext;
 	}
 
 	public UserInterpretationContext incrementUsageRun() {
@@ -100,7 +92,8 @@ public abstract class UserInterpretationContext {
 	protected final <T extends UserInterpretationContext, B extends BaseBuilder<T, B>> B updateWithBuilder(
 			final B builder) {
 		return builder.withCurrentAction(this.currentAction).withCurrentUsageRun(this.currentUsageRun)
-				.withScenario(this.scenario).withUser(this.user).withParentContext(this.parentContext)
+				.withScenario(this.scenario).withUser(this.user)
+//				.withParentContext(this.parentContext)
 				.withUsageScenarioBehaviorContext(this.getBehaviorContext());
 	}
 
@@ -117,7 +110,7 @@ public abstract class UserInterpretationContext {
 		private AbstractUserAction currentAction;
 		private User user;
 		private int currentUsageRun;
-		private Optional<UserInterpretationContext> parentContext = Optional.empty();
+//		private Optional<UserInterpretationContext> parentContext = Optional.empty();
 		private UsageScenarioBehaviorContext usageScenarioBehaviorContext;
 
 		private SimulatedStackframe<Object> resultFrame;
@@ -144,11 +137,6 @@ public abstract class UserInterpretationContext {
 
 		public B withCurrentUsageRun(final int currentUsageRun) {
 			this.currentUsageRun = currentUsageRun;
-			return this.actualBuilder();
-		}
-
-		public B withParentContext(final Optional<UserInterpretationContext> parentContext) {
-			this.parentContext = parentContext;
 			return this.actualBuilder();
 		}
 
