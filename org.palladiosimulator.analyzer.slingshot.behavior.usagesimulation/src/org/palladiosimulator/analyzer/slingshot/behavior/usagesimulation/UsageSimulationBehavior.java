@@ -69,11 +69,11 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
 @OnEvent(when = UserStarted.class, then = { UserFinished.class, UserEntryRequested.class, UserSlept.class,
 		UserWokeUp.class, InnerScenarioBehaviorInitiated.class, UsageScenarioStarted.class,
 		UsageModelPassedElement.class }, cardinality = MANY)
-@OnEvent(when = UserFinished.class, then = { UserStarted.class, InterArrivalUserInitiated.class,
-		ClosedWorkloadUserInitiated.class, UsageScenarioFinished.class, UserFinished.class, UserSlept.class,
+@OnEvent(when = UserFinished.class, then = { UserStarted.class, ClosedWorkloadUserInitiated.class,
+		UsageScenarioFinished.class, UserFinished.class, UserSlept.class,
 		UserWokeUp.class, UsageModelPassedElement.class }, cardinality = MANY)
-@OnEvent(when = UserAborted.class, then = { UserStarted.class, InterArrivalUserInitiated.class,
-		ClosedWorkloadUserInitiated.class, UsageScenarioFinished.class, UserFinished.class, UserSlept.class,
+@OnEvent(when = UserAborted.class, then = { UserStarted.class, ClosedWorkloadUserInitiated.class,
+		UsageScenarioFinished.class, UserFinished.class, UserSlept.class,
 		UserWokeUp.class, UsageModelPassedElement.class }, cardinality = MANY)
 @OnEvent(when = UserWokeUp.class, then = { UserFinished.class, UserEntryRequested.class, UserSlept.class,
 		UserWokeUp.class, InnerScenarioBehaviorInitiated.class, UsageModelPassedElement.class }, cardinality = MANY)
@@ -85,7 +85,7 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
 		UsageModelPassedElement.class }, cardinality = MANY)
 @OnEvent(when = InterArrivalUserInitiated.class, then = { UserFinished.class, UserEntryRequested.class, UserSlept.class,
 		UserWokeUp.class, InnerScenarioBehaviorInitiated.class, UsageScenarioStarted.class,
-		UsageModelPassedElement.class }, cardinality = MANY)
+		UsageModelPassedElement.class, InterArrivalUserInitiated.class }, cardinality = MANY)
 public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 
 	private final Logger LOGGER = Logger.getLogger(UsageSimulationBehavior.class);

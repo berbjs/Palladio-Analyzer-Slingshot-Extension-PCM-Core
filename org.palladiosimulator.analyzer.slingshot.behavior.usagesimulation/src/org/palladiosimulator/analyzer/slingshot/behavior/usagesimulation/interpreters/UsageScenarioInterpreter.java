@@ -173,8 +173,6 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 				|| this.userContext instanceof ClosedWorkloadUserInterpretationContext) {
 			resultSet = Set.of(new UserStarted(this.userContext.updateAction(object.getSuccessor())));
 		} else if (this.userContext instanceof OpenWorkloadUserInterpretationContext) {
-			final OpenWorkloadUserInterpretationContext openWorkloadUserContext = (OpenWorkloadUserInterpretationContext) this.userContext;
-			final double interArrivalTime = openWorkloadUserContext.getInterArrivalTime().calculateRV();
 
 			final UsageScenario startedScenario = object.getScenarioBehaviour_AbstractUserAction()
 					.getUsageScenario_SenarioBehaviour();
@@ -196,7 +194,8 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 					.withUsageScenarioBehaviorContext(nextScenarioContext).build();
 
 			resultSet = Set.of(new UserStarted(this.userContext.updateAction(object.getSuccessor())),
-					new InterArrivalUserInitiated(nextOpenWorkloadUserInterpretationContext, interArrivalTime));
+					new InterArrivalUserInitiated(nextOpenWorkloadUserInterpretationContext,
+							nextOpenWorkloadUserInterpretationContext.getInterArrivalTime().calculateRV()));
 		} else {
 			LOGGER.info("The user is neither a closed workload nor open workload user");
 			throw new IllegalStateException("The user must be a open workload or closed workload user");
