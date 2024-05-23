@@ -262,12 +262,12 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      */
     @Subscribe
     public Result<DESEvent> onUserStarted(final UserStarted userStarted) {
-        
+
         userStarted.getEntity()
             .getUser()
             .getStack()
             .createAndPushNewStackFrame();
-        
+
         final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(userStarted.getEntity());
         final Set<DESEvent> result = new HashSet<>(interpreter.doSwitch(userStarted.getEntity()
             .getCurrentAction()));
@@ -327,24 +327,31 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      */
     @Subscribe
     public Result<DESEvent> onUserRequestFinished(final UserRequestFinished evt) {
-        
-        Preconditions.checkArgument(evt.getEntity().getUser().getStack().size() == 2);
-        
-        
-        if(evt.getEntity().getUser().getStack().size()>2) {
+
+        Preconditions.checkArgument(evt.getEntity()
+            .getUser()
+            .getStack()
+            .size() == 2);
+
+        if (evt.getEntity()
+            .getUser()
+            .getStack()
+            .size() > 2) {
             System.out.println("problem");
         }
-        
-        if(evt.getEntity().getUser().getStack().size()<2) {
+
+        if (evt.getEntity()
+            .getUser()
+            .getStack()
+            .size() < 2) {
             System.out.println("problem");
         }
-        
+
         /* Pop input variable Usages */
         evt.getEntity()
             .getUser()
             .getStack()
             .removeStackFrame();
-        
 
         final SimulatedStackframe<Object> resultFrame = evt.getUserContext()
             .getResultFrame();
@@ -422,9 +429,11 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      */
     private Result<DESEvent> finishUserInterpretation(final UserInterpretationContext context) {
         final Set<DESEvent> resultSet = new HashSet<>();
-        
-        assert context.getUser().getStack().size() == 1;
-        
+
+        assert context.getUser()
+            .getStack()
+            .size() == 1;
+
         context.getUser()
             .getStack()
             .removeStackFrame();
@@ -436,20 +445,19 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
         resultSet.add(new UsageScenarioFinished(context, 0));
         return Result.of(resultSet);
     }
-    
+
     private void abortUser(final Set<DESEvent> resultSet, final UserInterpretationContext context) {
-        if(context instanceof ClosedWorkloadUserInterpretationContext) {
+        if (context instanceof ClosedWorkloadUserInterpretationContext) {
             ClosedWorkloadUserInterpretationContext closedContext = (ClosedWorkloadUserInterpretationContext) context;
 
             // new user starts living with an empty stack.
             closedContext = closedContext.update()
-                    .withUser(new User())
-                    .build();
-            
+                .withUser(new User())
+                .build();
+
             resultSet.add(new ClosedWorkloadUserInitiated(closedContext, closedContext.getThinkTime()));
-        }
-        else {
-            
+        } else {
+
         }
     }
 
@@ -464,10 +472,13 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
                 closedWorkloadUserInitiated.getEntity()
                     .getBehaviorContext()
                     .getScenarioBehavior());
-        
+
         final UsageScenarioInterpreter usageScenarioInterpreter = new UsageScenarioInterpreter(
-                closedWorkloadUserInitiated.getEntity().update().withUsageScenarioBehaviorContext(updatedRootScenarioContext).build());
-        
+                closedWorkloadUserInitiated.getEntity()
+                    .update()
+                    .withUsageScenarioBehaviorContext(updatedRootScenarioContext)
+                    .build());
+
         return Result.of(usageScenarioInterpreter.doSwitch(updatedRootScenarioContext.startScenario()));
     }
 
