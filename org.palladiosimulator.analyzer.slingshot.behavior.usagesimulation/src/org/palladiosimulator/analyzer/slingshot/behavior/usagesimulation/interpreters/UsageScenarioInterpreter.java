@@ -23,6 +23,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.Usage
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserEntryRequested;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserFinished;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserInterpretationProgressed;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserSlept;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserStarted;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserWokeUp;
@@ -146,6 +147,12 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	 */
 	@Override
 	public Set<DESEvent> caseStop(final Stop object) {
+	    	if(this.userContext.getBehaviorContext().isChildContext()) {
+	    	    UsageScenarioBehaviorContext parentBehaviorContext = this.userContext.getBehaviorContext().getParent().get();
+	    	    Optional<AbstractUserAction> nextAbstractUserAction = this.userContext.getBehaviorContext().getNextAction();
+	    	    UserInterpretationContext newUserInterpretationContext = this.userContext.update().withUsageScenarioBehaviorContext(parentBehaviorContext).withCurrentAction(nextAbstractUserAction.get()).build();
+	    	    return Set.of(new UserProgressed(newUserInterpretationContext));
+	    	}
 		return Set.of(new UserFinished(this.userContext));
 	}
 
@@ -169,8 +176,9 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 	public Set<DESEvent> caseStart(final Start object) {
 		final Set<DESEvent> resultSet;
 
-		if (this.userContext.getBehaviorContext().isChildContext()
-				|| this.userContext instanceof ClosedWorkloadUserInterpretationContext) {
+		if (this.userContext.getBehaviorContext().isChildContext()) {
+		    resultSet = Set.of(new UserProgressed(this.userContext.updateAction(object.getSuccessor())));
+		} else if (this.userContext instanceof ClosedWorkloadUserInterpretationContext) {
 			resultSet = Set.of(new UserStarted(this.userContext.updateAction(object.getSuccessor())));
 		} else if (this.userContext instanceof OpenWorkloadUserInterpretationContext) {
 			final OpenWorkloadUserInterpretationContext openWorkloadUserContext = (OpenWorkloadUserInterpretationContext) this.userContext;
@@ -226,16 +234,15 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 				.filter(Start.class::isInstance)
 				.findFirst()
 				.orElseThrow(() -> new IllegalStateException("There is no start action within the branch transition!"));
-
+		
 		final UsageScenarioBehaviorContext behaviorContext = BranchScenarioContext.builder()
-				.withNextAction(Optional.of(branch.getSuccessor()))
 				.withParent(Optional.of(this.userContext.getBehaviorContext()))
+				.withNextAction(Optional.of(branch.getSuccessor()))
 				.withScenarioBehavior(branchTransition.getBranchedBehaviour_BranchTransition()).build();
 
 		final UserInterpretationContext newContext = this.userContext.update()
 				.withCurrentAction(firstBranchAction)
 				.withUsageScenarioBehaviorContext(behaviorContext)
-				.withParentContext(Optional.of(this.userContext))
 				.build();
 
 		final InnerScenarioBehaviorInitiated innerScenarioBehaviorInitiated = new InnerScenarioBehaviorInitiated(

@@ -180,9 +180,10 @@ public class SystemSimulationBehavior implements SimulationBehaviorExtension {
 				.findProvidedRoleFromRequiredRole(entity.getRequiredRole());
 
 		if (assemblyContext.isPresent() && providedRole.isPresent()) {
+		    
 			final SimulatedStackframe<Object> inputStackframe = SimulatedStackHelper
 					.createAndPushNewStackFrame(entity.getUser().getStack(), entity.getInputVariableUsages());
-
+			
 			final CallOverWireRequest request = CallOverWireRequest.builder()
 					.from(entity.getRequestFrom().getAssemblyContext()).to(assemblyContext.get())
 					.signature(entity.getSignature()).user(entity.getUser()).entryRequest(entity)

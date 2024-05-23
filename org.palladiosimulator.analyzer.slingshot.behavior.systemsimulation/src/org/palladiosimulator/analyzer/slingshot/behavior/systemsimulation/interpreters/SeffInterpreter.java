@@ -110,9 +110,16 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 		final TransitionDeterminer transitionDeterminer = new TransitionDeterminer(
 				this.context.getRequestProcessingContext().getUser().getStack().currentStackFrame());
-		final AbstractBranchTransition branchTransition = transitionDeterminer
-				.determineTransition(abstractBranchTransitions);
+		AbstractBranchTransition branchTransition = null;
+		try {
 
+		 branchTransition = transitionDeterminer
+				.determineTransition(abstractBranchTransitions);
+		    
+		} catch (Exception e) {
+		    System.out.println("catched");
+		}
+		
 		if (branchTransition == null) {
 			throw new IllegalStateException("No branch transition was active. This is not allowed.");
 		}
