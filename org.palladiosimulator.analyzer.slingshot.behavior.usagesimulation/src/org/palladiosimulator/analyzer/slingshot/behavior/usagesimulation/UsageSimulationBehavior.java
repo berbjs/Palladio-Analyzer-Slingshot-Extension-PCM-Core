@@ -52,6 +52,7 @@ import org.palladiosimulator.pcm.usagemodel.OpenWorkload;
 import org.palladiosimulator.pcm.usagemodel.UsageModel;
 import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 
 import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
@@ -261,10 +262,12 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      */
     @Subscribe
     public Result<DESEvent> onUserStarted(final UserStarted userStarted) {
+        
         userStarted.getEntity()
             .getUser()
             .getStack()
             .createAndPushNewStackFrame();
+        
         final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(userStarted.getEntity());
         final Set<DESEvent> result = new HashSet<>(interpreter.doSwitch(userStarted.getEntity()
             .getCurrentAction()));
@@ -324,12 +327,24 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      */
     @Subscribe
     public Result<DESEvent> onUserRequestFinished(final UserRequestFinished evt) {
-
+        
+        Preconditions.checkArgument(evt.getEntity().getUser().getStack().size() == 2);
+        
+        
+        if(evt.getEntity().getUser().getStack().size()>2) {
+            System.out.println("problem");
+        }
+        
+        if(evt.getEntity().getUser().getStack().size()<2) {
+            System.out.println("problem");
+        }
+        
         /* Pop input variable Usages */
         evt.getEntity()
             .getUser()
             .getStack()
             .removeStackFrame();
+        
 
         final SimulatedStackframe<Object> resultFrame = evt.getUserContext()
             .getResultFrame();
@@ -363,30 +378,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
         this.LOGGER.info("User finished: " + evt.getEntity());
 
         final UserInterpretationContext context = evt.getEntity();
-        return finishUser(context);
-    }
-
-    private Result<DESEvent> finishUser(final UserInterpretationContext context) {
-        final Set<DESEvent> resultSet = new HashSet<>();
-//	if (context.getParentContext().isPresent()) {
-//	    /* We are inside another behavior, such as loop or branch */
-//	    final UsageScenarioBehaviorContext scenarioBehaviorContext = context.getBehaviorContext();
-//	    final UserInterpretationContext newContext;
-//
-//	    if (scenarioBehaviorContext.mustRepeatScenario()) {
-//		newContext = context.update().withCurrentAction(scenarioBehaviorContext.startScenario()).build();
-//	    } else {
-//		newContext = context.getParentContext().get()
-//			.updateAction(scenarioBehaviorContext.getNextAction().get());
-//	    }
-//
-//	    final UsageScenarioInterpreter interpreter = new UsageScenarioInterpreter(newContext);
-//	    resultSet.addAll(interpreter.doSwitch(newContext.getCurrentAction()));
-//	} else {
-        this.finishUserInterpretation(resultSet, context, false);
-//	}
-
-        return Result.of(resultSet);
+        return finishUserInterpretation(context);
     }
 
     /**
@@ -397,7 +389,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      * flag set to true. The resulting consequence is that a new simulated stack is created and the
      * closed workload user interpretation is initiated from the start. This means that a request
      * failing within a loop does not lead to the continuation of the loop but it is initiated all
-     * from the beginning. In order to make that possible a reconciliation of the stack is
+     * from the beginning. In order to make that pfossible a reconciliation of the stack is
      * necessary.
      * 
      * The only difference is that from the perspective of other extensions, the User did not
@@ -412,7 +404,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
         this.LOGGER.info("User aborted, lets restart, user: " + evt.getEntity());
 
         final UserInterpretationContext context = evt.getEntity();
-        finishUserInterpretation(resultSet, context, true);
+        abortUser(resultSet, context);
         return Result.of(resultSet);
     }
 
@@ -428,31 +420,37 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      *            Flag used to distinguish between a user finishing successful and a forced
      *            finished.
      */
-    private void finishUserInterpretation(final Set<DESEvent> resultSet, final UserInterpretationContext context,
-            boolean abortion) {
+    private Result<DESEvent> finishUserInterpretation(final UserInterpretationContext context) {
+        final Set<DESEvent> resultSet = new HashSet<>();
+        
+        assert context.getUser().getStack().size() == 1;
+        
         context.getUser()
             .getStack()
             .removeStackFrame();
 
-        if (!abortion) {
-            assert context.getUser()
-                .getStack()
-                .size() < 2;
-        }
-
         if (context instanceof ClosedWorkloadUserInterpretationContext) {
             ClosedWorkloadUserInterpretationContext closedContext = (ClosedWorkloadUserInterpretationContext) context;
-
-            if (abortion) {
-                // update context with a new user in case of abortion.
-                closedContext = closedContext.update()
-                    .withUser(new User())
-                    .build();
-            }
-
             resultSet.add(new ClosedWorkloadUserInitiated(closedContext, closedContext.getThinkTime()));
         }
         resultSet.add(new UsageScenarioFinished(context, 0));
+        return Result.of(resultSet);
+    }
+    
+    private void abortUser(final Set<DESEvent> resultSet, final UserInterpretationContext context) {
+        if(context instanceof ClosedWorkloadUserInterpretationContext) {
+            ClosedWorkloadUserInterpretationContext closedContext = (ClosedWorkloadUserInterpretationContext) context;
+
+            // new user starts living with an empty stack.
+            closedContext = closedContext.update()
+                    .withUser(new User())
+                    .build();
+            
+            resultSet.add(new ClosedWorkloadUserInitiated(closedContext, closedContext.getThinkTime()));
+        }
+        else {
+            
+        }
     }
 
     /**
@@ -466,8 +464,10 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
                 closedWorkloadUserInitiated.getEntity()
                     .getBehaviorContext()
                     .getScenarioBehavior());
+        
         final UsageScenarioInterpreter usageScenarioInterpreter = new UsageScenarioInterpreter(
-                closedWorkloadUserInitiated.getEntity());
+                closedWorkloadUserInitiated.getEntity().update().withUsageScenarioBehaviorContext(updatedRootScenarioContext).build());
+        
         return Result.of(usageScenarioInterpreter.doSwitch(updatedRootScenarioContext.startScenario()));
     }
 
