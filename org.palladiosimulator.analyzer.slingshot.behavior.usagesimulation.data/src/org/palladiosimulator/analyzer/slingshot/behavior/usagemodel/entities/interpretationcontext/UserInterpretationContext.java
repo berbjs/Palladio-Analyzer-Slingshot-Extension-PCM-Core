@@ -9,11 +9,13 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.sce
 import org.palladiosimulator.pcm.usagemodel.AbstractUserAction;
 import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
+
 /**
  * The UserInterpretationContext represents the knowledge that the interpreter
  * needs to continue interpretation for a user.
- * 
- * @author Julijan Katic
+ *
+ * @author Julijan Katic, Sarah Stieß
  */
 public abstract class UserInterpretationContext {
 
@@ -35,6 +37,8 @@ public abstract class UserInterpretationContext {
 	/** The behavior context indicating in which scenario we are. */
 	private final UsageScenarioBehaviorContext behaviorContext;
 
+	private final SimulatedStackframe<Object> resultFrame;
+
 	@Generated("SparkTools")
 	protected UserInterpretationContext(final BaseBuilder<?, ?> builder) {
 		this.scenario = builder.scenario;
@@ -43,6 +47,11 @@ public abstract class UserInterpretationContext {
 		this.currentUsageRun = builder.currentUsageRun;
 		this.parentContext = builder.parentContext;
 		this.behaviorContext = builder.usageScenarioBehaviorContext;
+		this.resultFrame = builder.resultFrame;
+	}
+
+	public SimulatedStackframe<Object> getResultFrame() {
+		return this.resultFrame;
 	}
 
 	public UsageScenario getScenario() {
@@ -78,7 +87,7 @@ public abstract class UserInterpretationContext {
 	/**
 	 * Helper method to create an update builder. The {@link #update()} should use
 	 * this method for to connect the updatable parameters from this parent class.
-	 * 
+	 *
 	 * @param <T>     The type extending this class. Used to inform which sub-class
 	 *                is built.
 	 * @param <B>     The type extending the abstract builder class
@@ -110,6 +119,13 @@ public abstract class UserInterpretationContext {
 		private int currentUsageRun;
 		private Optional<UserInterpretationContext> parentContext = Optional.empty();
 		private UsageScenarioBehaviorContext usageScenarioBehaviorContext;
+
+		private SimulatedStackframe<Object> resultFrame;
+
+		public B withResultFrame(final SimulatedStackframe<Object> resultFrame) {
+			this.resultFrame = resultFrame;
+			return this.actualBuilder();
+		}
 
 		public B withScenario(final UsageScenario scenario) {
 			this.scenario = scenario;

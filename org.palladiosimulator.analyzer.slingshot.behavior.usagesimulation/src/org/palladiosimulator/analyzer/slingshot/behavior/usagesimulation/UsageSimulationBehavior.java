@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 
 import org.apache.log4j.Logger;
+import org.eclipse.emf.common.util.EList;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.InterArrivalTime;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.ThinkTime;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
@@ -35,6 +36,7 @@ import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events.UserW
 import org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.interpreters.UsageScenarioInterpreter;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.repositories.UsageModelRepository;
 import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
+import org.palladiosimulator.analyzer.slingshot.common.utils.SimulatedStackHelper;
 //import org.palladiosimulator.analyzer.slingshot.common.utils.Postconditions;
 import org.palladiosimulator.analyzer.slingshot.core.events.SimulationStarted;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
@@ -42,6 +44,7 @@ import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscrib
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.eventcontract.OnEvent;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.returntypes.Result;
 import org.palladiosimulator.pcm.core.PCMRandomVariable;
+import org.palladiosimulator.pcm.parameter.VariableUsage;
 import org.palladiosimulator.pcm.usagemodel.AbstractUserAction;
 import org.palladiosimulator.pcm.usagemodel.ClosedWorkload;
 import org.palladiosimulator.pcm.usagemodel.OpenWorkload;
@@ -49,6 +52,8 @@ import org.palladiosimulator.pcm.usagemodel.UsageModel;
 import org.palladiosimulator.pcm.usagemodel.UsageScenario;
 
 import com.google.common.collect.ImmutableList;
+
+import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
 
 /**
  * This behavior handles the events for the usage simulation.
@@ -298,6 +303,16 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 */
 	@Subscribe
 	public Result<DESEvent> onUserRequestFinished(final UserRequestFinished evt) {
+
+		/* Pop input variable Usages */
+		evt.getEntity().getUser().getStack().removeStackFrame();
+
+		final SimulatedStackframe<Object> resultFrame = evt.getUserContext().getResultFrame();
+		final SimulatedStackframe<Object> topMostFrame = evt.getEntity().getUser().getStack().currentStackFrame();
+		final EList<VariableUsage> outVariables = evt.getEntity().getOutVariableUsages();
+
+		SimulatedStackHelper.addParameterToStackFrame(resultFrame, outVariables, topMostFrame);
+
 		return this.interpretNextAction(evt.getUserContext());
 	}
 
@@ -351,7 +366,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
 	 * simulation continue. The same behavior occurs in case of a
 	 * UserFinished event. The only difference is that from the perspective of other
 	 * extensions, the User did not successfully complete.
-	 * 
+	 *
 	 * @param evt
 	 * @return
 	 */

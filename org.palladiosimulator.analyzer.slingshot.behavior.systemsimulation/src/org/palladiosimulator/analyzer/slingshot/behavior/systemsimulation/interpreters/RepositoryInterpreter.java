@@ -16,6 +16,8 @@ import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entiti
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.events.SEFFInterpretationProgressed;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.repository.SystemModelRepository;
 import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.User;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.UserRequest;
+import org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext.UserInterpretationContext;
 import org.palladiosimulator.analyzer.slingshot.common.utils.SimulatedStackHelper;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.core.composition.ComposedStructure;
@@ -71,6 +73,9 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 	/** Needed for creating the appropriate SEFF Interpretation Context */
 	private final CallOverWireRequest callOverWireRequest;
 
+	private final UserInterpretationContext userInterpretationContext;
+	private final UserRequest userRequest;
+
 	/**
 	 * The stackframe to set variables into. Needed for creating the appropriate
 	 * SEFF Interpretation Context
@@ -100,6 +105,17 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 			final ProvidedRole providedRole, final User user, final SystemModelRepository modelRepository,
 			final Optional<SEFFInterpretationContext> callerContext, final CallOverWireRequest request,
 			final SimulatedStackframe<Object> resultStackframe) {
+
+		this(context, signature, providedRole, user, modelRepository, callerContext, request, resultStackframe, null,
+				null);
+
+	}
+
+	public RepositoryInterpreter(final AssemblyContext context, final Signature signature,
+			final ProvidedRole providedRole, final User user, final SystemModelRepository modelRepository,
+			final Optional<SEFFInterpretationContext> callerContext, final CallOverWireRequest request,
+			final SimulatedStackframe<Object> resultStackframe,
+			final UserInterpretationContext userInterpretationContext, final UserRequest userRequest) {
 		this.assemblyContext = context;
 		this.signature = signature;
 		this.providedRole = providedRole;
@@ -108,6 +124,9 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 		this.callerContext = callerContext;
 		this.callOverWireRequest = request;
 		this.resultStackframe = resultStackframe;
+
+		this.userInterpretationContext = userInterpretationContext;
+		this.userRequest = userRequest;
 	}
 
 	/**
@@ -124,6 +143,7 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 				.createAndPushNewStackFrame(this.user.getStack(),
 						object.getComponentParameterUsage_ImplementationComponentType(),
 						this.user.getStack().currentStackFrame());
+
 		SimulatedStackHelper.createAndPushNewStackFrame(this.user.getStack(),
 				this.assemblyContext.getConfigParameterUsages__AssemblyContext(), componentParameterStackframe);
 
@@ -139,8 +159,13 @@ public class RepositoryInterpreter extends RepositorySwitch<Set<SEFFInterpretati
 							.withAssemblyContext(this.assemblyContext).withCaller(this.callerContext)
 							.withBehaviorContext(new RootBehaviorContextHolder(rdSeff))
 							.withRequestProcessingContext(
-									RequestProcessingContext.builder().withAssemblyContext(this.assemblyContext)
-											.withProvidedRole(this.providedRole).withUser(this.user).build())
+									RequestProcessingContext.builder()
+											.withAssemblyContext(this.assemblyContext)
+											.withProvidedRole(this.providedRole)
+											.withUser(this.user)
+											.withUserInterpretationContext(userInterpretationContext)
+											.withUserRequest(userRequest)
+											.build())
 							.withCallOverWireRequest(callOverWireRequest)
 							.withResultStackframe(this.resultStackframe)
 							.build();
