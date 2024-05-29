@@ -333,20 +333,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
             .getStack()
             .size() == 2);
 
-        if (evt.getEntity()
-            .getUser()
-            .getStack()
-            .size() > 2) {
-            System.out.println("problem");
-        }
-
-        if (evt.getEntity()
-            .getUser()
-            .getStack()
-            .size() < 2) {
-            System.out.println("problem");
-        }
-
+       
         /* Pop input variable Usages */
         evt.getEntity()
             .getUser()
