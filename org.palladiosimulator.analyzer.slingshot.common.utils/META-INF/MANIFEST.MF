@@ -5,12 +5,10 @@ Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.common.utils
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: org.palladiosimulator
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.common.utils
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.apache.log4j,
  de.uka.ipd.sdq.simucomframework.variables,
- org.eclipse.emf.common,
  org.palladiosimulator.pcm,
- de.uka.ipd.sdq.stoex.analyser;bundle-version="4.3.0",
  org.palladiosimulator.analyzer.slingshot.core
 Export-Package: org.palladiosimulator.analyzer.slingshot.common.utils,
  org.palladiosimulator.analyzer.slingshot.common.utils.events,

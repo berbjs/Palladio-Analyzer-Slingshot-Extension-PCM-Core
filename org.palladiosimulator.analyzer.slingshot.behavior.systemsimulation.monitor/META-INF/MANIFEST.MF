@@ -4,20 +4,14 @@ Bundle-Name: Monitor
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.palladiosimulator.analyzer.slingshot.core,
  org.palladiosimulator.analyzer.slingshot.monitor.data,
- org.palladiosimulator.probeframework,
- org.palladiosimulator.analyzer.slingshot.monitor.utils;bundle-version="1.0.0",
- org.palladiosimulator.edp2,
  org.palladiosimulator.edp2.util,
  org.palladiosimulator.monitorrepository,
- org.eclipse.emf.ecore,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.monitor;bundle-version="1.0.0",
- org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data,
- org.palladiosimulator.pcm.edp2.measuringpoint;bundle-version="5.1.0",
- org.palladiosimulator.analyzer.slingshot.common.utils,
- org.palladiosimulator.spd.semantic,
  org.palladiosimulator.spd.measuringpoint;bundle-version="1.0.0",
- org.palladiosimulator.analyzer.slingshot.behavior.spd.data;bundle-version="1.0.0"
+ org.palladiosimulator.analyzer.slingshot.behavior.spd.data;bundle-version="1.0.0",
+ org.palladiosimulator.analyzer.slingshot.monitor.utils;bundle-version="1.0.0",
+ org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data

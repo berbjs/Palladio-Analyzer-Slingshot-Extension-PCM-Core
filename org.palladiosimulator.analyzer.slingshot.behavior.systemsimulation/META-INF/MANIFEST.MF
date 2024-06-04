@@ -4,17 +4,12 @@ Bundle-Name: Systemsimulation
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviour.systemsimulation
-Bundle-RequiredExecutionEnvironment: JavaSE-11
+Bundle-RequiredExecutionEnvironment: JavaSE-17
 Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0",
  org.palladiosimulator.pcm;bundle-version="4.3.0",
- org.apache.log4j;bundle-version="1.2.15",
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data;bundle-version="1.0.0",
  de.uka.ipd.sdq.simucomframework.variables;bundle-version="4.3.0",
- de.uka.ipd.sdq.simucomframework,
- de.uka.ipd.sdq.probfunction.math,
- org.palladiosimulator.analyzer.slingshot.common.utils,
  org.palladiosimulator.analyzer.slingshot.ui.events;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.workflow.events;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.workflow,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data;bundle-version="1.0.0"
-Import-Package: com.google.common.eventbus;version="21.0.0"
