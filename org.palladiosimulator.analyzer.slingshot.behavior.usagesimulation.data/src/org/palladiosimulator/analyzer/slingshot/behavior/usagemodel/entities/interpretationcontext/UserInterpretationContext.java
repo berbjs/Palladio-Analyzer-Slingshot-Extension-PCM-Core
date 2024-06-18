@@ -15,7 +15,7 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * The UserInterpretationContext represents the knowledge that the interpreter
  * needs to continue interpretation for a user.
  *
- * @author Julijan Katic, Sarah Stieß
+ * @author Julijan Katic, Sarah Stieß, Floriment Klinaku
  */
 public abstract class UserInterpretationContext {
 
