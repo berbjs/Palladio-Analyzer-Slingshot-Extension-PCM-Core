@@ -4,21 +4,15 @@ Bundle-Name: Usagemodel
 Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behavior.usagemodel
-Bundle-RequiredExecutionEnvironment: JavaSE-11
-Require-Bundle: org.apache.log4j;bundle-version="1.2.15",
- org.palladiosimulator.pcm;bundle-version="4.3.0",
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Require-Bundle: org.palladiosimulator.pcm,
  de.uka.ipd.sdq.simucomframework.variables,
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data;bundle-version="1.0.0",
- javax.inject,
- de.uka.ipd.sdq.simucomframework;bundle-version="4.3.0",
- de.uka.ipd.sdq.probfunction.math,
- com.google.inject,
  org.palladiosimulator.analyzer.slingshot.common.utils;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.ui.events;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.workflow.events;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.workflow,
  org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0"
-Import-Package: com.google.common.eventbus
 Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation,
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.interpreters,
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.repositories

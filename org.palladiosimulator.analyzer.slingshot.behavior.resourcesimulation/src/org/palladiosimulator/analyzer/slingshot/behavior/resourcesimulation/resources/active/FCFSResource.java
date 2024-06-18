@@ -78,7 +78,9 @@ public class FCFSResource extends AbstractActiveResource {
 	public Set<AbstractJobEvent> process(final JobProgressed jobProgressed) {
 		final Job job = jobProgressed.getEntity();
 
-		assert MathTools.equalsDouble(0, job.getDemand()) : "Remaining demand (" + job.getDemand() + ") not zero!";
+		// assertion does not hold anymore, as we do not update the demand anymore.
+		// assert MathTools.equalsDouble(0, job.getDemand()) : "Remaining demand (" +
+		// job.getDemand() + ") not zero!";
 
 		this.processes.remove(job);
 
