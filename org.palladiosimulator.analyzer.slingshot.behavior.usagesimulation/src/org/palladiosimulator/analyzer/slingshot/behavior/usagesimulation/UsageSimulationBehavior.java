@@ -63,7 +63,7 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * It interprets the usage model by listening on the {@link UsageInterpretationEvent}s. See the
  * method documentation for further information about the event handling.
  *
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku
  */
 @OnEvent(when = SimulationStarted.class, then = { UserStarted.class, InterArrivalUserInitiated.class,
         UsageModelPassedElement.class }, cardinality = MANY)

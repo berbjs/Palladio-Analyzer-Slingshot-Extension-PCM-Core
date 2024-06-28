@@ -52,7 +52,7 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * The usage scenario interpreter interprets a single usage scenario. In order for it to work, it
  * needs the user instance and the user context.
  *
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku
  */
 public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
 
@@ -89,18 +89,17 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
         LOGGER.debug("Interpret loop. Maximum loop number: " + numberOfLoops);
         final ScenarioBehaviour bodyBehavior = loop.getBodyBehaviour_Loop();
 
-        final AbstractUserAction firstLoopAction = bodyBehavior.getActions_ScenarioBehaviour()
-            .stream()
-            .filter(Start.class::isInstance)
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("There is no start action within the loop!"));
-
         final UsageScenarioBehaviorContext behaviorContext = LoopScenarioBehaviorContext.builder()
             .withNextAction(Optional.of(loop.getSuccessor()))
             .withParent(Optional.of(this.userContext.getBehaviorContext()))
             .withScenarioBehavior(bodyBehavior)
             .withMaximalLoopCount(numberOfLoops)
             .build();
+        
+        /*
+         * The loop has to start through the startScenario in order to increment the progression.
+         */
+        final AbstractUserAction firstLoopAction = behaviorContext.startScenario();
 
         final UserInterpretationContext newContext = this.userContext.update()
             .withCurrentAction(firstLoopAction)
@@ -147,20 +146,35 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
      *
      * @return set with {@link UserFinished} event.
      */
+    @SuppressWarnings("preview")
     @Override
     public Set<DESEvent> caseStop(final Stop object) {
         if (this.userContext.getBehaviorContext()
             .isChildContext()) {
-            UsageScenarioBehaviorContext parentBehaviorContext = this.userContext.getBehaviorContext()
-                .getParent()
-                .get();
-            Optional<AbstractUserAction> nextAbstractUserAction = this.userContext.getBehaviorContext()
-                .getNextAction();
-            UserInterpretationContext newUserInterpretationContext = this.userContext.update()
-                .withUsageScenarioBehaviorContext(parentBehaviorContext)
-                .withCurrentAction(nextAbstractUserAction.get())
-                .build();
-            return Set.of(new UserInterpretationProgressed(newUserInterpretationContext));
+        
+            switch (this.userContext.getBehaviorContext()) {
+            
+                case LoopScenarioBehaviorContext loopCtxt && loopCtxt.mustRepeatScenario() -> {
+                    
+                    Set<DESEvent> interpretationResultSet = this.doSwitch(loopCtxt.startScenario());
+                    return interpretationResultSet;
+                }
+                
+                default -> {
+                    UsageScenarioBehaviorContext parentBehaviorContext = this.userContext.getBehaviorContext()
+                            .getParent()
+                            .get();
+                    Optional<AbstractUserAction> nextAbstractUserAction = this.userContext.getBehaviorContext()
+                            .getNextAction();
+                    UserInterpretationContext newUserInterpretationContext = this.userContext.update()
+                            .withUsageScenarioBehaviorContext(parentBehaviorContext)
+                            .withCurrentAction(nextAbstractUserAction.get())
+                            .build();
+                    return Set.of(new UserInterpretationProgressed(newUserInterpretationContext));
+                }
+                    
+            }
+            
         }
         return Set.of(new UserFinished(this.userContext));
     }
