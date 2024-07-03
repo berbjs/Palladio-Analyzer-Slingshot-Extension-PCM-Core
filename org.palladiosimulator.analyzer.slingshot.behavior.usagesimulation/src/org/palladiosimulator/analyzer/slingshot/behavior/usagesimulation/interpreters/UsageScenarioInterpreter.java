@@ -142,39 +142,37 @@ public class UsageScenarioInterpreter extends UsagemodelSwitch<Set<DESEvent>> {
     }
 
     /**
-     * Interprets the Stop action and immediately returns the set with {@link UserFinished} event.
+     * Interprets the Stop action. In case of child behaviors such as Loop or Branch, it returns a
+     * {@link UserInterpretationProgressed} event, otherwise in case the main usage scenario
+     * finished it returns a {@link UserFinished} event.
      *
      * @return set with {@link UserFinished} event.
      */
-    @SuppressWarnings("preview")
     @Override
     public Set<DESEvent> caseStop(final Stop object) {
         if (this.userContext.getBehaviorContext()
             .isChildContext()) {
-        
-            switch (this.userContext.getBehaviorContext()) {
-            
-                case LoopScenarioBehaviorContext loopCtxt && loopCtxt.mustRepeatScenario() -> {
-                    
-                    Set<DESEvent> interpretationResultSet = this.doSwitch(loopCtxt.startScenario());
-                    return interpretationResultSet;
-                }
-                
-                default -> {
-                    UsageScenarioBehaviorContext parentBehaviorContext = this.userContext.getBehaviorContext()
-                            .getParent()
-                            .get();
-                    Optional<AbstractUserAction> nextAbstractUserAction = this.userContext.getBehaviorContext()
-                            .getNextAction();
-                    UserInterpretationContext newUserInterpretationContext = this.userContext.update()
-                            .withUsageScenarioBehaviorContext(parentBehaviorContext)
-                            .withCurrentAction(nextAbstractUserAction.get())
-                            .build();
-                    return Set.of(new UserInterpretationProgressed(newUserInterpretationContext));
-                }
-                    
+
+            if (this.userContext.getBehaviorContext() instanceof LoopScenarioBehaviorContext
+                    && ((LoopScenarioBehaviorContext) this.userContext.getBehaviorContext()).mustRepeatScenario()) {
+                LoopScenarioBehaviorContext loopCtxt = (LoopScenarioBehaviorContext) this.userContext
+                    .getBehaviorContext();
+                Set<DESEvent> interpretationResultSet = this.doSwitch(loopCtxt.startScenario());
+                return interpretationResultSet;
+            } else {
+                UsageScenarioBehaviorContext parentBehaviorContext = this.userContext.getBehaviorContext()
+                    .getParent()
+                    .get();
+                Optional<AbstractUserAction> nextAbstractUserAction = this.userContext.getBehaviorContext()
+                    .getNextAction();
+                UserInterpretationContext newUserInterpretationContext = this.userContext.update()
+                    .withUsageScenarioBehaviorContext(parentBehaviorContext)
+                    .withCurrentAction(nextAbstractUserAction.get())
+                    .build();
+                return Set.of(new UserInterpretationProgressed(newUserInterpretationContext));
+
             }
-            
+
         }
         return Set.of(new UserFinished(this.userContext));
     }
