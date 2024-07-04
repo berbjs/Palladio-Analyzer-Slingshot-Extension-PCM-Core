@@ -67,7 +67,7 @@ import de.uka.ipd.sdq.simucomframework.variables.stackframe.SimulatedStackframe;
  * <p>
  * It generates new events and returns them on each visit.
  *
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku
  */
 public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
@@ -110,9 +110,8 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 
 		final TransitionDeterminer transitionDeterminer = new TransitionDeterminer(
 				this.context.getRequestProcessingContext().getUser().getStack().currentStackFrame());
-		final AbstractBranchTransition branchTransition = transitionDeterminer
-				.determineTransition(abstractBranchTransitions);
-
+		AbstractBranchTransition branchTransition = transitionDeterminer.determineTransition(abstractBranchTransitions);
+		
 		if (branchTransition == null) {
 			throw new IllegalStateException("No branch transition was active. This is not allowed.");
 		}

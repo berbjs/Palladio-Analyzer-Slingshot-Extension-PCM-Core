@@ -5,21 +5,23 @@ import org.palladiosimulator.pcm.usagemodel.AbstractUserAction;
 import com.google.common.base.Preconditions;
 
 /**
- * This class is used for loops with inner scenario behaviors. It contains a
- * maximal loop count, that is, how many iterations are permitted, and the
- * current progression of that iteration.
+ * This class is used for loops with inner scenario behaviors. It contains a maximal loop count,
+ * that is, how many iterations are permitted, and the current progression of that iteration.
  * <p>
- * The scenario must be repeated as long as the progression has not reached the
- * maximal loop count yet. The scenario shouldn't be repeated anymore as soon as
- * the progression has reached that loop count.
+ * The scenario must be repeated as long as the progression has not reached the maximal loop count
+ * yet. The scenario shouldn't be repeated anymore as soon as the progression has reached that loop
+ * count.
  * <p>
- * When the scenario is started, the progression is incremented by one
- * automatically.
+ * When the scenario is started, the progression is incremented by one automatically. The
+ * post-condition of maximalLoopCount executions of the specified scenario holds only if the
+ * {@link #startScenario()} is called before interpreting the scenario itself. The
+ * {@link #startScenario()} returns the StartAction of the ScenarioBehavior. It is discouraged to
+ * retrieve the StartAction and interpret the scenario without starting the scenario. 
  * <p>
- * Because this is an inner scenario behavior, both the {@code nextAction} and
- * the {@code parent} must be present.
+ * Because this is an inner scenario behavior, both the {@code nextAction} and the {@code parent}
+ * must be present.
  * 
- * @author Julijan Katic
+ * @author Julijan Katic, Floriment Klinaku
  */
 public final class LoopScenarioBehaviorContext extends UsageScenarioBehaviorContext {
 
