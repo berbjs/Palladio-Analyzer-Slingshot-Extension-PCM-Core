@@ -25,10 +25,10 @@ import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 import org.palladiosimulator.monitorrepository.MeasurementSpecification;
 import org.palladiosimulator.pcm.repository.OperationProvidedRole;
 import org.palladiosimulator.pcm.repository.ProvidedRole;
-import org.palladiosimulator.pcm.repository.Role;
 import org.palladiosimulator.pcm.seff.StartAction;
 import org.palladiosimulator.pcm.seff.StopAction;
 import org.palladiosimulator.pcmmeasuringpoint.AssemblyOperationMeasuringPoint;
+import org.palladiosimulator.pcmmeasuringpoint.SystemOperationMeasuringPoint;
 import org.palladiosimulator.probeframework.calculator.Calculator;
 import org.palladiosimulator.probeframework.calculator.DefaultCalculatorProbeSets;
 import org.palladiosimulator.probeframework.calculator.IGenericCalculatorFactory;
@@ -82,19 +82,20 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 		final MeasurementSpecification measurementSpecification = event.getEntity();
 		final MeasuringPoint measuringPoint = measurementSpecification.getMonitor().getMeasuringPoint();
 
-		if (measuringPoint instanceof AssemblyOperationMeasuringPoint
+		if (measuringPoint instanceof final AssemblyOperationMeasuringPoint assemblyMeasuringPoint
 				&& MetricDescriptionUtility.metricDescriptionIdsEqual(measurementSpecification.getMetricDescription(),
 						MetricDescriptionConstants.RESPONSE_TIME_METRIC)) {
-			final Role role = ((AssemblyOperationMeasuringPoint) measuringPoint).getRole();
 
-			if (role instanceof OperationProvidedRole) {
+			if (assemblyMeasuringPoint.getRole() instanceof final OperationProvidedRole role) {
 
 				final OperationProbes userProbes = new OperationProbes();
-				final AssemblyOperationCompoundKey key = AssemblyOperationCompoundKey.of(((AssemblyOperationMeasuringPoint) measuringPoint).getAssembly(), (OperationProvidedRole) role);
+				final AssemblyOperationCompoundKey key = AssemblyOperationCompoundKey.of(
+						assemblyMeasuringPoint.getAssembly(), role,
+						assemblyMeasuringPoint.getOperationSignature());
 				this.userProbesMap.put(key, userProbes);
 
 				final Calculator calculator = this.calculatorFactory.buildCalculator(
-						MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, measuringPoint,
+						MetricDescriptionConstants.RESPONSE_TIME_METRIC_TUPLE, assemblyMeasuringPoint,
 						DefaultCalculatorProbeSets.createStartStopProbeConfiguration(userProbes.operationStartedProbe,
 								userProbes.operationFinishedProbe));
 
@@ -113,8 +114,9 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 		}
 
 		final ProvidedRole role = seffStarted.getContext().getRequestProcessingContext().getProvidedRole();
+
 		final AssemblyOperationCompoundKey key = AssemblyOperationCompoundKey
-				.of(seffStarted.getContext().getAssemblyContext(), role);
+				.of(seffStarted.getContext());
 
 		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(key)) {
 			final OperationProbes userProbes = this.userProbesMap.get(key);
@@ -133,7 +135,7 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 
 		final ProvidedRole role = seffFinished.getContext().getRequestProcessingContext().getProvidedRole();
 		final AssemblyOperationCompoundKey key = AssemblyOperationCompoundKey
-				.of(seffFinished.getContext().getAssemblyContext(), role);
+				.of(seffFinished.getContext());
 
 		if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(key)) {
 			final OperationProbes userProbes = this.userProbesMap.get(key);
@@ -157,13 +159,13 @@ public class OperationCallActionResponseTimeMonitoringBehavior implements Simula
 		private static RequestContext passedElement(final DESEvent desEvent) {
 			if (desEvent instanceof SEFFModelPassedElement<?>) {
 				final SEFFModelPassedElement<?> el = (SEFFModelPassedElement<?>) desEvent;
-				
+
 				if(el.getContext().getCaller().isPresent()) {
 					return new RequestContext(el.getContext().getRequestProcessingContext().getUser().getId()+el.getContext().getCaller().get().hashCode());
 				} else {
-					return new RequestContext(el.getContext().getRequestProcessingContext().getUser().getId());	
+					return new RequestContext(el.getContext().getRequestProcessingContext().getUser().getId());
 				}
-				
+
 			}
 			return RequestContext.EMPTY_REQUEST_CONTEXT;
 		}
