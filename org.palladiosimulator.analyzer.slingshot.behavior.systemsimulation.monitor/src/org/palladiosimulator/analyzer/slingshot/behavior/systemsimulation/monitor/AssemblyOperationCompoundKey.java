@@ -2,10 +2,8 @@ package org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monit
 
 import java.util.Objects;
 
-import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.entities.seff.SEFFInterpretationContext;
 import org.palladiosimulator.pcm.core.composition.AssemblyContext;
 import org.palladiosimulator.pcm.repository.ProvidedRole;
-import org.palladiosimulator.pcm.repository.Signature;
 
 /**
  *
@@ -20,18 +18,15 @@ public final class AssemblyOperationCompoundKey {
 
 	private final AssemblyContext assemblyContext;
 	private final ProvidedRole providedRole;
-	private final Signature signature;
 
-	private AssemblyOperationCompoundKey(final AssemblyContext resourceContainer, final ProvidedRole providedRole,
-			final Signature signature) {
+	private AssemblyOperationCompoundKey(final AssemblyContext resourceContainer, final ProvidedRole providedRole) {
 		this.assemblyContext = resourceContainer;
 		this.providedRole = providedRole;
-		this.signature = signature;
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(this.assemblyContext.getId(), this.providedRole.getId(), this.signature.getId());
+		return Objects.hash(this.assemblyContext.getId(), this.providedRole.getId());
 	}
 
 	@Override
@@ -44,8 +39,7 @@ public final class AssemblyOperationCompoundKey {
 		}
 		final AssemblyOperationCompoundKey other = (AssemblyOperationCompoundKey) obj;
 		return Objects.equals(this.assemblyContext.getId(), other.assemblyContext.getId())
-				&& Objects.equals(this.providedRole.getId(), other.providedRole.getId())
-				&& Objects.equals(this.signature.getId(), other.signature.getId());
+				&& Objects.equals(this.providedRole.getId(), other.providedRole.getId());
 	}
 
 	@Override
@@ -53,25 +47,8 @@ public final class AssemblyOperationCompoundKey {
 		return this.assemblyContext.getId() + ":" + this.providedRole.getId();
 	}
 
-	public static AssemblyOperationCompoundKey of(final SEFFInterpretationContext context) {
-
-		Signature sig = null;
-		if (context.getRequestProcessingContext().getUserRequest() != null) {
-			sig = context.getRequestProcessingContext().getUserRequest().getOperationSignature();
-		} else if (context.getCallOverWireRequest().isPresent()) {
-			sig = context.getCallOverWireRequest().get().getSignature();
-		} else {
-			throw new IllegalArgumentException(String.format(
-					"Cannot determine Signature of SEFFInterpretationContext %s, as their is neither a UserRequest, nor a CallOverWireRequest.",
-					context.toString()));
-		}
-
-		return new AssemblyOperationCompoundKey(context.getAssemblyContext(),
-				context.getRequestProcessingContext().getProvidedRole(), sig);
-	}
-
 	public static AssemblyOperationCompoundKey of(final AssemblyContext resourceContainer,
-			final ProvidedRole providedRole, final Signature signature) {
-		return new AssemblyOperationCompoundKey(resourceContainer, providedRole, signature);
+			final ProvidedRole providedRole) {
+		return new AssemblyOperationCompoundKey(resourceContainer, providedRole);
 	}
 }
