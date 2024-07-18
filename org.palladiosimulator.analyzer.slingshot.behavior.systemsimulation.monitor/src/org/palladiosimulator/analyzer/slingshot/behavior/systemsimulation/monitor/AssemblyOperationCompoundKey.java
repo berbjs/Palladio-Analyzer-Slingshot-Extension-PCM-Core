@@ -22,9 +22,9 @@ public final class AssemblyOperationCompoundKey {
 	private final ProvidedRole providedRole;
 	private final Signature signature;
 
-	private AssemblyOperationCompoundKey(final AssemblyContext resourceContainer, final ProvidedRole providedRole,
+	private AssemblyOperationCompoundKey(final AssemblyContext assemblyContext, final ProvidedRole providedRole,
 			final Signature signature) {
-		this.assemblyContext = resourceContainer;
+		this.assemblyContext = assemblyContext;
 		this.providedRole = providedRole;
 		this.signature = signature;
 	}
@@ -70,8 +70,8 @@ public final class AssemblyOperationCompoundKey {
 				context.getRequestProcessingContext().getProvidedRole(), sig);
 	}
 
-	public static AssemblyOperationCompoundKey of(final AssemblyContext resourceContainer,
+	public static AssemblyOperationCompoundKey of(final AssemblyContext assemblyContext,
 			final ProvidedRole providedRole, final Signature signature) {
-		return new AssemblyOperationCompoundKey(resourceContainer, providedRole, signature);
+		return new AssemblyOperationCompoundKey(assemblyContext, providedRole, signature);
 	}
 }
