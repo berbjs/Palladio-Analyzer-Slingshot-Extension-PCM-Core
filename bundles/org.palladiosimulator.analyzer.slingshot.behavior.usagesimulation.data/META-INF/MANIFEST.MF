@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: UsageModelData
+Bundle-SymbolicName: org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data
+Bundle-Version: 1.0.0.qualifier
+Automatic-Module-Name: org.palladiosimulator.analyzer.slingshot.behaviour.usagesimulation.data
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.0.0",
+ org.palladiosimulator.pcm,
+ de.uka.ipd.sdq.simucomframework.variables;bundle-version="4.3.0",
+ org.palladiosimulator.analyzer.slingshot.common.utils;visibility:=reexport
+Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities,
+ org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.interpretationcontext,
+ org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.entities.scenariobehavior,
+ org.palladiosimulator.analyzer.slingshot.behavior.usagemodel.events

@@ -4,14 +4,24 @@
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>org.palladiosimulator.analyzer.slingshot</groupId>
-		<artifactId>parent</artifactId>	
-		<version>0.1.0-SNAPSHOT</version>
+		<artifactId>slingshot-pcm</artifactId>	
+		<version>0.0.2-SNAPSHOT</version>
 	</parent>
 	<artifactId>bundles</artifactId>	
 	<packaging>pom</packaging>
 	
 	<modules>
-		<!-- insert bundle folders here -->
+	  	<module>org.palladiosimulator.analyzer.slingshot.behavior.generalsimulationconfiguration</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.data</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.monitor</module>
+		<module>org.palladiosimulator.analyzer.slingshot.common.utils</module>
 	</modules>
 	
 </project>

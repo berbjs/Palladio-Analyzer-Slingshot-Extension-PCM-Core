@@ -1,0 +1,12 @@
+**/target/
+**/bin/
+**/conf/
+**/doc/
+*.html
+*.css
+*.js
+**/codemr/
+**/.settings/
+**/.metadata/
+
+.DS_Store
