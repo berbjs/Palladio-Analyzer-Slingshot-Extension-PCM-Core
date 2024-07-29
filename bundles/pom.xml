@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.palladiosimulator.analyzer.slingshot.behavior.pcm</groupId>
+		<artifactId>parent</artifactId>	
+		<version>0.0.2-SNAPSHOT</version>
+	</parent>
+	<artifactId>bundles</artifactId>	
+	<packaging>pom</packaging>
+	
+	<modules>
+	  	<module>org.palladiosimulator.analyzer.slingshot.behavior.generalsimulationconfiguration</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.data</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.monitor</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data</module>
+		<module>org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.monitor</module>
+		<module>org.palladiosimulator.analyzer.slingshot.common.utils</module>
+	</modules>
+	
+</project>
