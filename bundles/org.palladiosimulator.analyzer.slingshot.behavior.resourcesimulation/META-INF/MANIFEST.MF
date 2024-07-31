@@ -13,7 +13,6 @@ Require-Bundle: org.palladiosimulator.analyzer.slingshot.core;bundle-version="1.
  de.uka.ipd.sdq.simucomframework,
  org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.data,
  de.uka.ipd.sdq.simucomframework.variables,
- org.palladiosimulator.analyzer.slingshot.behavior.spd.data,
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data,
  org.palladiosimulator.analyzer.slingshot.common.utils
 Export-Package: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation,
