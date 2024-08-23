@@ -39,9 +39,9 @@ import org.palladiosimulator.spdmeasuringpoint.ElasticInfrastructureMeasuringPoi
  * Behavior to monitor the number of elements in a Elastic Infrastructure.
  *
  * The behavior creates Probes and Calculators for
- * {@link SPDResourceContainerMeasuringPoint}s.
+ * {@link ElasticInfrastructureMeasuringPoint}s.
  *
- * For a {@link SPDResourceContainerMeasuringPoint}, the behavior creates a
+ * For a {@link ElasticInfrastructureMeasuringPoint}, the behavior creates a
  * probe and a calculator for the given resource container, iff the resource
  * container is {@code unit} in any of the given target configurations.
  *
