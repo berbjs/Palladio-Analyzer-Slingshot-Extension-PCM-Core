@@ -11,6 +11,7 @@ import javax.inject.Inject;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor.probes.NumberOfElementsInCompetingConsumerGroupProbe;
 import org.palladiosimulator.analyzer.slingshot.behavior.systemsimulation.monitor.probes.NumberOfElementsInServiceGroupProbe;
 import org.palladiosimulator.analyzer.slingshot.common.annotations.Nullable;
+import org.palladiosimulator.analyzer.slingshot.common.events.DESEvent;
 import org.palladiosimulator.analyzer.slingshot.common.events.modelchanges.ModelAdjusted;
 import org.palladiosimulator.analyzer.slingshot.core.extension.SimulationBehaviorExtension;
 import org.palladiosimulator.analyzer.slingshot.eventdriver.annotations.Subscribe;
@@ -54,7 +55,8 @@ import org.palladiosimulator.spdmeasuringpoint.ServiceGroupMeasuringPoint;
  * @author Sarah Stieß
  *
  */
-@OnEvent(when = MonitorModelVisited.class, then = CalculatorRegistered.class, cardinality = EventCardinality.SINGLE)
+@OnEvent(when = MonitorModelVisited.class, then = { CalculatorRegistered.class,
+		ProbeTaken.class }, cardinality = EventCardinality.SINGLE)
 @OnEvent(when = ModelAdjusted.class, then = ProbeTaken.class, cardinality = EventCardinality.SINGLE)
 public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtension {
 
@@ -77,9 +79,11 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 	}
 
 	@Subscribe
-	public Result<CalculatorRegistered> onMeasurementSpecification(final MeasurementSpecificationVisited m) {
+	public Result<DESEvent> onMeasurementSpecification(final MeasurementSpecificationVisited m) {
 		final MeasurementSpecification spec = m.getEntity();
 		final MeasuringPoint measuringPoint = spec.getMonitor().getMeasuringPoint();
+
+		final Set<DESEvent> resultingEvents = new HashSet<>();
 
 		if (measuringPoint instanceof final ServiceGroupMeasuringPoint mp
 				&& MetricDescriptionUtility.metricDescriptionIdsEqual(spec.getMetricDescription(),
@@ -88,8 +92,12 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 			final Optional<Calculator> sgCalculator = regsterSGCalculator(mp);
 
 			if (sgCalculator.isPresent()) {
-				return Result.of(new CalculatorRegistered(sgCalculator.get()));
+				resultingEvents.add(new CalculatorRegistered(sgCalculator.get()));
 
+				final NumberOfElementsInServiceGroupProbe probe = serviceGroupProbes
+						.get(mp.getServiceGroup().getUnitAssembly());
+				probe.takeMeasurement(m);
+				resultingEvents.add(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
 			}
 		}
 
@@ -100,12 +108,17 @@ public class NumberOfElementsMonitorBehavior implements SimulationBehaviorExtens
 			final Optional<Calculator> ccgCalculator = registerCCGCalculator(mp);
 
 			if (ccgCalculator.isPresent()) {
-				return Result.of(new CalculatorRegistered(ccgCalculator.get()));
+				resultingEvents.add(new CalculatorRegistered(ccgCalculator.get()));
+
+				final NumberOfElementsInServiceGroupProbe probe = serviceGroupProbes
+						.get(mp.getCompetingConsumerGroup().getUnitAssembly());
+				probe.takeMeasurement(m);
+				resultingEvents.add(new ProbeTaken(ProbeTakenEntity.builder().withProbe(probe).build()));
 
 			}
 		}
 
-		return Result.empty();
+		return Result.of(resultingEvents);
 	}
 
 	/**
