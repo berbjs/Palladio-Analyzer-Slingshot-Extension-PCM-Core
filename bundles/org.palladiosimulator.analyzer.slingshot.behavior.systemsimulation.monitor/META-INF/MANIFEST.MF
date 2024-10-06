@@ -14,3 +14,4 @@ Require-Bundle: org.palladiosimulator.analyzer.slingshot.core,
  org.palladiosimulator.spd.measuringpoint;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.monitor.utils;bundle-version="1.0.0",
  org.palladiosimulator.analyzer.slingshot.behavior.usagesimulation.data
+Import-Package: org.palladiosimulator.analyzer.slingshot.behavior.resourcesimulation.probes

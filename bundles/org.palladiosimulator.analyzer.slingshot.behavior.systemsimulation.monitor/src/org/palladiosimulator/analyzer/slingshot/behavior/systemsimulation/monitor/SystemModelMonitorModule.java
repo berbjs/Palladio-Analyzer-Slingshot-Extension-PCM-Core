@@ -4,9 +4,10 @@ import org.palladiosimulator.analyzer.slingshot.core.extension.AbstractSlingshot
 
 public class SystemModelMonitorModule extends AbstractSlingshotExtension {
 
-	@Override
-	protected void configure() {
-		install(OperationCallActionResponseTimeMonitoringBehavior.class);
-		install(NumberOfElementsMonitorBehavior.class);
-	}
+    @Override
+    protected void configure() {
+        install(OperationCallActionResponseTimeMonitoringBehavior.class);
+        install(OperationCallActionRequestArrivalRateMonitoringBehavior.class);
+        install(NumberOfElementsMonitorBehavior.class);
+    }
 }
