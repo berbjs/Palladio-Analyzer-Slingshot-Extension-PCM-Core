@@ -11,18 +11,23 @@ import org.palladiosimulator.analyzer.slingshot.monitor.probes.EventBasedListPro
 import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 
 /**
- * Probe for the Number of Elements in a Elastic Infrastructure.
+ * Probe for the Request arrival rate for some operation.
  *
- * The Number of Elements is always calculated with regard to a certain target group configuration,
- * i.e. only elements of a given target group are aconsidered.
+ * The Request arrival rate is smoothed using an exponential moving average (with static parameters
+ * given below) as it can be based on some probabilistic function and thus be quite noisy without
+ * smoothing
  *
- * @author Sarah Stieß
+ * @author Jens Berberich
  *
  */
 public final class RequestArrivalRateProbe extends EventBasedListProbe<Double, Frequency> {
 
     private double time;
     private double rate;
+    private static final double alpha = 0.01;
+    private double currentRate;
+    private static final double windowSizeInSeconds = 120;
+    private int nextFactor = 1;
 
     /**
      * Constructor for RequestArrivalRateProbe.
@@ -38,14 +43,28 @@ public final class RequestArrivalRateProbe extends EventBasedListProbe<Double, F
     @Override
     public Measure<Double, Frequency> getMeasurement(final DESEvent event) {
         if (event instanceof SEFFModelPassedElement) {
-            if (this.time != event.time()) {
-                this.rate = 1 / (event.time() - this.time);
-                this.time = event.time();
-                return Measure.valueOf(rate, SI.HERTZ);
+            double deltaTime = event.time() - this.time;
+
+            if (deltaTime != 0) {
+                // Update the EMA with the new data point
+                this.currentRate = (1.0 - this.alpha) * this.currentRate + this.nextFactor * (this.alpha / deltaTime);
+                this.nextFactor = 1;
+                double previousRate = this.currentRate;
             } else {
-                this.rate *= 2;
+                this.nextFactor += 1;
             }
-            return Measure.valueOf(this.rate, SI.HERTZ);
+
+            // Adjust the time-weighted factor based on the time elapsed since the last
+            // update
+            final double timeFactor = Math.exp(-deltaTime / this.windowSizeInSeconds);
+
+            // Apply the time factor to the current value
+            this.currentRate *= timeFactor;
+
+            // Update the last update time
+            this.time = event.time();
+
+            return Measure.valueOf(this.currentRate, SI.HERTZ);
         }
         throw new IllegalArgumentException(String.format("Wrong eventype. Expected %s but got %s.",
                 ActiveResourceStateUpdated.class.getSimpleName(), event.getClass()
