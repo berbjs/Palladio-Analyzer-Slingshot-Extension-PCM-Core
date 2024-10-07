@@ -369,7 +369,7 @@ public class UsageSimulationBehavior implements SimulationBehaviorExtension {
      */
     @Subscribe
     public Result<DESEvent> onUserFinished(final UserFinished evt) {
-        this.LOGGER.info("User finished: " + evt.getEntity());
+        this.LOGGER.debug("User finished: " + evt.getEntity());
 
         final UserInterpretationContext context = evt.getEntity();
         return finishUserInterpretation(context);

@@ -98,21 +98,21 @@ public class SeffSimulationBehavior implements SimulationBehaviorExtension {
 			} else if (fb.isProcessed()) {
 				result = Result.of();
 			} else {
-				LOGGER.info("return to parent - from forked");
+				LOGGER.debug("return to parent - from forked");
 				fb.markProcessed();
 				result = Result.of(this.continueInParent(entity));
 			}
 		} else if (!entity.getBehaviorContext().hasFinished()) {
-			LOGGER.info("repeat scenario");
+			LOGGER.debug("repeat scenario");
 			result = Result.of(this.repeat(entity));
 		} else if (entity.getBehaviorContext().isChild()) { // go to parents first, only go to caller if no parent.
-			LOGGER.info("return to parent");
+			LOGGER.debug("return to parent");
 			result = Result.of(this.continueInParent(entity));
 		} else if (entity.getCaller().isPresent()) {
-			LOGGER.info("return to caller");
+			LOGGER.debug("return to caller");
 			result = Result.of(this.continueInCaller(entity));
 		} else {
-			LOGGER.info("finish request");
+			LOGGER.debug("finish request");
 			result = Result.of(this.finishUserRequest(entity));
 		}
 

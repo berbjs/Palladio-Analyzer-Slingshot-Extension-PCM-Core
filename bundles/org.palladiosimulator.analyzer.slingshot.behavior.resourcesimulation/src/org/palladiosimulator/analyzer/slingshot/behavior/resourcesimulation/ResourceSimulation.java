@@ -217,7 +217,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				return Result.of(new JobAborted(linkingJob, 0, "linking resource is not found"));
 			}
 
-			LOGGER.info("A linking job has started with id " + linkingJob.getId() + " and demand (without latency) "
+			LOGGER.debug("A linking job has started with id " + linkingJob.getId() + " and demand (without latency) "
 					+ linkingJob.getDemand());
 			final Set<AbstractJobEvent> jobs = linkingResource.get().onJobInitiated(jobInitiated);
 			LOGGER.debug("Size: " + jobs.size());
@@ -280,7 +280,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 				return Result.of(new JobAborted(linkingJob, 0, "linking resource is not found"));
 			}
 
-			LOGGER.info("A linking job has been progressed: " + linkingJob.getId() + " with demand "
+			LOGGER.debug("A linking job has been progressed: " + linkingJob.getId() + " with demand "
 					+ linkingJob.getDemand());
 			return Result.of(linkingResource.get().onJobProgressed(jobProgressed));
 		}
@@ -303,7 +303,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 		if (evt.getEntity() instanceof LinkingJob) {
 			/* This is just for Debugging Purposes */
 			final LinkingJob linkingJob = (LinkingJob) evt.getEntity();
-			LOGGER.info("The linking job with id " + linkingJob.getId() + " has finished");
+			LOGGER.debug("The linking job with id " + linkingJob.getId() + " has finished");
 			return Result.of(new CallOverWireSucceeded(linkingJob.getRequest()));
 		}
 
@@ -362,7 +362,7 @@ public class ResourceSimulation implements SimulationBehaviorExtension {
 
 			if (fromAlC.get().getResourceContainer_AllocationContext().getId()
 					.equals(toAlC.get().getResourceContainer_AllocationContext().getId())) {
-				LOGGER.info("Both components lie on the same resource container -> no call over wire required.");
+				LOGGER.debug("Both components lie on the same resource container -> no call over wire required.");
 				return Result.of(new CallOverWireSucceeded(externalCallRequested.getRequest()));
 			}
 

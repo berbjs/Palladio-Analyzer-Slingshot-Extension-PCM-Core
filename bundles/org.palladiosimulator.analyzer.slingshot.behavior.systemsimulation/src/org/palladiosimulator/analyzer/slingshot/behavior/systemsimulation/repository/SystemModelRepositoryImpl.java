@@ -130,7 +130,7 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 	public Optional<ServiceEffectSpecification> getSeffFromProvidedRole(final ProvidedRole role,
 			final Signature signature) {
 
-		LOGGER.info("Find SEFF: " + role.getEntityName() + " (ProvidedRole) and " + signature.getEntityName()
+		LOGGER.debug("Find SEFF: " + role.getEntityName() + " (ProvidedRole) and " + signature.getEntityName()
 				+ " (Signature)");
 
 		LOGGER.debug(
@@ -141,10 +141,10 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 				.peek(component -> LOGGER.debug("Encapsulated Component: " + component.getEntityName()))
 				.filter(component -> component.getProvidedRoles_InterfaceProvidingEntity().stream()
 						.anyMatch(providedRole -> providedRole.getId().equals(role.getId())))
-				.peek(component -> LOGGER.info("Found the component: " + component.getEntityName()))
+				.peek(component -> LOGGER.debug("Found the component: " + component.getEntityName()))
 				.filter(BasicComponent.class::isInstance)
 				.map(BasicComponent.class::cast)
-				.peek(component -> LOGGER.info("Found the basic component: " + component.getEntityName()))
+				.peek(component -> LOGGER.debug("Found the basic component: " + component.getEntityName()))
 				.map(basicComponent -> this.getSeffFromBasicComponent(basicComponent, signature))
 				.filter(Optional::isPresent)
 				.map(Optional::get)
@@ -189,7 +189,7 @@ public class SystemModelRepositoryImpl implements SystemModelRepository {
 	public Optional<ServiceEffectSpecification> getSeffFromBasicComponent(final BasicComponent basicComponent,
 			final Signature signature) {
 
-		LOGGER.info("Start searching for seff: " + basicComponent.getEntityName());
+		LOGGER.debug("Start searching for seff: " + basicComponent.getEntityName());
 		return basicComponent.getServiceEffectSpecifications__BasicComponent().stream()
 				.filter(spec -> spec.getDescribedService__SEFF().getId().equals(signature.getId()))
 				.findFirst();

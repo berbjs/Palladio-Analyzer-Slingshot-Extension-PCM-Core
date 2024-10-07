@@ -116,7 +116,7 @@ public class SeffInterpreter extends SeffSwitch<Set<SEFFInterpreted>> {
 			throw new IllegalStateException("No branch transition was active. This is not allowed.");
 		}
 
-		LOGGER.info(String.format("Branch chosen: %s with id %s", branchTransition.getEntityName(),
+		LOGGER.debug(String.format("Branch chosen: %s with id %s", branchTransition.getEntityName(),
 				branchTransition.getId()));
 
 		final BranchBehaviorContextHolder holder = new BranchBehaviorContextHolder(
