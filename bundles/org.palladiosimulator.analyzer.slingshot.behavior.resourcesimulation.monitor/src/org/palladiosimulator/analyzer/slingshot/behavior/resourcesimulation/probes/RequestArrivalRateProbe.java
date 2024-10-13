@@ -23,10 +23,9 @@ import org.palladiosimulator.metricspec.constants.MetricDescriptionConstants;
 public final class RequestArrivalRateProbe extends EventBasedListProbe<Double, Frequency> {
 
     private double time;
-    private double rate;
-    private static final double alpha = 0.01;
-    private double currentRate;
-    private static final double windowSizeInSeconds = 120;
+    private static final double alpha = 0.02;
+    private double averageTime;
+    private static final double windowSizeInSeconds = 240;
     private int nextFactor = 1;
 
     /**
@@ -43,28 +42,27 @@ public final class RequestArrivalRateProbe extends EventBasedListProbe<Double, F
     @Override
     public Measure<Double, Frequency> getMeasurement(final DESEvent event) {
         if (event instanceof SEFFModelPassedElement) {
-            double deltaTime = event.time() - this.time;
-
+            final double deltaTime = event.time() - this.time;
             if (deltaTime != 0) {
                 // Update the EMA with the new data point
-                this.currentRate = (1.0 - this.alpha) * this.currentRate + this.nextFactor * (this.alpha / deltaTime);
+                this.averageTime = (1.0 - RequestArrivalRateProbe.alpha) * this.averageTime
+                        + RequestArrivalRateProbe.alpha * deltaTime / this.nextFactor;
                 this.nextFactor = 1;
-                double previousRate = this.currentRate;
             } else {
                 this.nextFactor += 1;
             }
 
             // Adjust the time-weighted factor based on the time elapsed since the last
             // update
-            final double timeFactor = Math.exp(-deltaTime / this.windowSizeInSeconds);
+            final double timeFactor = Math.exp(-deltaTime / RequestArrivalRateProbe.windowSizeInSeconds);
 
             // Apply the time factor to the current value
-            this.currentRate *= timeFactor;
+            this.averageTime *= timeFactor;
 
             // Update the last update time
             this.time = event.time();
 
-            return Measure.valueOf(this.currentRate, SI.HERTZ);
+            return Measure.valueOf(1 / this.averageTime, SI.HERTZ);
         }
         throw new IllegalArgumentException(String.format("Wrong eventype. Expected %s but got %s.",
                 ActiveResourceStateUpdated.class.getSimpleName(), event.getClass()

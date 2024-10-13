@@ -117,7 +117,7 @@ public class OperationCallActionRequestArrivalRateMonitoringBehavior implements 
 
         if (role instanceof OperationProvidedRole && this.userProbesMap.containsKey(key)) {
             final OperationProbes userProbes = this.userProbesMap.get(key);
-            userProbes.operationStartedProbe.takeMeasurement(seffStarted); // HERE THE MAGIC HAPPENS
+            userProbes.operationStartedProbe.takeMeasurement(seffStarted);
             return Result.of(new ProbeTaken(ProbeTakenEntity.builder()
                 .withProbe(userProbes.operationStartedProbe)
                 .build()));
